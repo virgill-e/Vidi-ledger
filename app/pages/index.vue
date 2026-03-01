@@ -34,9 +34,6 @@
             <div class="text-[48px] sm:text-[54px] leading-none tracking-tight font-semibold text-text-heading">
               {{ currentTotal }}
             </div>
-            <div class="mt-2 text-sm text-text-body/60 font-medium">
-              <span class="text-[#e25c5c]">↑ 12%</span> par rapport à la période précédente
-            </div>
           </div>
           
           <!-- Dynamic Chart inside card -->
