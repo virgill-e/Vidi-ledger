@@ -11,6 +11,25 @@ Vidi Ledger est une application de gestion de dépenses.
 
 ---
 
+## ⚙️ Configuration (.env)
+
+Créez un fichier `.env` à la racine du projet avec les variables suivantes :
+
+```bash
+# "sqlite" pour le local, "postgres" pour la production
+DB_TYPE=sqlite
+
+# URL de connexion
+# Pour SQLite : sqlite.db
+# Pour PostgreSQL : postgresql://user:password@host:5432/dbname
+DATABASE_URL=sqlite.db
+
+# Mot de passe secret pour la session (32 caractères minimum)
+NUXT_SESSION_PASSWORD=votre_secret_de_32_caracteres_minimum
+```
+
+---
+
 ## 🛠️ Installation et Exécution locale
 
 1. **Installer les dépendances** :
@@ -59,6 +78,3 @@ docker exec -it vidi-ledger-app npx drizzle-kit push
 
 ---
 
-## 🔐 Sécurité
-- Les mots de passe sont hachés avec **Bcrypt**.
-- La session est sécurisée via des cookies chiffrés.
