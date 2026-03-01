@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { categories } from '../../database/schema';
+import { db, fetchAll } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
     const session = await getUserSession(event);

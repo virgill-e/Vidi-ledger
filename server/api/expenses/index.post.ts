@@ -1,4 +1,5 @@
 import { expenses } from '../../database/schema';
+import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
     const session = await getUserSession(event);

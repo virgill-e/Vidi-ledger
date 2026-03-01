@@ -1,6 +1,7 @@
 import { compare } from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import { users } from '../../database/schema';
+import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);

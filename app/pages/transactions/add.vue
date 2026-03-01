@@ -35,20 +35,48 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <!-- Merchant / Label -->
-          <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-3 relative">
             <label class="text-text-heading font-bold text-[15px] ml-2">Commerçant ou libellé</label>
             <div class="relative group">
               <input 
                 type="text" 
                 v-model="form.merchant"
+                @focus="showSuggestions = true"
+                @blur="handleBlur"
                 placeholder="Ex: Delhaize, Amazon..."
                 class="w-full bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4 text-text-heading font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
                 required
+                autocomplete="off"
               />
               <div class="absolute right-5 top-1/2 -translate-y-1/2 text-text-body/20 group-focus-within:text-primary transition-colors">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
+              </div>
+            </div>
+
+            <!-- Suggestions Dropdown -->
+            <div 
+              v-if="showSuggestions && filteredMerchants.length > 0"
+              class="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-[#e3ece8] rounded-[24px] shadow-2xl overflow-hidden z-20 animate-in fade-in slide-in-from-top-2 duration-200"
+            >
+              <div class="flex flex-col">
+                <button 
+                  v-for="(merchant, index) in filteredMerchants" 
+                  :key="index"
+                  type="button"
+                  @mousedown="selectMerchant(merchant)"
+                  class="flex items-center gap-4 px-6 py-4 text-left hover:bg-bg-base transition-colors border-b border-[#f1f5f3] last:border-0 group"
+                >
+                  <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-text-heading font-bold text-[14px]">{{ merchant }}</span>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
@@ -241,7 +269,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -252,6 +280,29 @@ const showSuccess = ref(false);
 const showAddCategory = ref(false);
 const isEditingCategory = ref(false);
 const editCategoryId = ref<number | null>(null);
+
+// Merchant suggestions
+const showSuggestions = ref(false);
+const merchants = ref<string[]>([]);
+const filteredMerchants = computed(() => {
+  if (!form.merchant) return merchants.value.slice(0, 5);
+  const query = form.merchant.toLowerCase();
+  return merchants.value
+    .filter(m => m.toLowerCase().includes(query))
+    .slice(0, 5);
+});
+
+const selectMerchant = (merchant: string) => {
+  form.merchant = merchant;
+  showSuggestions.value = false;
+};
+
+const handleBlur = () => {
+  // Delay to allow mousedown to trigger on suggestions
+  setTimeout(() => {
+    showSuggestions.value = false;
+  }, 200);
+};
 
 const categories = ref<any[]>([]);
 const presetColors = ['#294b3c', '#679178', '#557a66', '#3b5e4a', '#1b3127', '#e74c3c', '#f1c40f', '#3498db', '#9b59b6', '#34495e'];
@@ -284,14 +335,32 @@ const newCat = reactive({
 });
 
 const fetchCategories = async () => {
-  const data = await $fetch('/api/categories');
-  categories.value = data as any[];
-  if (categories.value.length > 0 && !form.categoryId) {
-    form.categoryId = categories.value[0].id;
+  try {
+    const data = await $fetch('/api/categories');
+    categories.value = data as any[];
+    if (categories.value.length > 0 && !form.categoryId) {
+      form.categoryId = categories.value[0].id;
+    }
+  } catch (err) {
+    console.error('Failed to fetch categories', err);
   }
 };
 
-onMounted(fetchCategories);
+const fetchMerchants = async () => {
+  try {
+    const data = await $fetch('/api/merchants');
+    merchants.value = data as string[];
+  } catch (err) {
+    console.error('Failed to fetch merchants', err);
+  }
+};
+
+onMounted(async () => {
+  await Promise.all([
+    fetchCategories(),
+    fetchMerchants()
+  ]);
+});
 
 const openAddCategory = () => {
   isEditingCategory.value = false;
@@ -336,7 +405,7 @@ const handleSaveCategory = async () => {
 };
 
 const handleSubmit = async () => {
-  if (!form.categoryId || form.amount === undefined) return;
+  if (isSubmitting.value || !form.categoryId || form.amount === undefined) return;
   
   isSubmitting.value = true;
   
@@ -346,12 +415,13 @@ const handleSubmit = async () => {
       body: form
     });
     
-    isSubmitting.value = false;
     showSuccess.value = true;
     
     setTimeout(async () => {
       showSuccess.value = false;
       await navigateTo('/transactions');
+      // On ne reset isSubmitting qu'après le changement de page
+      // ou on laisse l'unmount faire son travail
     }, 1500);
   } catch (err) {
     console.error('Failed to save expense', err);
