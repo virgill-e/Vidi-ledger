@@ -145,14 +145,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useFilterTime, type TimeFilter } from '~/composables/useFilters';
 
 definePageMeta({
   middleware: 'auth'
 });
 
 // Time Filter State
-type TimeFilter = 'week' | 'month' | 'year' | 'all';
-const timeFilter = ref<TimeFilter>('month');
+const timeFilter = useFilterTime('main', 'month');
 
 // Mapping filter to labels
 const timeFilterLabel = computed(() => {

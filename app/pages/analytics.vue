@@ -150,6 +150,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useFilterTime, type TimeFilter } from '~/composables/useFilters';
 
 definePageMeta({
   middleware: 'auth'
@@ -169,8 +170,7 @@ const fetchData = async () => {
 
 onMounted(fetchData);
 
-type TimeFilter = 'week' | 'month' | 'year' | 'all';
-const timeFilter = ref<TimeFilter>('month');
+const timeFilter = useFilterTime('main', 'month');
 
 const filters: { id: TimeFilter, label: string }[] = [
   { id: 'week', label: 'Semaine' },
