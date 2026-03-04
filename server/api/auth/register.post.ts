@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
             id: newUser.id,
             email: newUser.email,
             name: newUser.name,
+            role: newUser.role,
         },
     });
 
@@ -70,6 +71,7 @@ export default defineEventHandler(async (event) => {
             id: newUser.id,
             email: newUser.email,
             name: newUser.name,
+            role: newUser.role,
         },
     };
 });

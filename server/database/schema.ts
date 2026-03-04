@@ -37,6 +37,7 @@ export const users = table('users', {
     email: text('email').notNull().unique(),
     name: text('name').notNull(),
     password: text('password').notNull(),
+    role: text('role').notNull().default('user'),
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
 });
 

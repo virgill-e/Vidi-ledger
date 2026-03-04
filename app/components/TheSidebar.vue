@@ -44,6 +44,19 @@
         </div>
         <span class="text-[12px]" :class="[route.path.startsWith('/analytics') ? 'font-semibold' : 'font-medium']">Analyses</span>
       </NuxtLink>
+
+      <!-- Admin -->
+      <NuxtLink v-if="user?.role === 'admin'" to="/admin" class="flex flex-col items-center gap-2.5 transition-colors group px-2"
+        :class="[route.path.startsWith('/admin') ? 'text-primary font-medium' : 'text-text-body/60 hover:text-primary']"
+        @click="closeMenu">
+        <div :class="['w-12 h-12 rounded-[16px] flex items-center justify-center transition-all', 
+          route.path.startsWith('/admin') ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-100' : 'group-hover:bg-primary/10']">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+        <span class="text-[12px]" :class="[route.path.startsWith('/admin') ? 'font-semibold' : 'font-medium']">Admin</span>
+      </NuxtLink>
     </div>
 
     <div class="flex flex-col gap-4 w-full">
@@ -76,7 +89,7 @@
 
 <script setup lang="ts">
 const { isMobileMenuOpen, closeMenu } = useNavigation();
-const { clear: clearSession } = useUserSession();
+const { user, clear: clearSession } = useUserSession();
 const route = useRoute();
 
 const handleLogout = async () => {
