@@ -225,9 +225,39 @@ const currentTotal = computed(() => formatCurrency(currentTotalValue.value));
 const dailyAverage = computed(() => {
   if (filteredTransactions.value.length === 0) return 0;
   
-  const dates = filteredTransactions.value.map(tx => new Date(tx.date).toLocaleDateString());
-  const uniqueDays = new Set(dates).size || 1;
-  return currentTotalValue.value / uniqueDays;
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  // Date de la toute première dépense (indépendamment du filtre)
+  const allDates = expensesList.value.map(tx => new Date(tx.date).getTime());
+  if (allDates.length === 0) return 0;
+  const firstExpenseDate = new Date(Math.min(...allDates));
+  firstExpenseDate.setHours(0, 0, 0, 0);
+
+  let periodStartDate: Date;
+
+  if (timeFilter.value === 'week') {
+    const tempNow = new Date(now);
+    const day = tempNow.getDay();
+    const diff = (day === 0 ? 6 : day - 1); // lundi de cette semaine
+    periodStartDate = new Date(tempNow.setDate(tempNow.getDate() - diff));
+  } else if (timeFilter.value === 'month') {
+    periodStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  } else if (timeFilter.value === 'year') {
+    periodStartDate = new Date(now.getFullYear(), 0, 1);
+  } else {
+    // 'all'
+    periodStartDate = firstExpenseDate;
+  }
+
+  // On prend la date la plus récente des deux pour respecter les filtres et ne pas remonter plus loin que la première dépense
+  const effectiveStartDate = periodStartDate > firstExpenseDate ? periodStartDate : firstExpenseDate;
+  
+  // Calcul du nombre de jours entre effectiveStartDate et aujourd'hui (inclus)
+  const diffTime = now.getTime() - effectiveStartDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  
+  return currentTotalValue.value / Math.max(diffDays, 1);
 });
 
 const categoryComparison = computed(() => {
