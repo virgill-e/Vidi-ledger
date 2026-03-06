@@ -110,7 +110,7 @@
                   {{ formatCurrency(tx.amount) }}
                 </td>
                 <td class="py-5 pr-4 text-right rounded-r-[22px]">
-                  <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="flex items-center justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button 
                       @click="handleEdit(tx)"
                       class="w-10 h-10 rounded-xl bg-bg-base text-text-body/40 hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center"
