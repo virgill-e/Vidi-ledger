@@ -1,5 +1,5 @@
-import { sqliteTable, text as sqliteText, integer as sqliteInteger } from 'drizzle-orm/sqlite-core';
-import { pgTable, text as pgText, integer as pgInteger, serial as pgSerial, timestamp as pgTimestamp } from 'drizzle-orm/pg-core';
+import { sqliteTable, text as sqliteText, integer as sqliteInteger, real as sqliteReal } from 'drizzle-orm/sqlite-core';
+import { pgTable, text as pgText, integer as pgInteger, serial as pgSerial, timestamp as pgTimestamp, doublePrecision as pgDouble } from 'drizzle-orm/pg-core';
 
 // Check if we are using Postgres based on the environment
 const usePostgres = process.env.DB_TYPE === 'postgres' || process.env.DATABASE_URL?.startsWith('postgres://') || process.env.DATABASE_URL?.startsWith('postgresql://');
@@ -32,6 +32,9 @@ const dateColumn = (name: string) => {
 // Amount and foreign key helper (integers)
 const int = (name: string) => usePostgres ? pgInteger(name) : sqliteInteger(name);
 
+// Real/Double helper
+const real = (name: string) => usePostgres ? pgDouble(name) : sqliteReal(name);
+
 export const users = table('users', {
     id: idColumn('id'),
     email: text('email').notNull().unique(),
@@ -62,6 +65,18 @@ export const expenses = table('expenses', {
     categoryId: int('category_id').notNull().references(() => categories.id),
     amount: int('amount').notNull(),
     merchant: text('merchant').notNull(),
+    date: dateColumn('date').notNull(),
+    note: text('note'),
+    createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
+});
+
+export const investments = table('investments', {
+    id: idColumn('id'),
+    userId: int('user_id').notNull().references(() => users.id),
+    type: text('type').notNull(), // 'buy' or 'sell'
+    asset: text('asset').notNull(),
+    amount: int('amount').notNull(), // In cents
+    quantity: real('quantity').notNull(), // Decimal values
     date: dateColumn('date').notNull(),
     note: text('note'),
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),

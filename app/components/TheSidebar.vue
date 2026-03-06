@@ -30,7 +30,18 @@
         <span class="text-[12px]" :class="[route.path.startsWith('/transactions') ? 'font-semibold' : 'font-medium']">Dépenses</span>
       </NuxtLink>
 
-
+      <!-- Investments -->
+      <NuxtLink to="/investments" class="flex flex-col items-center gap-2.5 transition-colors group px-2"
+        :class="[route.path.startsWith('/investments') ? 'text-primary font-medium' : 'text-text-body/60 hover:text-primary']"
+        @click="closeMenu">
+        <div :class="['w-12 h-12 rounded-[16px] flex items-center justify-center transition-all', 
+          route.path.startsWith('/investments') ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-100' : 'group-hover:bg-primary/10']">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+          </svg>
+        </div>
+        <span class="text-[12px]" :class="[route.path.startsWith('/investments') ? 'font-semibold' : 'font-medium']">Placements</span>
+      </NuxtLink>
 
       <!-- Analytics -->
       <NuxtLink to="/analytics" class="flex flex-col items-center gap-2.5 transition-colors group px-2"
