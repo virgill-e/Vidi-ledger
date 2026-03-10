@@ -83,10 +83,11 @@
                   class="flex items-center gap-4 px-6 py-4 text-left hover:bg-bg-base transition-colors border-b border-[#f1f5f3] last:border-0 group"
                 >
                   <div class="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary group-hover:scale-110 transition-transform font-bold text-[10px]">
-                    {{ asset.substring(0, 3) }}
+                    {{ asset.name.substring(0, 3) }}
                   </div>
                   <div class="flex flex-col">
-                    <span class="text-text-heading font-bold text-[14px]">{{ asset }}</span>
+                    <span class="text-text-heading font-bold text-[14px]">{{ asset.name }}</span>
+                    <span class="text-text-body/40 text-[11px] font-bold">{{ asset.totalQuantity.toLocaleString('fr-FR') }} possédés</span>
                   </div>
                 </button>
               </div>
@@ -105,6 +106,14 @@
                 class="w-full bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4 text-text-heading font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
                 required
               />
+              <button 
+                v-if="form.type === 'sell' && currentHolding && currentHolding > 0"
+                type="button"
+                @click="setMaxQuantity"
+                class="absolute right-4 top-1/2 -translate-y-1/2 bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-bold hover:bg-primary/20 transition-all z-10"
+              >
+                MAX
+              </button>
             </div>
           </div>
           
@@ -193,18 +202,30 @@ const form = reactive({
 
 // Asset suggestions
 const showSuggestions = ref(false);
-const assets = ref<string[]>([]);
+const assets = ref<{ name: string, totalQuantity: number }[]>([]);
 const filteredAssets = computed(() => {
   if (!form.asset) return assets.value.slice(0, 5);
   const query = form.asset.toLowerCase();
   return assets.value
-    .filter(a => a.toLowerCase().includes(query))
+    .filter(a => a.name.toLowerCase().includes(query))
     .slice(0, 5);
 });
 
-const selectAsset = (asset: string) => {
-  form.asset = asset;
+const selectAsset = (asset: { name: string, totalQuantity: number }) => {
+  form.asset = asset.name;
   showSuggestions.value = false;
+};
+
+const currentHolding = computed(() => {
+  if (!form.asset) return null;
+  const asset = assets.value.find(a => a.name.toLowerCase() === form.asset.toLowerCase());
+  return asset ? asset.totalQuantity : null;
+});
+
+const setMaxQuantity = () => {
+  if (currentHolding.value !== null) {
+    form.quantity = currentHolding.value;
+  }
 };
 
 const handleBlur = () => {
@@ -216,7 +237,7 @@ const handleBlur = () => {
 const fetchAssets = async () => {
   try {
     const data = await $fetch('/api/investments/assets');
-    assets.value = data as string[];
+    assets.value = data as { name: string, totalQuantity: number }[];
   } catch (err) {
     console.error('Failed to fetch assets', err);
   }

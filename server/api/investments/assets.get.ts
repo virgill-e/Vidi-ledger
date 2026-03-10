@@ -14,19 +14,19 @@ export default defineEventHandler(async (event) => {
     const userId = (session.user as { id: number }).id;
 
     try {
-        // Query to get distinct asset names ranked by frequency
-        const query = (db as any)
+        // Query to get distinct asset names and their total quantity
+        const results = await fetchAll(db
             .select({
                 name: (investments as any).asset,
+                totalQuantity: sql<number>`SUM(CASE WHEN type = 'buy' THEN quantity ELSE -quantity END)`,
             })
             .from(investments as any)
             .where(eq((investments as any).userId, userId))
             .groupBy((investments as any).asset)
             .orderBy(desc(sql`count(*)`))
-            .limit(20);
+            .limit(50));
 
-        const results = await fetchAll(query);
-        return results.map((a: any) => a.name);
+        return results;
     } catch (error) {
         console.error('Assets API Error:', error);
         return [];
