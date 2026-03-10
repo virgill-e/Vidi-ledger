@@ -82,9 +82,35 @@
               <label for="password" class="text-[15px] font-medium text-text-heading">
                 Password
               </label>
-              <a v-if="isLogin" href="#" class="text-[13px] font-medium text-primary hover:text-primary/70 transition-colors">
-                Forgot password?
-              </a>
+              <div v-if="isLogin" class="relative group">
+                <button 
+                  type="button"
+                  @click="showForgotTooltip = !showForgotTooltip"
+                  class="text-[13px] font-medium text-primary hover:text-primary/70 transition-colors flex items-center gap-1"
+                >
+                  Forgot password?
+                  <svg class="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                
+                <!-- Tooltip / Info Bubble -->
+                <div 
+                  :class="[
+                    'absolute bottom-full right-0 mb-3 w-64 p-4 bg-text-heading text-white text-[13px] rounded-2xl shadow-2xl z-50 transition-all duration-300 pointer-events-none lg:group-hover:opacity-100 lg:group-hover:translate-y-0 lg:group-hover:pointer-events-auto',
+                    showForgotTooltip ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2'
+                  ]"
+                >
+                  <p class="leading-relaxed font-medium">
+                    Veuillez contacter la personne qui héberge ce projet pour réinitialiser votre mot de passe via le <span class="text-primary-light">centre de contrôle administrateur</span>.
+                  </p>
+                  <!-- Arrow -->
+                  <div class="absolute top-full right-6 -mt-px border-[6px] border-transparent border-t-text-heading"></div>
+                </div>
+
+                <!-- Overlay for mobile click-outside -->
+                <div v-if="showForgotTooltip" @click="showForgotTooltip = false" class="fixed inset-0 z-40 lg:hidden"></div>
+              </div>
             </div>
             <UiInput
               id="password"
@@ -140,6 +166,7 @@ const { fetch: refreshSession } = useUserSession();
 const name = ref('');
 const email = ref('');
 const password = ref('');
+const showForgotTooltip = ref(false);
 
 const toggleMode = () => {
   isLogin.value = !isLogin.value;
