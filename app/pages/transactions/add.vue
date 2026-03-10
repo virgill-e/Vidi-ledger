@@ -222,6 +222,30 @@
                   </svg>
                 </div>
               </button>
+              
+              <!-- Custom Color Picker -->
+              <div class="relative group/picker">
+                <div 
+                  class="w-8 h-8 rounded-lg border-2 border-dashed border-[#e3ece8] flex items-center justify-center transition-all hover:border-primary/50 cursor-pointer bg-white"
+                  :style="{ backgroundColor: !presetColors.includes(newCat.color) ? newCat.color : '', borderStyle: !presetColors.includes(newCat.color) ? 'solid' : 'dashed' }"
+                >
+                  <svg 
+                    class="w-4 h-4 transition-colors" 
+                    :class="!presetColors.includes(newCat.color) ? 'text-white mix-blend-difference' : 'text-text-body/40 group-hover/picker:text-primary'" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor" 
+                    stroke-width="3"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <input 
+                  type="color" 
+                  v-model="newCat.color"
+                  class="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                />
+              </div>
             </div>
           </div>
 
