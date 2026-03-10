@@ -8,6 +8,16 @@ Vidi Ledger est une application de gestion de dépenses.
 - **Styling** : [Tailwind CSS 4](https://tailwindcss.com/)
 - **Base de données** : [Drizzle ORM](https://orm.drizzle.team/) (SQLite ou PostgreSQL)
 - **Conteneurisation** : Docker & Docker Compose.
+- **Node.js** : v22.x ou supérieur
+- **npm** : v10.x ou supérieur
+
+---
+
+## 📋 Prérequis
+
+Avant de commencer, assurez-vous d'avoir installé :
+- **Node.js** (recommandé v22.22.0 ou plus récent)
+- **npm** (v10.9.4 ou supérieur)
 
 ---
 
