@@ -136,8 +136,8 @@
            </div>
            
            <!-- List that scrolls if too many -->
-           <div class="flex flex-col gap-2 md:overflow-y-auto pr-2 custom-scrollbar grow pb-4">
-             <div v-for="(tx, index) in filteredTransactions" :key="index" class="flex items-center justify-between group p-3 -mx-2 rounded-2xl hover:bg-input-bg transition-colors relative z-0">
+            <div class="flex flex-col gap-4 md:overflow-y-auto pr-2 custom-scrollbar grow pb-4">
+              <div v-for="(tx, index) in recentTransactions" :key="index" class="flex items-center justify-between group p-3 -mx-2 rounded-2xl hover:bg-input-bg transition-colors relative z-0">
                <div class="flex items-center gap-4">
                  <div class="w-12 h-12 rounded-[16px] flex items-center justify-center shadow-sm text-white shrink-0" 
                       :class="tx.type === 'buy' ? 'bg-[#294b3c]' : 'bg-[#e74c3c]'">
@@ -160,18 +160,6 @@
                       {{ tx.type === 'buy' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                     </span>
                     <span class="text-[10px] text-text-body/40 font-bold uppercase tracking-tighter">{{ formatCurrency(tx.amount / tx.quantity, true) }} / unit</span>
-                  </div>
-                  <div class="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <NuxtLink :to="`/investments/edit/${tx.id}`" class="p-1.5 text-text-body/30 hover:text-primary transition-all rounded-lg hover:bg-primary/5 z-10" title="Modifier">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </NuxtLink>
-                    <button @click="deleteInvestment(tx.id)" class="p-1.5 text-text-body/30 hover:text-red-500 transition-all rounded-lg hover:bg-red-50 z-10" title="Supprimer">
-                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
              </div>
@@ -279,6 +267,16 @@ const filteredTransactions = computed(() => {
     ...tx,
     formattedDate: new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: timeFilter.value === 'all' ? 'numeric' : undefined })
   }));
+});
+
+const recentTransactions = computed(() => {
+  return [...investments.value]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 6)
+    .map(tx => ({
+      ...tx,
+      formattedDate: new Date(tx.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    }));
 });
 
 // Total Invested (Buys - Sells)
