@@ -8,13 +8,73 @@
         <p class="text-text-body/60 font-medium">Visualisez vos habitudes de consommation et optimisez votre budget.</p>
       </div>
       
-      <!-- Time Filter -->
-      <div class="flex items-center bg-[#e3ece8] p-1.5 rounded-[24px] w-fit shadow-sm border border-white/50">
-        <button v-for="filter in filters" :key="filter.id" 
-          @click="timeFilter = filter.id"
-          :class="['px-6 py-2.5 rounded-[18px] text-[14px] font-semibold transition-all', timeFilter === filter.id ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
-          {{ filter.label }}
-        </button>
+      <!-- Filters & Navigation Controls -->
+      <div class="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
+        <!-- Range Type Selector -->
+        <div class="flex items-center bg-[#e3ece8] p-1 rounded-[24px] w-full sm:w-fit shadow-sm border border-white/50">
+          <button v-for="filter in filters" :key="filter.id" 
+            @click="timeFilter = filter.id"
+            :class="['flex-1 sm:flex-none px-4 sm:px-6 py-2.5 rounded-[18px] text-[12px] sm:text-[13px] font-bold transition-all', timeFilter === filter.id ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+            {{ filter.label }}
+          </button>
+        </div>
+
+        <!-- Period Navigator -->
+        <div v-if="timeFilter !== 'all'" class="flex items-center gap-2 sm:gap-3 w-full sm:w-fit">
+          <div class="flex items-center bg-[#e3ece8] p-1 rounded-[24px] shadow-sm border border-white/50 grow sm:grow-0">
+            <!-- Prev Button -->
+            <button @click="navigatePeriod(-1)" class="p-2 sm:p-2.5 rounded-[18px] text-text-body/60 hover:bg-white hover:text-primary transition-all" title="Précédent">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="sm:w-[20px] sm:h-[20px]"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            
+            <!-- Current Period Label -->
+            <div 
+              @click="triggerPicker"
+              class="px-3 sm:px-6 py-2 text-[12px] sm:text-[14px] font-bold text-primary min-w-[100px] sm:min-w-[160px] grow text-center border-x border-white/30 capitalize whitespace-nowrap cursor-pointer hover:bg-white/50 transition-colors flex items-center justify-center gap-1.5 sm:gap-2 group/label"
+            >
+              {{ timeFilterLabel }}
+              <svg v-if="timeFilter === 'month' || timeFilter === 'year'" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="opacity-30 group-hover/label:opacity-80 transition-opacity sm:w-[12px] sm:h-[12px]"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            
+            <!-- Hidden native pickers -->
+            <input 
+              v-if="timeFilter === 'month'" 
+              ref="monthPickerRef" 
+              type="month" 
+              class="absolute invisible pointer-events-none" 
+              @change="onDatePicked"
+            />
+            <input 
+              v-if="timeFilter === 'year'" 
+              ref="yearPickerRef" 
+              type="number" 
+              min="2000" 
+              max="2100" 
+              class="absolute invisible pointer-events-none" 
+              @change="onDatePicked"
+            />
+
+            <!-- Next Button -->
+            <button @click="navigatePeriod(1)" class="p-2 sm:p-2.5 rounded-[18px] text-text-body/60 hover:bg-white hover:text-primary transition-all" title="Suivant">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="sm:w-[20px] sm:h-[20px]"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+
+          <!-- Quick Return to Today -->
+          <button 
+            @click="resetSelection" 
+            class="group flex items-center justify-center gap-2 p-3 sm:px-5 sm:py-3 rounded-[24px] bg-white border border-[#eff3f1] text-primary text-[13px] font-bold shadow-sm hover:bg-primary hover:text-white hover:border-primary transition-all active:scale-95 shrink-0"
+            title="Aujourd'hui"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-70 group-hover:opacity-100 sm:w-[16px] sm:h-[16px]">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="hidden sm:inline">Aujourd'hui</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -136,7 +196,7 @@
             <span class="text-text-heading font-bold text-[18px]">{{ formatCurrency(merchant.amount) }}</span>
           </div>
           <div class="mt-4 h-1.5 w-full bg-[#e3ece8] rounded-full overflow-hidden">
-            <div class="h-full bg-primary rounded-full" :style="{ width: (merchant.amount / (topMerchants[0]?.amount || 1) * 100) + '%' }"></div>
+            <div class="h-full bg-primary rounded-full" :style="{ width: (merchant.amount / (topMerchants[0]?.amount || merchant.amount || 1) * 100) + '%' }"></div>
           </div>
         </div>
         <div v-if="topMerchants.length === 0" class="col-span-full py-10 text-center text-text-body/40 font-medium">
@@ -151,21 +211,48 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useFilterTime, type TimeFilter } from '~/composables/useFilters';
+import { 
+  startOfWeek, endOfWeek, 
+  startOfMonth, endOfMonth, 
+  startOfYear, endOfYear,
+  addWeeks, subWeeks,
+  addMonths, subMonths,
+  addYears, subYears,
+  format, isWithinInterval,
+  isSameWeek, isSameMonth, isSameYear
+} from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 definePageMeta({
   middleware: 'auth'
 });
 
-const categoriesList = ref<any[]>([]);
-const expensesList = ref<any[]>([]);
+interface Category {
+  id: number;
+  name: string;
+  color: string;
+  icon: string;
+}
+
+interface Expense {
+  id: number;
+  amount: number;
+  date: string | Date;
+  merchant: string;
+  category: Category;
+}
+
+const categoriesList = ref<Category[]>([]);
+const expensesList = ref<Expense[]>([]);
+const selectedDate = ref(new Date());
 
 const fetchData = async () => {
   const [cats, exps] = await Promise.all([
     $fetch('/api/categories'),
     $fetch('/api/expenses')
   ]);
-  categoriesList.value = cats as any[];
-  expensesList.value = exps as any[];
+  categoriesList.value = cats as Category[];
+  expensesList.value = exps as Expense[];
 };
 
 onMounted(fetchData);
@@ -180,14 +267,62 @@ const filters: { id: TimeFilter, label: string }[] = [
 ];
 
 const timeFilterLabel = computed(() => {
-  const labels: Record<TimeFilter, string> = {
-    week: 'Cette Semaine',
-    month: 'Ce Mois',
-    year: 'Cette Année',
-    all: 'Toujours'
-  };
-  return labels[timeFilter.value];
+  if (timeFilter.value === 'all') return 'Toujours';
+  
+  const options = { locale: fr };
+  if (timeFilter.value === 'week') {
+    const start = startOfWeek(selectedDate.value, { weekStartsOn: 1 });
+    const end = endOfWeek(selectedDate.value, { weekStartsOn: 1 });
+    return `S${format(selectedDate.value, 'ww', options)} (${format(start, 'dd MMM', options)} - ${format(end, 'dd MMM', options)})`;
+  }
+  if (timeFilter.value === 'month') {
+    return format(selectedDate.value, 'MMMM yyyy', options);
+  }
+  if (timeFilter.value === 'year') {
+    return format(selectedDate.value, 'yyyy', options);
+  }
+  return '';
 });
+
+const navigatePeriod = (direction: number) => {
+  if (timeFilter.value === 'week') {
+    selectedDate.value = direction > 0 ? addWeeks(selectedDate.value, 1) : subWeeks(selectedDate.value, 1);
+  } else if (timeFilter.value === 'month') {
+    selectedDate.value = direction > 0 ? addMonths(selectedDate.value, 1) : subMonths(selectedDate.value, 1);
+  } else if (timeFilter.value === 'year') {
+    selectedDate.value = direction > 0 ? addYears(selectedDate.value, 1) : subYears(selectedDate.value, 1);
+  }
+};
+
+const resetSelection = () => {
+  selectedDate.value = new Date();
+};
+
+const monthPickerRef = ref<HTMLInputElement | null>(null);
+const yearPickerRef = ref<HTMLInputElement | null>(null);
+
+const triggerPicker = () => {
+  if (timeFilter.value === 'month') {
+    monthPickerRef.value?.showPicker?.();
+    if (!monthPickerRef.value?.showPicker) monthPickerRef.value?.click();
+  } else if (timeFilter.value === 'year') {
+    yearPickerRef.value?.focus();
+  }
+};
+
+const onDatePicked = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (!target.value) return;
+
+  if (timeFilter.value === 'month') {
+    selectedDate.value = new Date(target.value + '-01');
+  } else if (timeFilter.value === 'year') {
+    const year = parseInt(target.value);
+    const newDate = new Date(selectedDate.value);
+    newDate.setFullYear(year);
+    selectedDate.value = newDate;
+  }
+};
 
 const formatCurrency = (valueInCents: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(valueInCents / 100);
@@ -202,17 +337,33 @@ const getWeekNumber = (date: Date) => {
 };
 
 const filteredTransactions = computed(() => {
-  const now = new Date();
+  if (timeFilter.value === 'all') return expensesList.value;
+
+  const interval = (() => {
+    if (timeFilter.value === 'week') {
+      return { 
+        start: startOfWeek(selectedDate.value, { weekStartsOn: 1 }), 
+        end: endOfWeek(selectedDate.value, { weekStartsOn: 1 }) 
+      };
+    } else if (timeFilter.value === 'month') {
+      return { 
+        start: startOfMonth(selectedDate.value), 
+        end: endOfMonth(selectedDate.value) 
+      };
+    } else if (timeFilter.value === 'year') {
+      return { 
+        start: startOfYear(selectedDate.value), 
+        end: endOfYear(selectedDate.value) 
+      };
+    }
+    return null;
+  })();
+
+  if (!interval) return expensesList.value;
+
   return expensesList.value.filter(tx => {
     const txDate = new Date(tx.date);
-    if (timeFilter.value === 'week') {
-      return getWeekNumber(txDate) === getWeekNumber(now) && txDate.getFullYear() === now.getFullYear();
-    } else if (timeFilter.value === 'month') {
-      return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
-    } else if (timeFilter.value === 'year') {
-      return txDate.getFullYear() === now.getFullYear();
-    }
-    return true;
+    return isWithinInterval(txDate, interval);
   });
 });
 
@@ -225,36 +376,34 @@ const currentTotal = computed(() => formatCurrency(currentTotalValue.value));
 const dailyAverage = computed(() => {
   if (filteredTransactions.value.length === 0) return 0;
   
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  
-  // Date de la toute première dépense (indépendamment du filtre)
   const allDates = expensesList.value.map(tx => new Date(tx.date).getTime());
   if (allDates.length === 0) return 0;
   const firstExpenseDate = new Date(Math.min(...allDates));
   firstExpenseDate.setHours(0, 0, 0, 0);
 
   let periodStartDate: Date;
+  let periodEndDate: Date;
 
   if (timeFilter.value === 'week') {
-    const tempNow = new Date(now);
-    const day = tempNow.getDay();
-    const diff = (day === 0 ? 6 : day - 1); // lundi de cette semaine
-    periodStartDate = new Date(tempNow.setDate(tempNow.getDate() - diff));
+    periodStartDate = startOfWeek(selectedDate.value, { weekStartsOn: 1 });
+    periodEndDate = endOfWeek(selectedDate.value, { weekStartsOn: 1 });
   } else if (timeFilter.value === 'month') {
-    periodStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    periodStartDate = startOfMonth(selectedDate.value);
+    periodEndDate = endOfMonth(selectedDate.value);
   } else if (timeFilter.value === 'year') {
-    periodStartDate = new Date(now.getFullYear(), 0, 1);
+    periodStartDate = startOfYear(selectedDate.value);
+    periodEndDate = endOfYear(selectedDate.value);
   } else {
-    // 'all'
     periodStartDate = firstExpenseDate;
+    periodEndDate = new Date();
+    periodEndDate.setHours(23, 59, 59, 999);
   }
 
-  // On prend la date la plus récente des deux pour respecter les filtres et ne pas remonter plus loin que la première dépense
   const effectiveStartDate = periodStartDate > firstExpenseDate ? periodStartDate : firstExpenseDate;
+  const now = new Date();
+  const effectiveEndDate = periodEndDate > now ? now : periodEndDate;
   
-  // Calcul du nombre de jours entre effectiveStartDate et aujourd'hui (inclus)
-  const diffTime = now.getTime() - effectiveStartDate.getTime();
+  const diffTime = effectiveEndDate.getTime() - effectiveStartDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   
   return currentTotalValue.value / Math.max(diffDays, 1);
@@ -263,15 +412,18 @@ const dailyAverage = computed(() => {
 const categoryComparison = computed(() => {
   const stats: Record<number, { name: string, amount: number, color: string, icon: string }> = {};
   filteredTransactions.value.forEach(tx => {
-    if (!stats[tx.category.id]) {
-      stats[tx.category.id] = { 
+    if (!tx.category || !tx.category.id) return;
+    const catId = tx.category.id;
+    if (!stats[catId]) {
+      stats[catId] = { 
         name: tx.category.name, 
         amount: 0, 
         color: tx.category.color,
         icon: tx.category.icon
       };
     }
-    stats[tx.category.id].amount += tx.amount;
+    const s = stats[catId];
+    if (s) s.amount += tx.amount;
   });
   
   const total = currentTotalValue.value || 1;
@@ -286,12 +438,13 @@ const categoryComparison = computed(() => {
 const donutSegments = computed(() => {
   let currentOffset = 0;
   const radius = 40;
-  const circumference = 2 * Math.PI * radius; // 251.32
+  const circumference = 2 * Math.PI * radius;
 
   return categoryComparison.value.map(cat => {
-    const dashArray = `${(cat.percentage * circumference) / 100} ${circumference}`;
+    const p = cat.percentage || 0;
+    const dashArray = `${(p * circumference) / 100} ${circumference}`;
     const dashOffset = -currentOffset;
-    currentOffset += (cat.percentage * circumference) / 100;
+    currentOffset += (p * circumference) / 100;
     return { ...cat, dashArray, dashOffset: dashOffset.toString() };
   });
 });
@@ -307,26 +460,31 @@ const weekdaySpending = computed(() => {
   });
 
   const max = Math.max(...amounts, 1);
-  return days.map((label, i) => ({
-    label,
-    amount: amounts[i],
-    percentage: (amounts[i] / max) * 100
-  }));
+  return days.map((label, i) => {
+    const amount = amounts[i] ?? 0;
+    return {
+      label,
+      amount,
+      percentage: (amount / max) * 100
+    };
+  });
 });
 
 const topMerchants = computed(() => {
   const counts: Record<string, { amount: number, count: number, icon: string, color: string }> = {};
   filteredTransactions.value.forEach(tx => {
-    if (!counts[tx.merchant]) {
-      counts[tx.merchant] = { 
+    if (!tx.category || !tx.merchant) return;
+    const merchantName = tx.merchant;
+    if (!counts[merchantName]) {
+      counts[merchantName] = { 
         amount: 0, 
         count: 0, 
         icon: tx.category.icon,
         color: tx.category.color 
       };
     }
-    counts[tx.merchant].amount += tx.amount;
-    counts[tx.merchant].count += 1;
+    counts[merchantName]!.amount += tx.amount;
+    counts[merchantName]!.count += 1;
   });
 
   return Object.entries(counts)
