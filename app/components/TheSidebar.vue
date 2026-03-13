@@ -40,7 +40,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
           </svg>
         </div>
-        <span class="text-[12px]" :class="[route.path.startsWith('/investments') ? 'font-semibold' : 'font-medium']">Placements</span>
+        <span class="text-[12px]" :class="[route.path.startsWith('/investments') ? 'font-semibold' : 'font-medium']">Investments</span>
       </NuxtLink>
 
       <!-- Analytics -->

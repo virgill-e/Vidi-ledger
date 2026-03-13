@@ -91,6 +91,7 @@
                 <div class="flex flex-col">
                   <div class="flex items-center gap-2">
                     <span class="font-bold text-[18px] sm:text-[20px] text-white">{{ asset.name }}</span>
+                    <span v-if="asset.netInvested > 0" class="font-bold text-[11px] text-white/60 bg-white/10 px-2 py-0.5 rounded-md">{{ asset.portfolioPercentage.toFixed(1) }}%</span>
                     <span class="font-medium text-[12px] text-white/50 bg-white/10 px-2 py-0.5 rounded-md">{{ asset.quantity.toLocaleString('fr-FR') }} unités</span>
                   </div>
                   <div class="flex flex-col gap-1 mt-1">
@@ -335,9 +336,12 @@ const currentAssets = computed(() => {
     };
   }).filter(a => a.quantity > 0.00000001 || Math.abs(a.realizedPnL) > 0.00000001);
   
+  const totalNet = results.reduce((acc, r) => acc + Math.max(0, r.netInvested), 0);
   const maxVal = Math.max(...results.map(r => Math.max(0, r.netInvested)), 1);
+
   return results.map(r => ({ 
     ...r, 
+    portfolioPercentage: totalNet > 0 ? (Math.max(0, r.netInvested) / totalNet) * 100 : 0,
     percentage: Math.max(5, Math.min(100, Math.round((Math.max(0, r.netInvested) / maxVal) * 100))) 
   })).sort((a, b) => b.netInvested - a.netInvested);
 });
