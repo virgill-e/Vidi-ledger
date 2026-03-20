@@ -110,12 +110,13 @@
                 type="number" 
                 step="any"
                 v-model="form.quantity"
+                :max="form.type === 'sell' && maxAllowedForSell !== null ? maxAllowedForSell : undefined"
                 placeholder="Ex: 0.5, 10..."
                 class="w-full bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4 text-text-heading font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
                 required
               />
               <button 
-                v-if="form.type === 'sell' && currentHolding && currentHolding > 0"
+                v-if="form.type === 'sell' && maxAllowedForSell !== null && maxAllowedForSell > 0"
                 type="button"
                 @click="setMaxQuantity"
                 class="absolute right-4 top-1/2 -translate-y-1/2 bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-bold hover:bg-primary/20 transition-all z-10"
@@ -123,6 +124,9 @@
                 MAX
               </button>
             </div>
+            <span v-if="showMaxMessage && form.type === 'sell'" class="text-[#e74c3c] font-bold text-[13px] ml-2 mt-1 animate-in fade-in duration-300">
+              Le nombre d'actifs possédés est de {{ maxAllowedForSell }}
+            </span>
           </div>
           
           <!-- Date -->
@@ -190,18 +194,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
 });
 
 const route = useRoute();
-const id = route.params.id;
+const id = route.params.id as string;
 
 const loading = ref(true);
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
+const showMaxMessage = ref(false);
+let maxMessageTimeout: ReturnType<typeof setTimeout> | null = null;
+
+const originalType = ref('buy');
+const originalQuantity = ref(0);
+const originalAsset = ref('');
 
 const form = reactive({
   type: 'buy' as 'buy' | 'sell',
@@ -234,11 +244,41 @@ const currentHolding = computed(() => {
   return asset ? asset.totalQuantity : null;
 });
 
+const maxAllowedForSell = computed(() => {
+  const holding = currentHolding.value;
+  if (holding === null) return null;
+  
+  if (originalAsset.value.toLowerCase() === form.asset.toLowerCase()) {
+    if (originalType.value === 'sell') {
+      return holding + originalQuantity.value;
+    }
+    if (originalType.value === 'buy') {
+      const holdingWithoutOriginalBuy = holding - originalQuantity.value;
+      return Math.max(0, holdingWithoutOriginalBuy);
+    }
+  }
+  return holding;
+});
+
 const setMaxQuantity = () => {
-  if (currentHolding.value !== null) {
-    form.quantity = currentHolding.value;
+  if (maxAllowedForSell.value !== null) {
+    form.quantity = maxAllowedForSell.value;
   }
 };
+
+watch(() => form.quantity, (newVal) => {
+  if (form.type === 'sell' && maxAllowedForSell.value !== null && newVal !== undefined && newVal > maxAllowedForSell.value) {
+    form.quantity = maxAllowedForSell.value;
+    
+    showMaxMessage.value = true;
+    if (maxMessageTimeout) clearTimeout(maxMessageTimeout);
+    maxMessageTimeout = setTimeout(() => {
+      showMaxMessage.value = false;
+    }, 3000);
+  } else if (newVal !== undefined && maxAllowedForSell.value !== null && newVal < maxAllowedForSell.value) {
+    showMaxMessage.value = false;
+  }
+});
 
 const handleBlur = () => {
   setTimeout(() => {
@@ -272,6 +312,10 @@ const fetchInvestment = async () => {
     form.date = new Date(target.date).toISOString().split('T')[0];
     form.note = target.note || '';
     
+    originalType.value = target.type;
+    originalQuantity.value = target.quantity;
+    originalAsset.value = target.asset;
+
     loading.value = false;
   } catch (err) {
     console.error('Failed to fetch investment', err);
@@ -286,7 +330,8 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   if (isSubmitting.value || form.amount === undefined || form.quantity === undefined || !form.asset) return;
-  
+  if (form.type === 'sell' && maxAllowedForSell.value !== null && form.quantity > maxAllowedForSell.value) return;
+
   isSubmitting.value = true;
   
   try {

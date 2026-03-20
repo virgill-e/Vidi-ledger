@@ -102,6 +102,7 @@
                 type="number" 
                 step="any"
                 v-model="form.quantity"
+                :max="form.type === 'sell' && currentHolding !== null ? currentHolding : undefined"
                 placeholder="Ex: 0.5, 10..."
                 class="w-full bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4 text-text-heading font-medium focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none"
                 required
@@ -115,6 +116,9 @@
                 MAX
               </button>
             </div>
+            <span v-if="showMaxMessage && form.type === 'sell'" class="text-[#e74c3c] font-bold text-[13px] ml-2 mt-1 animate-in fade-in duration-300">
+              Le nombre d'actifs possédés est de {{ currentHolding }}
+            </span>
           </div>
           
           <!-- Date -->
@@ -182,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed, watch } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -190,6 +194,8 @@ definePageMeta({
 
 const isSubmitting = ref(false);
 const showSuccess = ref(false);
+const showMaxMessage = ref(false);
+let maxMessageTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const form = reactive({
   type: 'buy' as 'buy' | 'sell',
@@ -228,6 +234,20 @@ const setMaxQuantity = () => {
   }
 };
 
+watch(() => form.quantity, (newVal) => {
+  if (form.type === 'sell' && currentHolding.value !== null && newVal !== undefined && newVal > currentHolding.value) {
+    form.quantity = currentHolding.value;
+    
+    showMaxMessage.value = true;
+    if (maxMessageTimeout) clearTimeout(maxMessageTimeout);
+    maxMessageTimeout = setTimeout(() => {
+      showMaxMessage.value = false;
+    }, 3000);
+  } else if (newVal !== undefined && currentHolding.value !== null && newVal < currentHolding.value) {
+    showMaxMessage.value = false;
+  }
+});
+
 const handleBlur = () => {
   setTimeout(() => {
     showSuggestions.value = false;
@@ -249,6 +269,7 @@ onMounted(() => {
 
 const handleSubmit = async () => {
   if (isSubmitting.value || form.amount === undefined || form.quantity === undefined || !form.asset) return;
+  if (form.type === 'sell' && currentHolding.value !== null && form.quantity > currentHolding.value) return;
   
   isSubmitting.value = true;
   
