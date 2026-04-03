@@ -14,11 +14,13 @@
   },
   "dependencies": {
     "@microsoft/generator-sharepoint": "^1.11.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/vite": "^4.2.1",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.6.2",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "eventsource": "^4.1.0",
     "nuxt": "^4.3.1",
     "nuxt-auth-utils": "^0.5.29",
     "postgres": "^3.4.8",

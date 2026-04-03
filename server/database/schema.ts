@@ -81,3 +81,13 @@ export const investments = table('investments', {
     note: text('note'),
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
 });
+
+export const mcpTokens = table('mcp_tokens', {
+    id: text('id').primaryKey(),
+    userId: int('user_id').notNull().references(() => users.id),
+    token: text('token').notNull().unique(),
+    label: text('label'),
+    createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
+    lastUsedAt: dateColumn('last_used_at'),
+    revokedAt: dateColumn('revoked_at'),
+});

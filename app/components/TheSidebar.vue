@@ -76,13 +76,26 @@
         :class="[route.path.startsWith('/settings') ? 'text-primary font-medium' : 'text-text-body/60 hover:text-primary']"
         @click="closeMenu">
         <div :class="['w-12 h-12 rounded-[16px] flex items-center justify-center transition-all', 
-          route.path.startsWith('/settings') ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-100' : 'group-hover:bg-primary/10']">
+          route.path.startsWith('/settings') && route.path !== '/settings/mcp' ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-100' : 'group-hover:bg-primary/10']">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <span class="text-[12px]" :class="[route.path.startsWith('/settings') ? 'font-semibold' : 'font-medium']">Réglages</span>
+        <span class="text-[12px]" :class="[route.path.startsWith('/settings') && route.path !== '/settings/mcp' ? 'font-semibold' : 'font-medium']">Réglages</span>
+      </NuxtLink>
+
+      <!-- MCP -->
+      <NuxtLink to="/settings/mcp" class="flex flex-col items-center gap-2.5 transition-colors group px-2"
+        :class="[route.path === '/settings/mcp' ? 'text-primary font-medium' : 'text-text-body/60 hover:text-primary']"
+        @click="closeMenu">
+        <div :class="['w-12 h-12 rounded-[16px] flex items-center justify-center transition-all', 
+          route.path === '/settings/mcp' ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-100' : 'group-hover:bg-primary/10']">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+          </svg>
+        </div>
+        <span class="text-[12px]" :class="[route.path === '/settings/mcp' ? 'font-semibold' : 'font-medium']">Claude IA</span>
       </NuxtLink>
 
       <!-- Logout -->
