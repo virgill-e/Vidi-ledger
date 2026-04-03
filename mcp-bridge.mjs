@@ -16,6 +16,8 @@ async function run() {
 
     try {
         const url = new URL(urlString);
+        process.stderr.write(`Bridge: Connexion à ${url.origin}${url.pathname}...\n`);
+
         const sse = new SSEClientTransport(url, {
             eventSource: EventSource
         });
@@ -23,6 +25,7 @@ async function run() {
 
         // Relay messages from SSE (Vidi) to Stdio (Claude)
         sse.onmessage = (message) => {
+            process.stderr.write(`[BRIDGE -> CLAUDE] ${JSON.stringify(message).slice(0, 80)}...\n`);
             stdio.send(message).catch(err => {
                 process.stderr.write(`Bridge Error: Failed to send to stdio: ${err.message}\n`);
             });
@@ -30,6 +33,7 @@ async function run() {
 
         // Relay messages from Stdio (Claude) to SSE (Vidi)
         stdio.onmessage = (message) => {
+            process.stderr.write(`[CLAUDE -> BRIDGE] ${JSON.stringify(message).slice(0, 80)}...\n`);
             sse.send(message).catch(err => {
                 process.stderr.write(`Bridge Error: Failed to send to SSE: ${err.message}\n`);
             });
@@ -43,10 +47,13 @@ async function run() {
             process.stderr.write(`Bridge Error: Stdio Error: ${error}\n`);
         };
 
-        // Start SSE connection
-        await sse.start();
+        // Start connections
+        await Promise.all([
+            sse.start(),
+            stdio.start()
+        ]);
         
-        process.stderr.write("Bridge MCP: Connecté avec succès.\n");
+        process.stderr.write("Bridge MCP: Connecté avec succès au serveur SSE et à l'entrée Stdio.\n");
 
     } catch (err) {
         process.stderr.write(`Bridge Error: Erreur fatale: ${err instanceof Error ? err.stack : err}\n`);

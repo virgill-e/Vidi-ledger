@@ -7,7 +7,12 @@ import { mcpTokens, expenses, investments, categories } from '../../database/sch
 
 export default defineEventHandler(async (event) => {
     const token = getQuery(event).token as string;
-    if (!token) throw createError({ statusCode: 401, statusMessage: 'Missing token' });
+    console.log(`[MCP] Tentative de connexion avec le token: ${token?.slice(0, 10)}...`);
+
+    if (!token) {
+        console.error('[MCP] Connexion rejetée: Token manquant');
+        throw createError({ statusCode: 401, statusMessage: 'Missing token' });
+    }
 
     const mcpTokenList = await fetchAll(
         db.select()
@@ -17,10 +22,12 @@ export default defineEventHandler(async (event) => {
 
     const tokenData = mcpTokenList[0];
     if (!tokenData || tokenData.revokedAt) {
+        console.error('[MCP] Connexion rejetée: Token invalide ou révoqué');
         throw createError({ statusCode: 401, statusMessage: 'Invalid or revoked token' });
     }
 
     const userId = tokenData.userId;
+    console.log(`[MCP] Token validé pour l'utilisateur ID: ${userId}`);
 
     await (db.update(mcpTokens as any)
         .set({ lastUsedAt: new Date() })
@@ -216,10 +223,18 @@ export default defineEventHandler(async (event) => {
         }
     );
 
-    const transport = new SSEServerTransport('/api/mcp/message', event.node.res);
+    const protocol = getRequestProtocol(event);
+    const host = getRequestHost(event);
+    const messageEndpoint = `${protocol}://${host}/api/mcp/message`;
+    
+    console.log(`[MCP] Configuration du endpoint de message: ${messageEndpoint}`);
+    
+    // On utilise l'URL absolue pour être sûr que le pont MCP local ou distant la trouve sans ambiguïté.
+    const transport = new SSEServerTransport(messageEndpoint as any, event.node.res);
     await server.connect(transport);
 
     const sessionId = transport.sessionId;
+    console.log(`[MCP] Connexion SSE établie. SessionID: ${sessionId}`);
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).mcpTransports = (globalThis as any).mcpTransports || new Map();
@@ -227,6 +242,7 @@ export default defineEventHandler(async (event) => {
     (globalThis as any).mcpTransports.set(sessionId, transport);
     
     event.node.req.on('close', () => {
+        console.log(`[MCP] Connexion fermée pour la session: ${sessionId}`);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (globalThis as any).mcpTransports?.delete(sessionId);
     });
