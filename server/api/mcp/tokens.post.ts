@@ -23,7 +23,17 @@ export default defineEventHandler(async (event) => {
             }) as any);
         
         const config = useRuntimeConfig();
-        const mcpUrl = `${config.baseUrl}/api/mcp?token=${rawToken}`;
+        const protocol = getRequestProtocol(event);
+        const host = getRequestHost(event);
+        const requestBaseUrl = `${protocol}://${host}`;
+
+        // Utilise la baseUrl de la config si elle n'est pas le localhost par défaut,
+        // sinon utilise l'URL détectée de la requête (plus fiable en prod si BASE_URL non défini).
+        const finalBaseUrl = (config.baseUrl === 'http://localhost:3000' || !config.baseUrl) 
+            ? requestBaseUrl 
+            : config.baseUrl;
+
+        const mcpUrl = `${finalBaseUrl}/api/mcp?token=${rawToken}`;
         
         return {
             id,
