@@ -4,6 +4,9 @@ import { users } from '../../../../database/schema';
 import { db, fetchOne } from '../../../../utils/db';
 
 export default defineEventHandler(async (event) => {
+    // Rate limit: 10 resets per minute for the admin
+    await defineRateLimit({ max: 10, window: 60 })(event);
+
     const session = await requireUserSession(event);
     if (session.user.role !== 'admin') {
         throw createError({

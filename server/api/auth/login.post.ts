@@ -4,6 +4,9 @@ import { users } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
+    // Rate limit: 5 attempts per minute
+    await defineRateLimit({ max: 5, window: 60 })(event);
+
     const body = await readBody(event);
     const { email, password } = body;
 

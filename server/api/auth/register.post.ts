@@ -4,6 +4,9 @@ import { users, categories } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
+    // Rate limit: 3 registrations per hour per IP
+    await defineRateLimit({ max: 3, window: 3600 })(event);
+
     const body = await readBody(event);
     const { email, password, name } = body;
 
