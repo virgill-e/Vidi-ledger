@@ -16,9 +16,14 @@ logs
 # Misc
 .DS_Store
 .fleet
+*.db
+*.sqlite
+sqlite.db
+.env
 .idea
 
 # Local env files
 .env
 .env.*
 !.env.example
+sqlite.db

@@ -22,7 +22,8 @@ export default defineEventHandler(async (event) => {
             id: categories.id,
             name: categories.name,
             icon: categories.icon,
-            color: categories.color
+            color: categories.color,
+            maxBudget: (categories as any).maxBudget
         }
     } as any)
         .from(expenses as any)

@@ -123,17 +123,41 @@
           </div>
 
           <!-- Legend -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-5 grow w-full min-w-0 py-2">
-            <div v-for="cat in categoryComparison" :key="cat.name" class="flex items-center justify-between group cursor-default gap-4 border-b border-[#eff3f1]/50 pb-2">
-              <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" :style="{ backgroundColor: cat.color }">
-                  <span v-html="cat.icon" class="scale-75"></span>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 grow w-full min-w-0 py-2">
+            <div v-for="cat in categoryComparison" :key="cat.name" class="flex flex-col gap-3 group cursor-default border-b border-[#eff3f1]/50 pb-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0" :style="{ backgroundColor: cat.color }">
+                    <span v-html="cat.icon" class="scale-75"></span>
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-text-heading font-semibold text-[16px] group-hover:text-primary transition-colors whitespace-nowrap">{{ cat.name }}</span>
+                    <span v-if="cat.maxBudget" class="text-[11px] font-bold uppercase tracking-tight" :class="cat.isOverBudget ? 'text-red-500' : 'text-text-body/40'">
+                      Budget: {{ formatCurrency(cat.maxBudget) }}
+                    </span>
+                  </div>
                 </div>
-                <span class="text-text-heading font-semibold text-[16px] group-hover:text-primary transition-colors whitespace-nowrap">{{ cat.name }}</span>
+                <div class="flex flex-col items-end">
+                  <span class="text-text-heading font-bold text-[16px] tabular-nums">{{ formatCurrency(cat.amount) }}</span>
+                  <span class="text-text-body/40 text-[12px] font-medium">{{ cat.percentage }}% du total</span>
+                </div>
               </div>
-              <div class="flex items-center gap-4 shrink-0">
-                <span class="text-text-body/40 text-[14px] font-medium">{{ cat.percentage }}%</span>
-                <span class="text-text-heading font-bold text-[16px] text-right tabular-nums">{{ formatCurrency(cat.amount) }}</span>
+              
+              <!-- Budget Progress Bar -->
+              <div v-if="cat.maxBudget" class="flex flex-col gap-1.5">
+                <div class="h-2 w-full bg-[#e3ece8] rounded-full overflow-hidden">
+                  <div 
+                    class="h-full rounded-full transition-all duration-1000 ease-out" 
+                    :class="cat.isOverBudget ? 'bg-red-500' : 'bg-primary'"
+                    :style="{ width: cat.budgetProgress + '%', backgroundColor: cat.isOverBudget ? '' : cat.color }"
+                  ></div>
+                </div>
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                  <span :class="cat.isOverBudget ? 'text-red-500 animate-pulse' : 'text-text-body/40'">
+                    {{ cat.isOverBudget ? 'Budget Dépassé !' : 'Utilisation du budget' }}
+                  </span>
+                  <span :class="cat.isOverBudget ? 'text-red-500' : 'text-text-body/60'">{{ cat.budgetProgress }}%</span>
+                </div>
               </div>
             </div>
             <div v-if="categoryComparison.length === 0" class="col-span-full py-10 text-center text-text-body/40 italic">
@@ -232,6 +256,7 @@ interface Category {
   name: string;
   color: string;
   icon: string;
+  maxBudget?: number;
 }
 
 interface Expense {
@@ -410,7 +435,7 @@ const dailyAverage = computed(() => {
 });
 
 const categoryComparison = computed(() => {
-  const stats: Record<number, { name: string, amount: number, color: string, icon: string }> = {};
+  const stats: Record<number, { name: string, amount: number, color: string, icon: string, maxBudget?: number }> = {};
   filteredTransactions.value.forEach(tx => {
     if (!tx.category || !tx.category.id) return;
     const catId = tx.category.id;
@@ -419,7 +444,8 @@ const categoryComparison = computed(() => {
         name: tx.category.name, 
         amount: 0, 
         color: tx.category.color,
-        icon: tx.category.icon
+        icon: tx.category.icon,
+        maxBudget: tx.category.maxBudget
       };
     }
     const s = stats[catId];
@@ -428,10 +454,15 @@ const categoryComparison = computed(() => {
   
   const total = currentTotalValue.value || 1;
   return Object.values(stats)
-    .map(s => ({
-      ...s,
-      percentage: Math.round((s.amount / total) * 100)
-    }))
+    .map(s => {
+      const budgetProgress = s.maxBudget ? (s.amount / s.maxBudget) * 100 : null;
+      return {
+        ...s,
+        percentage: Math.round((s.amount / total) * 100),
+        budgetProgress: budgetProgress !== null ? Math.min(Math.round(budgetProgress), 100) : null,
+        isOverBudget: s.maxBudget ? s.amount > s.maxBudget : false
+      };
+    })
     .sort((a, b) => b.amount - a.amount);
 });
 

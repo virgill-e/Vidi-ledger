@@ -216,7 +216,12 @@ const currentCategories = computed(() => {
   const stats: Record<number, { name: string, amount: number, color: string }> = {};
   filteredTransactions.value.forEach(tx => {
     if (!stats[tx.category.id]) {
-      stats[tx.category.id] = { name: tx.category.name, amount: 0, color: tx.category.color };
+      stats[tx.category.id] = { 
+        name: tx.category.name, 
+        amount: 0, 
+        color: tx.category.color,
+        maxBudget: tx.category.maxBudget
+      };
     }
     stats[tx.category.id].amount += tx.amount;
   });

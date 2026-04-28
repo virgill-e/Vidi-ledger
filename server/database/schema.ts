@@ -56,6 +56,7 @@ export const categories = table('categories', {
     name: text('name').notNull(),
     icon: text('icon').notNull(),
     color: text('color').notNull(),
+    maxBudget: int('max_budget'),
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
 });
 

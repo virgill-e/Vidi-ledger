@@ -266,6 +266,22 @@
             </div>
           </div>
 
+          <!-- Budget Max -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-bold text-text-body/60 ml-1">Budget Max (optionnel)</label>
+            <div class="relative group">
+              <input 
+                type="number" 
+                v-model="newCat.maxBudget" 
+                placeholder="Ex: 500" 
+                class="w-full bg-[#f8faf9] rounded-xl px-4 py-3 outline-none border border-transparent focus:border-primary/30 font-medium" 
+                @keydown.enter.prevent.stop="handleSaveCategory"
+              />
+              <span class="absolute right-4 top-1/2 -translate-y-1/2 text-text-body/40 font-bold text-sm">€ / mois</span>
+            </div>
+            <p class="text-[10px] text-text-body/40 ml-1 italic">Laissez vide pour aucune limite.</p>
+          </div>
+
           <!-- Actions -->
           <div class="flex gap-3 mt-4">
             <button type="button" @click="showAddCategory = false" class="flex-1 bg-gray-100 py-4 rounded-xl font-bold text-text-body hover:bg-gray-200 transition-colors">Annuler</button>
@@ -355,7 +371,8 @@ const form = reactive({
 const newCat = reactive({
   name: '',
   color: presetColors[0],
-  icon: presetIcons[0].svg
+  icon: presetIcons[0].svg,
+  maxBudget: undefined as number | undefined
 });
 
 const fetchCategories = async () => {
@@ -392,6 +409,7 @@ const openAddCategory = () => {
   newCat.name = '';
   newCat.color = presetColors[0];
   newCat.icon = presetIcons[0].svg;
+  newCat.maxBudget = undefined;
   showAddCategory.value = true;
 };
 
@@ -401,6 +419,7 @@ const openEditCategory = (cat: any) => {
   newCat.name = cat.name;
   newCat.color = cat.color;
   newCat.icon = cat.icon;
+  newCat.maxBudget = cat.maxBudget ? cat.maxBudget / 100 : undefined;
   showAddCategory.value = true;
 };
 

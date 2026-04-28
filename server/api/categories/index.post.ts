@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event);
-    const { name, icon, color } = body;
+    const { name, icon, color, maxBudget } = body;
 
     if (!name || !icon || !color) {
         throw createError({
@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
         name,
         icon,
         color,
+        maxBudget: maxBudget ? Math.round(Number(maxBudget) * 100) : null,
     }).returning();
 
     return newCategory;
