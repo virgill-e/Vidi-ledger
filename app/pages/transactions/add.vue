@@ -332,15 +332,17 @@ const filteredMerchants = computed(() => {
     .slice(0, 5);
 });
 
-const selectMerchant = (merchant: string) => {
+const selectMerchant = async (merchant: string) => {
   form.merchant = merchant;
   showSuggestions.value = false;
+  await checkLastCategory(merchant);
 };
 
 const handleBlur = () => {
   // Delay to allow mousedown to trigger on suggestions
   setTimeout(() => {
     showSuggestions.value = false;
+    checkLastCategory(form.merchant);
   }, 200);
 };
 
@@ -374,6 +376,20 @@ const newCat = reactive({
   icon: presetIcons[0].svg,
   maxBudget: undefined as number | undefined
 });
+
+const checkLastCategory = async (merchant: string) => {
+  if (!merchant) return;
+  try {
+    const data = await $fetch<{ categoryId: number }>('/api/expenses/last-category', {
+      params: { merchant }
+    });
+    if (data && data.categoryId) {
+      form.categoryId = data.categoryId;
+    }
+  } catch (err) {
+    console.error('Failed to fetch last category', err);
+  }
+};
 
 const fetchCategories = async () => {
   try {
