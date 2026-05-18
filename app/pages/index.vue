@@ -13,20 +13,70 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
               <h2 class="text-text-heading text-[22px] font-medium">Total Dépenses</h2>
               
-              <!-- Time Filter Toggle -->
-              <div class="flex items-center bg-[#f0f4f2] p-1.5 rounded-2xl w-fit">
-                <button @click="timeFilter = 'week'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
-                  Semaine
-                </button>
-                <button @click="timeFilter = 'month'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
-                  Mois
-                </button>
-                <button @click="timeFilter = 'year'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
-                  Année
-                </button>
-                <button @click="timeFilter = 'all'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
-                  Tout
-                </button>
+              <div class="flex items-center gap-4 justify-end sm:justify-start">
+                
+                <!-- Time Filter Toggle -->
+                <div class="flex items-center bg-[#f0f4f2] p-1.5 rounded-2xl w-fit">
+                  <button @click="timeFilter = 'week'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                    Semaine
+                  </button>
+                  <button @click="timeFilter = 'month'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                    Mois
+                  </button>
+                  <button @click="timeFilter = 'year'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                    Année
+                  </button>
+                  <button @click="timeFilter = 'all'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                    Tout
+                  </button>
+                </div>
+
+                <!-- Export Dropdown -->
+                <div class="relative z-50">
+                  <button @click="isExportMenuOpen = !isExportMenuOpen" 
+                          class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white border border-[#eff3f1] shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-text-body/50 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all group"
+                          :class="isExportMenuOpen ? 'border-primary/20 bg-primary/5 text-primary' : ''"
+                          title="Exporter les données">
+                    <svg class="w-5 h-5 transition-transform group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                  </button>
+                  
+                  <div v-if="isExportMenuOpen" 
+                       class="absolute right-0 mt-3 w-56 bg-white rounded-[24px] shadow-[0_20px_60px_rgb(0,0,0,0.08)] border border-[#eff3f1] p-2.5 flex flex-col gap-1 origin-top-right animate-in fade-in slide-in-from-top-2 duration-200">
+                    <!-- Invisible overlay to detect clicks outside -->
+                    <div class="fixed inset-0 z-[-1]" @click="isExportMenuOpen = false"></div>
+                    
+                    <div class="px-3 py-1.5 text-[11px] font-bold text-text-body/40 uppercase tracking-widest">
+                      Exporter la période
+                    </div>
+                    
+                    <button @click="handleExport('pdf'); isExportMenuOpen = false" class="w-full text-left px-2 py-2 rounded-[16px] text-[14px] font-medium text-text-heading hover:bg-[#f0f4f2] transition-colors flex items-center gap-3 group">
+                      <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="font-semibold">Format PDF</div>
+                        <div class="text-[11px] text-text-body/50 font-normal">Rapport mis en page</div>
+                      </div>
+                    </button>
+                    
+                    <button @click="handleExport('csv'); isExportMenuOpen = false" class="w-full text-left px-2 py-2 rounded-[16px] text-[14px] font-medium text-text-heading hover:bg-[#f0f4f2] transition-colors flex items-center gap-3 group">
+                      <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div class="font-semibold">Format CSV</div>
+                        <div class="text-[11px] text-text-body/50 font-normal">Données brutes (Excel)</div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -146,6 +196,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useFilterTime, type TimeFilter } from '~/composables/useFilters';
+import { exportToCSV, exportToPDF } from '~/utils/exportData';
 
 definePageMeta({
   middleware: 'auth'
@@ -153,6 +204,9 @@ definePageMeta({
 
 // Time Filter State
 const timeFilter = useFilterTime('main', 'month');
+
+// Export Menu State
+const isExportMenuOpen = ref(false);
 
 // Mapping filter to labels
 const timeFilterLabel = computed(() => {
@@ -211,6 +265,28 @@ const currentTotalValue = computed(() => {
 });
 
 const currentTotal = computed(() => formatCurrency(currentTotalValue.value));
+
+const handleExport = (format: 'csv' | 'pdf') => {
+  const headers = ['Date', 'Marchand', 'Catégorie', 'Montant', 'Note'];
+  const data = filteredTransactions.value
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .map(tx => [
+      new Date(tx.date).toLocaleDateString('fr-FR'),
+      tx.merchant,
+      tx.category.name,
+      formatCurrency(tx.amount).replace('€', '').trim(),
+      tx.note || ''
+    ]);
+
+  const title = `Rapport de dépenses - ${timeFilterLabel.value}`;
+  const filename = `depenses_${timeFilter.value}_${new Date().toISOString().split('T')[0]}`;
+
+  if (format === 'csv') {
+    exportToCSV(filename, headers, data);
+  } else {
+    exportToPDF(title, filename, headers, data);
+  }
+};
 
 const currentCategories = computed(() => {
   const stats: Record<number, { name: string, amount: number, color: string }> = {};
