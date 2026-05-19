@@ -455,12 +455,25 @@ const categoryComparison = computed(() => {
   const total = currentTotalValue.value || 1;
   return Object.values(stats)
     .map(s => {
-      const budgetProgress = s.maxBudget ? (s.amount / s.maxBudget) * 100 : null;
+      let adjustedBudget = s.maxBudget;
+      
+      if (adjustedBudget) {
+        if (timeFilter.value === 'week') {
+          adjustedBudget = Math.round(adjustedBudget / 4);
+        } else if (timeFilter.value === 'year') {
+          adjustedBudget = adjustedBudget * 12;
+        } else if (timeFilter.value === 'all') {
+          adjustedBudget = undefined;
+        }
+      }
+      
+      const budgetProgress = adjustedBudget ? (s.amount / adjustedBudget) * 100 : null;
       return {
         ...s,
+        maxBudget: adjustedBudget,
         percentage: Math.round((s.amount / total) * 100),
         budgetProgress: budgetProgress !== null ? Math.min(Math.round(budgetProgress), 100) : null,
-        isOverBudget: s.maxBudget ? s.amount > s.maxBudget : false
+        isOverBudget: adjustedBudget ? s.amount > adjustedBudget : false
       };
     })
     .sort((a, b) => b.amount - a.amount);
