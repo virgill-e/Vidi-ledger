@@ -2,6 +2,8 @@
 
 Vidi Ledger est une application de gestion de dépenses.
 
+![Vidi Ledger Mockup](mockup-vidiledger.webp)
+
 ## 🚀 Technologies utilisées
 
 - **Framework** : [Nuxt 4](https://nuxt.com/) (Vue.js 3)
