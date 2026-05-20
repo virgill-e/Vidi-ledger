@@ -41,12 +41,20 @@
           >
             Vente
           </button>
+          <button 
+            type="button"
+            @click="form.type = 'dividend'"
+            :class="['px-8 py-4 rounded-[22px] font-bold text-[16px] transition-all', form.type === 'dividend' ? 'bg-[#3498db] text-white shadow-lg shadow-blue-500/20 scale-105' : 'bg-[#e8f4fc] text-text-body/60 hover:bg-[#d4ebf8]']"
+          >
+            Dividende
+          </button>
         </div>
 
         <!-- Amount Input Group -->
         <div class="flex flex-col items-center justify-center py-10 bg-bg-base/50 rounded-[32px] border border-[#eff3f1] mb-4 relative overflow-hidden">
           <div v-if="form.type === 'sell'" class="absolute inset-0 bg-red-500/5 pointer-events-none"></div>
-          <span class="text-text-body/40 text-sm font-bold uppercase tracking-widest mb-4 z-10 relative">Montant total</span>
+          <div v-else-if="form.type === 'dividend'" class="absolute inset-0 bg-blue-500/5 pointer-events-none"></div>
+          <span class="text-text-body/40 text-sm font-bold uppercase tracking-widest mb-4 z-10 relative">{{ form.type === 'dividend' ? 'Montant du dividende' : 'Montant total' }}</span>
           <div class="relative flex items-center z-10">
             <input 
               type="number" 
@@ -103,7 +111,7 @@
           </div>
 
           <!-- Quantity -->
-          <div class="flex flex-col gap-3 relative">
+          <div v-if="form.type !== 'dividend'" class="flex flex-col gap-3 relative">
             <label class="text-text-heading font-bold text-[15px] ml-2">Quantité</label>
             <div class="relative group">
               <input 
@@ -165,7 +173,9 @@
           :disabled="isSubmitting"
           :class="[
             'mt-4 w-full text-white py-5 rounded-[24px] text-lg font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:translate-y-0',
-            form.type === 'buy' ? 'bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1' : 'bg-[#e74c3c] shadow-xl shadow-red-500/20 hover:shadow-red-500/40 hover:-translate-y-1'
+            form.type === 'buy' ? 'bg-primary shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1' : 
+            form.type === 'sell' ? 'bg-[#e74c3c] shadow-xl shadow-red-500/20 hover:shadow-red-500/40 hover:-translate-y-1' :
+            'bg-[#3498db] shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-1'
           ]"
         >
           <svg v-if="isSubmitting" class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -214,7 +224,7 @@ const originalQuantity = ref(0);
 const originalAsset = ref('');
 
 const form = reactive({
-  type: 'buy' as 'buy' | 'sell',
+  type: 'buy' as 'buy' | 'sell' | 'dividend',
   amount: undefined as number | undefined,
   quantity: undefined as number | undefined,
   asset: '',
@@ -329,14 +339,16 @@ onMounted(() => {
 });
 
 const handleSubmit = async () => {
-  if (isSubmitting.value || form.amount === undefined || form.quantity === undefined || !form.asset) return;
-  if (form.type === 'sell' && maxAllowedForSell.value !== null && form.quantity > maxAllowedForSell.value) return;
+  if (isSubmitting.value || form.amount === undefined || !form.asset) return;
+  if (form.type !== 'dividend' && form.quantity === undefined) return;
+  if (form.type === 'sell' && maxAllowedForSell.value !== null && form.quantity !== undefined && form.quantity > maxAllowedForSell.value) return;
 
   isSubmitting.value = true;
   
   try {
     const payload = {
       ...form,
+      quantity: form.type === 'dividend' ? (form.quantity !== undefined && form.quantity !== null && form.quantity !== '' ? Number(form.quantity) : 0) : form.quantity,
       amount: Math.round(form.amount * 100), // convert to cents
       asset: form.asset.toUpperCase()
     };

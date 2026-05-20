@@ -190,27 +190,31 @@
             <div class="flex flex-col gap-4 md:overflow-y-auto pr-2 custom-scrollbar grow pb-4">
               <div v-for="(tx, index) in recentTransactions" :key="index" class="flex items-center justify-between group p-3 -mx-2 rounded-2xl hover:bg-input-bg transition-colors relative z-0">
                <div class="flex items-center gap-4">
-                 <div class="w-12 h-12 rounded-[16px] flex items-center justify-center shadow-sm text-white shrink-0" 
-                      :class="tx.type === 'buy' ? 'bg-[#294b3c]' : 'bg-[#e74c3c]'">
-                   <svg v-if="tx.type === 'buy'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                   </svg>
-                   <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                   </svg>
-                 </div>
+                  <div class="w-12 h-12 rounded-[16px] flex items-center justify-center shadow-sm text-white shrink-0" 
+                       :class="tx.type === 'buy' ? 'bg-[#294b3c]' : tx.type === 'sell' ? 'bg-[#e74c3c]' : 'bg-[#3498db]'">
+                    <svg v-if="tx.type === 'buy'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    <svg v-else-if="tx.type === 'sell'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                    <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
                  <div class="flex flex-col min-w-0">
                    <h3 class="text-[16px] sm:text-[17px] font-semibold text-text-heading leading-tight truncate">{{ tx.asset }}</h3>
-                   <span class="text-[13px] text-text-body/60 font-medium whitespace-nowrap">{{ tx.formattedDate }} • {{ tx.type === 'buy' ? 'Achat' : 'Vente' }} de {{ tx.quantity }}</span>
+                   <span class="text-[13px] text-text-body/60 font-medium whitespace-nowrap">{{ tx.formattedDate }} • {{ tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende' }}{{ tx.type === 'dividend' && tx.quantity === 0 ? '' : ' de ' + tx.quantity }}</span>
                    <span v-if="tx.note" class="text-[12px] text-text-body/40 italic mt-0.5 line-clamp-1 max-w-[150px]">{{ tx.note }}</span>
                  </div>
                </div>
                 <div class="flex items-center gap-3 shrink-0">
                   <div class="flex flex-col items-end">
-                    <span class="text-[16px] sm:text-[17px] font-bold" :class="tx.type === 'buy' ? 'text-primary' : 'text-[#e74c3c]'">
-                      {{ tx.type === 'buy' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
+                    <span class="text-[16px] sm:text-[17px] font-bold" :class="tx.type === 'buy' ? 'text-primary' : tx.type === 'sell' ? 'text-[#e74c3c]' : 'text-[#3498db]'">
+                      {{ tx.type === 'buy' || tx.type === 'dividend' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                     </span>
-                    <span class="text-[10px] text-text-body/40 font-bold uppercase tracking-tighter">{{ formatCurrency(tx.amount / tx.quantity, true) }} / unit</span>
+                    <span v-if="tx.type !== 'dividend'" class="text-[10px] text-text-body/40 font-bold uppercase tracking-tighter">{{ formatCurrency(tx.amount / tx.quantity, true) }} / unit</span>
+                    <span v-else class="text-[10px] text-text-body/40 font-bold uppercase tracking-tighter">{{ tx.quantity > 0 ? formatCurrency(tx.amount / tx.quantity, true) + ' / unit' : 'Dividende unique' }}</span>
                   </div>
                 </div>
              </div>
@@ -337,7 +341,7 @@ const recentTransactions = computed(() => {
 // Total Invested (Buys - Sells)
 const currentTotalValue = computed(() => {
   return filteredTransactions.value.reduce((acc, tx) => {
-    return acc + (tx.type === 'buy' ? tx.amount : -tx.amount);
+    return acc + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0);
   }, 0);
 });
 
@@ -350,7 +354,7 @@ const handleExport = (format: 'csv' | 'pdf') => {
     .map(tx => [
       new Date(tx.date).toLocaleDateString('fr-FR'),
       tx.asset,
-      tx.type === 'buy' ? 'Achat' : 'Vente',
+      tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende',
       tx.quantity.toString(),
       formatCurrency(tx.amount).replace('€', '').trim(),
       tx.note || ''
@@ -389,7 +393,7 @@ const currentAssets = computed(() => {
         runningQty += tx.quantity;
         netInvested += tx.amount;
         runningCostBasis += tx.amount;
-      } else {
+      } else if (tx.type === 'sell') {
         // Calculate realized PnL based on previous weighted average before this sale
         const avgBeforeSale = runningQty > 0 ? (runningCostBasis / runningQty) : 0;
         const sellQtyMatched = Math.min(tx.quantity, runningQty);
@@ -398,6 +402,9 @@ const currentAssets = computed(() => {
         runningQty -= tx.quantity;
         netInvested -= tx.amount;
         runningCostBasis -= avgBeforeSale * sellQtyMatched;
+      } else if (tx.type === 'dividend') {
+        // Dividends increase realized profit (realizedPnL) but do NOT affect netInvested, runningQty, or runningCostBasis
+        realizedPnL += tx.amount;
       }
     });
 
@@ -440,7 +447,7 @@ const chartData = computed(() => {
       let day = new Date(tx.date).getDay();
       day = day === 0 ? 6 : day - 1;
       const label = labels[day] as string;
-      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : -tx.amount);
+      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0);
     });
   } else if (timeFilter.value === 'month') {
     labels.push('Sem 1', 'Sem 2', 'Sem 3', 'Sem 4+');
@@ -450,7 +457,7 @@ const chartData = computed(() => {
       let week = Math.floor((date - 1) / 7);
       if (week > 3) week = 3;
       const label = labels[week] as string;
-      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : -tx.amount);
+      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0);
     });
   } else if (timeFilter.value === 'year') {
     const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
@@ -459,7 +466,7 @@ const chartData = computed(() => {
     filteredTransactions.value.forEach(tx => {
       const month = new Date(tx.date).getMonth();
       const label = labels[month] as string;
-      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : -tx.amount);
+      buckets[label] = (buckets[label] || 0) + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0);
     });
   } else if (timeFilter.value === 'all') {
     if (filteredTransactions.value.length === 0) {
@@ -475,7 +482,7 @@ const chartData = computed(() => {
       }
       filteredTransactions.value.forEach(tx => {
         const year = new Date(tx.date).getFullYear().toString();
-        buckets[year] = (buckets[year] || 0) + (tx.type === 'buy' ? tx.amount : -tx.amount);
+        buckets[year] = (buckets[year] || 0) + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0);
       });
     }
   }

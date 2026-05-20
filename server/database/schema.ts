@@ -74,7 +74,7 @@ export const expenses = table('expenses', {
 export const investments = table('investments', {
     id: idColumn('id'),
     userId: int('user_id').notNull().references(() => users.id),
-    type: text('type').notNull(), // 'buy' or 'sell'
+    type: text('type').notNull(), // 'buy', 'sell' or 'dividend'
     asset: text('asset').notNull(),
     amount: int('amount').notNull(), // In cents
     quantity: real('quantity').notNull(), // Decimal values

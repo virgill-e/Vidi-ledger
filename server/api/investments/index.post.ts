@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
     const { type, asset, amount, quantity, date, note } = body;
 
     // Validate
-    if (!type || (type !== 'buy' && type !== 'sell')) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid type (buy or sell)' });
+    if (!type || (type !== 'buy' && type !== 'sell' && type !== 'dividend')) {
+        throw createError({ statusCode: 400, statusMessage: 'Invalid type (buy, sell or dividend)' });
     }
     if (!asset || typeof asset !== 'string') {
         throw createError({ statusCode: 400, statusMessage: 'Asset is required' });
@@ -21,9 +21,17 @@ export default defineEventHandler(async (event) => {
     if (amount === undefined || isNaN(Number(amount))) {
         throw createError({ statusCode: 400, statusMessage: 'Amount is required' });
     }
-    if (quantity === undefined || isNaN(Number(quantity))) {
-        throw createError({ statusCode: 400, statusMessage: 'Quantity is required' });
+    
+    let parsedQuantity = 0;
+    if (type === 'dividend') {
+        parsedQuantity = (quantity !== undefined && quantity !== null && quantity !== '') ? Number(quantity) : 0;
+    } else {
+        if (quantity === undefined || quantity === null || quantity === '' || isNaN(Number(quantity))) {
+            throw createError({ statusCode: 400, statusMessage: 'Quantity is required' });
+        }
+        parsedQuantity = Number(quantity);
     }
+
     if (!date) {
         throw createError({ statusCode: 400, statusMessage: 'Date is required' });
     }
@@ -33,7 +41,7 @@ export default defineEventHandler(async (event) => {
         type,
         asset,
         amount: Number(amount),
-        quantity: Number(quantity),
+        quantity: parsedQuantity,
         date: new Date(date),
         note: note || null,
         createdAt: new Date()

@@ -35,12 +35,12 @@
             <!-- Buy/Sell Toggle -->
             <div class="flex items-center gap-2 bg-bg-base p-1.5 rounded-[20px] w-fit">
               <button 
-                v-for="filter in ['all', 'buy', 'sell']" 
+                v-for="filter in ['all', 'buy', 'sell', 'dividend']" 
                 :key="filter"
                 @click="typeFilter = filter"
                 :class="['px-5 py-2.5 rounded-[14px] text-sm font-bold transition-all', typeFilter === filter ? 'bg-white text-primary shadow-sm' : 'text-text-body/40 hover:text-text-body/60']"
               >
-                {{ filter === 'all' ? 'Tous' : filter === 'buy' ? 'Achats' : 'Ventes' }}
+                {{ filter === 'all' ? 'Tous' : filter === 'buy' ? 'Achats' : filter === 'sell' ? 'Ventes' : 'Dividendes' }}
               </button>
             </div>
 
@@ -99,8 +99,8 @@
                   {{ tx.asset }}
                 </td>
                 <td class="py-5">
-                  <span :class="['px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider', tx.type === 'buy' ? 'bg-primary/5 text-primary' : 'bg-red-500/5 text-red-500']">
-                    {{ tx.type === 'buy' ? 'Achat' : 'Vente' }}
+                  <span :class="['px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider', tx.type === 'buy' ? 'bg-primary/5 text-primary' : tx.type === 'sell' ? 'bg-red-500/5 text-red-500' : 'bg-blue-500/5 text-blue-500']">
+                    {{ tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende' }}
                   </span>
                 </td>
                 <td class="py-5 font-bold text-text-heading text-sm">
@@ -148,8 +148,8 @@
                 <span class="text-[11px] text-text-body/40 font-bold uppercase tracking-widest mb-1">{{ formatDate(tx.date) }}</span>
                 <span class="text-lg font-bold text-text-heading">{{ tx.asset }}</span>
               </div>
-              <span :class="['px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider', tx.type === 'buy' ? 'bg-primary/5 text-primary' : 'bg-red-500/5 text-red-500']">
-                {{ tx.type === 'buy' ? 'Achat' : 'Vente' }}
+              <span :class="['px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider', tx.type === 'buy' ? 'bg-primary/5 text-primary' : tx.type === 'sell' ? 'bg-red-500/5 text-red-500' : 'bg-blue-500/5 text-blue-500']">
+                {{ tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende' }}
               </span>
             </div>
             
@@ -256,6 +256,13 @@
               </div>
               <span class="font-bold text-text-heading">{{ sellCount }}</span>
             </div>
+            <div class="flex justify-between items-center bg-bg-base p-4 rounded-[20px]">
+              <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span class="text-sm font-bold text-text-body/60">Dividendes</span>
+              </div>
+              <span class="font-bold text-text-heading">{{ dividendCount }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -350,8 +357,9 @@ const totalPages = computed(() => Math.ceil(filteredInvestments.value.length / p
 
 const buyCount = computed(() => investments.value.filter(tx => tx.type === 'buy').length);
 const sellCount = computed(() => investments.value.filter(tx => tx.type === 'sell').length);
+const dividendCount = computed(() => investments.value.filter(tx => tx.type === 'dividend').length);
 const netTotalValue = computed(() => {
-  return investments.value.reduce((acc, tx) => acc + (tx.type === 'buy' ? tx.amount : -tx.amount), 0);
+  return investments.value.reduce((acc, tx) => acc + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0), 0);
 });
 
 const formatDate = (date: string) => {

@@ -19,12 +19,37 @@ export default defineEventHandler(async (event) => {
     const { type, asset, amount, quantity, date, note } = body;
 
     const updateData: any = {};
-    if (type) updateData.type = type;
-    if (asset) updateData.asset = asset;
-    if (amount !== undefined) updateData.amount = Number(amount);
-    if (quantity !== undefined) updateData.quantity = Number(quantity);
-    if (date) updateData.date = new Date(date);
-    if (note !== undefined) updateData.note = note;
+    if (type) {
+        if (type !== 'buy' && type !== 'sell' && type !== 'dividend') {
+            throw createError({ statusCode: 400, statusMessage: 'Invalid type (buy, sell or dividend)' });
+        }
+        updateData.type = type;
+    }
+    if (asset) {
+        if (typeof asset !== 'string' || !asset) {
+            throw createError({ statusCode: 400, statusMessage: 'Asset cannot be empty' });
+        }
+        updateData.asset = asset;
+    }
+    if (amount !== undefined) {
+        if (amount === null || isNaN(Number(amount))) {
+            throw createError({ statusCode: 400, statusMessage: 'Amount must be a number' });
+        }
+        updateData.amount = Number(amount);
+    }
+    if (quantity !== undefined) {
+        const qVal = (quantity === null || quantity === '') ? 0 : Number(quantity);
+        if (isNaN(qVal)) {
+            throw createError({ statusCode: 400, statusMessage: 'Quantity must be a number' });
+        }
+        updateData.quantity = qVal;
+    }
+    if (date) {
+        updateData.date = new Date(date);
+    }
+    if (note !== undefined) {
+        updateData.note = note || null;
+    }
 
     const updated = await fetchOne(
         db.update(investments as any)
