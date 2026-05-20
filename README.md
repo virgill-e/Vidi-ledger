@@ -1,6 +1,6 @@
 # 💰 Vidi Ledger
 
-Vidi Ledger est une application de gestion de dépenses.
+Vidi Ledger est une application de finances personnelles permettant de suivre ses dépenses quotidiennes et de gérer le suivi de ses investissements (achats, ventes et dividendes d'actifs).
 
 ![Vidi Ledger Mockup](mockup-vidiledger.webp)
 
