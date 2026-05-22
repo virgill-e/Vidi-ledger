@@ -25,8 +25,7 @@
           Track your expenses securely & achieve financial goals.
         </h1>
         <p class="text-primary-light/80 text-lg leading-relaxed font-light">
-          Join thousands of users who are already managing their money smarter and faster every single day.
-        </p>
+Your finances, clear and simple — finally.        </p>
       </div>
       
       <!-- Footer Info -->
