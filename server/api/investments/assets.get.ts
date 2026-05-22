@@ -42,6 +42,10 @@ export default defineEventHandler(async (event) => {
                     totalCost += tx.amount;
                     totalQty += tx.quantity;
                 } else if (tx.type === 'sell') {
+                    // Reduce cost basis by weighted average cost of sold shares
+                    const avgCostBeforeSale = totalQty > 0 ? (totalCost / totalQty) : 0;
+                    const soldQty = Math.min(tx.quantity, totalQty);
+                    totalCost -= avgCostBeforeSale * soldQty;
                     totalQty -= tx.quantity;
                 } else if (tx.type === 'dividend') {
                     totalDividends += tx.amount;

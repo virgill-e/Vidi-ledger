@@ -152,11 +152,18 @@
                   </div>
                 </div>
                 <div class="flex flex-col items-end">
-                  <span class="text-[11px] text-white/40 font-bold uppercase tracking-wider mb-1">Valeur Net</span>
-                  <span class="font-bold text-[18px] sm:text-[20px] tracking-wide" :class="asset.netInvested < 0 ? 'text-green-300' : 'text-white'">
-                    {{ formatCurrency(Math.abs(asset.netInvested)) }}
-                    <span class="text-[12px] align-top ml-0.5">{{ asset.netInvested < 0 ? 'PROFIT' : '' }}</span>
-                  </span>
+                  <span class="text-[11px] text-white/40 font-bold uppercase tracking-wider mb-1">{{ asset.quantity > 0 ? 'Valeur Net' : 'P&L Réalisé' }}</span>
+                  <template v-if="asset.quantity > 0">
+                    <span class="font-bold text-[18px] sm:text-[20px] tracking-wide text-white">
+                      {{ formatCurrency(asset.netInvested) }}
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span class="font-bold text-[18px] sm:text-[20px] tracking-wide" :class="asset.realizedPnL >= 0 ? 'text-green-300' : 'text-red-400'">
+                      {{ asset.realizedPnL >= 0 ? '+' : '' }}{{ formatCurrency(asset.realizedPnL) }}
+                      <span class="text-[12px] align-top ml-0.5">{{ asset.realizedPnL >= 0 ? 'PROFIT' : 'PERTE' }}</span>
+                    </span>
+                  </template>
                 </div>
               </div>
               <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1">
@@ -384,32 +391,35 @@ const currentAssets = computed(() => {
 
   const results = Array.from(assetsGroup.entries()).map(([assetName, txs]) => {
     let runningQty = 0;
-    let netInvested = 0; // buys - sells
     let realizedPnL = 0;
-    let runningCostBasis = 0; // for internal PnL tracking
+    let runningCostBasis = 0; // weighted average cost basis tracking
 
     txs.forEach(tx => {
       if (tx.type === 'buy') {
         runningQty += tx.quantity;
-        netInvested += tx.amount;
         runningCostBasis += tx.amount;
       } else if (tx.type === 'sell') {
-        // Calculate realized PnL based on previous weighted average before this sale
+        // Calculate realized PnL based on weighted average cost before this sale
         const avgBeforeSale = runningQty > 0 ? (runningCostBasis / runningQty) : 0;
         const sellQtyMatched = Math.min(tx.quantity, runningQty);
+        // PnL = sale proceeds - cost basis of sold shares
+        // Positive = profit, negative = loss
         realizedPnL += (tx.amount - (avgBeforeSale * sellQtyMatched));
         
         runningQty -= tx.quantity;
-        netInvested -= tx.amount;
         runningCostBasis -= avgBeforeSale * sellQtyMatched;
       } else if (tx.type === 'dividend') {
-        // Dividends increase realized profit (realizedPnL) but do NOT affect netInvested, runningQty, or runningCostBasis
+        // Dividends increase realized profit but do NOT affect runningQty or runningCostBasis
         realizedPnL += tx.amount;
       }
     });
 
-    // The "Average Price" requested (reflects impact of sales on net investment)
-    const avgPrice = runningQty > 0 ? (netInvested / runningQty) : 0;
+    // netInvested = remaining cost basis (what you still have invested in this asset)
+    // This is 0 when all shares are sold, regardless of profit or loss
+    const netInvested = runningCostBasis;
+
+    // Average Price = cost basis per remaining unit
+    const avgPrice = runningQty > 0 ? (runningCostBasis / runningQty) : 0;
 
     return {
       name: assetName,
