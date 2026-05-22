@@ -436,7 +436,7 @@ const currentAssets = computed(() => {
   return results.map(r => ({ 
     ...r, 
     portfolioPercentage: totalNet > 0 ? (Math.max(0, r.netInvested) / totalNet) * 100 : 0,
-    percentage: Math.max(5, Math.min(100, Math.round((Math.max(0, r.netInvested) / maxVal) * 100))) 
+    percentage: r.netInvested > 0 ? Math.max(5, Math.min(100, Math.round((r.netInvested / maxVal) * 100))) : 0 
   })).sort((a, b) => b.netInvested - a.netInvested);
 });
 
