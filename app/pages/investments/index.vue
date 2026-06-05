@@ -172,7 +172,7 @@
                 </div>
               </div>
                 <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1">
-                  <div class="h-full rounded-full transition-all duration-1000 ease-out bg-white/40 group-hover/asset:bg-white/80" :style="{ width: asset.percentage + '%' }"></div>
+                  <div class="h-full rounded-full transition-all duration-1000 ease-out bg-white/40 group-hover/asset:bg-white/80" :style="{ width: asset.portfolioPercentage + '%' }"></div>
                 </div>
               </NuxtLink>
             </div>
@@ -437,12 +437,9 @@ const currentAssets = computed(() => {
   }).filter(a => a.quantity > 0.00000001 || Math.abs(a.realizedPnL) > 0.00000001);
   
   const totalNet = results.reduce((acc, r) => acc + Math.max(0, r.netInvested), 0);
-  const maxVal = Math.max(...results.map(r => Math.max(0, r.netInvested)), 1);
-
   return results.map(r => ({ 
     ...r, 
-    portfolioPercentage: totalNet > 0 ? (Math.max(0, r.netInvested) / totalNet) * 100 : 0,
-    percentage: r.netInvested > 0 ? Math.max(5, Math.min(100, Math.round((r.netInvested / maxVal) * 100))) : 0 
+    portfolioPercentage: totalNet > 0 ? (Math.max(0, r.netInvested) / totalNet) * 100 : 0
   })).sort((a, b) => b.netInvested - a.netInvested);
 });
 
