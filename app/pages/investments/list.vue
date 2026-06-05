@@ -287,7 +287,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 definePageMeta({
   middleware: 'auth'
@@ -301,6 +301,7 @@ const page = ref(1);
 const perPage = 10;
 const showSuccess = ref(false);
 const successMessage = ref('');
+const route = useRoute();
 
 const filters = [
   { id: 'all', label: 'Tout' },
@@ -308,6 +309,17 @@ const filters = [
   { id: 'month', label: '30j' },
   { id: 'year', label: '12m' }
 ];
+
+watch(
+  () => route.query.asset,
+  (assetQuery) => {
+    if (typeof assetQuery === 'string') {
+      search.value = assetQuery;
+      page.value = 1;
+    }
+  },
+  { immediate: true }
+);
 
 const fetchInvestments = async () => {
   try {

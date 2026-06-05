@@ -137,6 +137,11 @@
           
           <div class="flex flex-col grow gap-6 relative z-10 md:overflow-y-auto pr-2 custom-scrollbar pt-1">
             <div v-for="(asset, index) in currentAssets" :key="index" class="group/asset">
+              <NuxtLink
+                :to="{ path: '/investments/list', query: { asset: asset.name } }"
+                class="block rounded-2xl -mx-2 px-2 py-1.5 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                :aria-label="`Voir l'historique de ${asset.name}`"
+              >
               <div class="flex justify-between items-start mb-2">
                 <div class="flex flex-col">
                   <div class="flex items-center gap-2">
@@ -166,9 +171,10 @@
                   </template>
                 </div>
               </div>
-              <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1">
-                <div class="h-full rounded-full transition-all duration-1000 ease-out bg-white/40 group-hover/asset:bg-white/80" :style="{ width: asset.percentage + '%' }"></div>
-              </div>
+                <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mt-1">
+                  <div class="h-full rounded-full transition-all duration-1000 ease-out bg-white/40 group-hover/asset:bg-white/80" :style="{ width: asset.percentage + '%' }"></div>
+                </div>
+              </NuxtLink>
             </div>
             <div v-if="currentAssets.length === 0" class="flex items-center justify-center h-full text-white/40 italic">
               Aucun actif en portefeuille
