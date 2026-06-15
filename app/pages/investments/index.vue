@@ -202,8 +202,8 @@
            <!-- List that scrolls if too many -->
             <div class="flex flex-col gap-4 md:overflow-y-auto pr-2 custom-scrollbar grow pb-4">
               <div v-for="(tx, index) in recentTransactions" :key="index" class="flex items-center justify-between group p-3 -mx-2 rounded-2xl hover:bg-input-bg transition-colors relative z-0">
-               <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 rounded-[16px] flex items-center justify-center shadow-sm text-white shrink-0" 
+               <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="w-12 h-12 rounded-[16px] flex items-center justify-center shadow-sm text-white shrink-0"
                        :class="tx.type === 'buy' ? 'bg-[#294b3c]' : tx.type === 'sell' ? 'bg-[#e74c3c]' : 'bg-[#3498db]'">
                     <svg v-if="tx.type === 'buy'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -215,15 +215,15 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                 <div class="flex flex-col min-w-0">
-                   <h3 class="text-[16px] sm:text-[17px] font-semibold text-text-heading leading-tight truncate">{{ tx.asset }}</h3>
-                   <span class="text-[13px] text-text-body/60 font-medium whitespace-nowrap">{{ tx.formattedDate }} • {{ tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende' }}{{ tx.type === 'dividend' && tx.quantity === 0 ? '' : ' de ' + tx.quantity }}</span>
-                   <span v-if="tx.note" class="text-[12px] text-text-body/40 italic mt-0.5 line-clamp-1 max-w-[150px]">{{ tx.note }}</span>
+                 <div class="flex flex-col min-w-0 flex-1">
+                   <h3 class="text-[15px] sm:text-[16px] font-semibold text-text-heading leading-tight truncate">{{ tx.asset }}</h3>
+                   <span class="text-[12px] text-text-body/60 font-medium truncate">{{ tx.formattedDate }} • {{ tx.type === 'buy' ? 'Achat' : tx.type === 'sell' ? 'Vente' : 'Dividende' }}{{ tx.type === 'dividend' && tx.quantity === 0 ? '' : ' de ' + tx.quantity }}</span>
+                   <span v-if="tx.note" class="text-[11px] text-text-body/40 italic mt-0.5 line-clamp-1 truncate">{{ tx.note }}</span>
                  </div>
                </div>
-                <div class="flex items-center gap-3 shrink-0">
+                <div class="flex items-center gap-3 shrink-0 pl-2">
                   <div class="flex flex-col items-end">
-                    <span class="text-[16px] sm:text-[17px] font-bold" :class="tx.type === 'buy' ? 'text-primary' : tx.type === 'sell' ? 'text-[#e74c3c]' : 'text-[#3498db]'">
+                    <span class="text-[15px] sm:text-[16px] font-bold whitespace-nowrap" :class="tx.type === 'buy' ? 'text-primary' : tx.type === 'sell' ? 'text-[#e74c3c]' : 'text-[#3498db]'">
                       {{ tx.type === 'buy' || tx.type === 'dividend' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                     </span>
                     <span v-if="tx.type !== 'dividend'" class="text-[10px] text-text-body/40 font-bold uppercase tracking-tighter">{{ formatCurrency(tx.amount / tx.quantity, true) }} / unit</span>
