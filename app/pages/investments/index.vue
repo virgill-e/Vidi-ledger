@@ -138,9 +138,9 @@
           <div class="flex flex-col grow gap-6 relative z-10 md:overflow-y-auto pr-2 custom-scrollbar pt-1">
             <div v-for="(asset, index) in currentAssets" :key="index" class="group/asset">
               <NuxtLink
-                :to="{ path: '/investments/list', query: { asset: asset.name } }"
+                :to="`/investments/asset/${encodeURIComponent(asset.name)}`"
                 class="block rounded-2xl -mx-2 px-2 py-1.5 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-                :aria-label="`Voir l'historique de ${asset.name}`"
+                :aria-label="`Voir le détail de ${asset.name}`"
               >
               <div class="flex justify-between items-start mb-2">
                 <div class="flex flex-col">

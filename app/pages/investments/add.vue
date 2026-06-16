@@ -273,8 +273,13 @@ const fetchAssets = async () => {
   }
 };
 
+const route = useRoute();
+
 onMounted(() => {
   fetchAssets();
+  if (typeof route.query.asset === 'string' && route.query.asset) {
+    form.asset = route.query.asset;
+  }
 });
 
 const handleSubmit = async () => {
