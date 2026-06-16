@@ -13,28 +13,28 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
               <h2 class="text-text-heading text-[22px] font-medium">Total Dépenses</h2>
               
-              <div class="flex items-center gap-4 justify-end sm:justify-start">
-                
+              <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end sm:justify-start">
+
                 <!-- Time Filter Toggle -->
-                <div class="flex items-center bg-[#f0f4f2] p-1.5 rounded-2xl w-fit">
-                  <button @click="timeFilter = 'week'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                <div class="flex items-center bg-[#f0f4f2] p-1 sm:p-1.5 rounded-2xl flex-1 sm:flex-none sm:w-fit min-w-0">
+                  <button @click="timeFilter = 'week'" :class="['flex-1 sm:flex-none px-2 sm:px-4 py-1.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Semaine
                   </button>
-                  <button @click="timeFilter = 'month'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'month'" :class="['flex-1 sm:flex-none px-2 sm:px-4 py-1.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Mois
                   </button>
-                  <button @click="timeFilter = 'year'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'year'" :class="['flex-1 sm:flex-none px-2 sm:px-4 py-1.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Année
                   </button>
-                  <button @click="timeFilter = 'all'" :class="['px-4 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'all'" :class="['flex-1 sm:flex-none px-2 sm:px-4 py-1.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Tout
                   </button>
                 </div>
 
                 <!-- Export Dropdown -->
                 <div class="relative z-50">
-                  <button @click="isExportMenuOpen = !isExportMenuOpen" 
-                          class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white border border-[#eff3f1] shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-text-body/50 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all group"
+                  <button @click="isExportMenuOpen = !isExportMenuOpen"
+                          class="w-10 h-10 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center rounded-2xl bg-white border border-[#eff3f1] shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-text-body/50 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all group"
                           :class="isExportMenuOpen ? 'border-primary/20 bg-primary/5 text-primary' : ''"
                           title="Exporter les données">
                     <svg class="w-5 h-5 transition-transform group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
