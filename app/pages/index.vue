@@ -72,7 +72,7 @@
     </div>
 
     <!-- Monthly Recap (sum of both per month) + Recent activity -->
-    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 min-w-0">
+    <div class="flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8 min-w-0">
 
       <!-- Monthly comparison chart -->
       <div class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] flex flex-col w-full lg:w-[62%] transition-transform hover:-translate-y-1 duration-300">
@@ -94,21 +94,16 @@
         </div>
 
         <!-- Bars -->
-        <div class="flex-grow overflow-x-auto custom-scrollbar-h">
-          <div class="flex items-end justify-between gap-2 sm:gap-3 min-w-[560px]">
-            <div v-for="(m, i) in monthlyData" :key="i" class="flex flex-col items-center gap-2 flex-1 group/bar">
-              <div class="flex items-end justify-center gap-1.5 w-full h-[200px] relative">
-                <!-- Tooltip -->
-                <div class="absolute -top-1 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover/bar:opacity-100 transition-opacity bg-text-heading text-white text-[11px] font-semibold rounded-xl px-3 py-2 whitespace-nowrap pointer-events-none z-20 shadow-lg">
-                  <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#e74c3c]"></span>{{ formatCompact(m.expenses) }}</div>
-                  <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-primary"></span>{{ formatCompact(m.invested) }}</div>
-                  <div class="border-t border-white/20 mt-1 pt-1">Total {{ formatCompact(m.total) }}</div>
-                </div>
-                <div class="w-3 sm:w-3.5 rounded-t-md bg-[#e74c3c] transition-all duration-700 ease-out" :style="{ height: barHeight(m.expenses) }"></div>
-                <div class="w-3 sm:w-3.5 rounded-t-md bg-primary transition-all duration-700 ease-out" :style="{ height: barHeight(m.invested) }"></div>
-              </div>
-              <span :class="['text-[11px] font-medium', m.isCurrent ? 'text-primary font-bold' : 'text-text-body/50']">{{ m.label }}</span>
+        <div class="flex items-end justify-between gap-1 sm:gap-3">
+          <div v-for="(m, i) in monthlyData" :key="i" class="flex flex-col items-center gap-2 flex-1 min-w-0 group/bar">
+            <div class="flex items-end justify-center gap-1 sm:gap-1.5 w-full h-[200px]">
+              <div class="w-2.5 sm:w-3.5 rounded-t-md bg-[#e74c3c] transition-all duration-700 ease-out group-hover/bar:opacity-80" :style="{ height: barHeight(m.expenses) }"
+                   :title="`Dépenses ${m.label} : ${formatCompact(m.expenses)}`"></div>
+              <div class="w-2.5 sm:w-3.5 rounded-t-md bg-primary transition-all duration-700 ease-out group-hover/bar:opacity-80" :style="{ height: barHeight(m.invested) }"
+                   :title="`Investi ${m.label} : ${formatCompact(m.invested)}`"></div>
             </div>
+            <span :class="['text-[11px] font-medium', m.isCurrent ? 'text-primary font-bold' : 'text-text-body/50']">{{ m.label }}</span>
+            <span class="text-[10px] sm:text-[11px] font-bold tabular-nums" :class="m.isCurrent ? 'text-primary' : 'text-text-heading/70'">{{ compactNumber(m.total) }}</span>
           </div>
         </div>
       </div>
@@ -198,6 +193,11 @@ const investmentsList = ref<any[]>([]);
 
 const formatCompact = (amountInCents: number) => {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amountInCents / 100);
+};
+
+// Short currency for tight spaces (e.g. "1,2 k €")
+const compactNumber = (amountInCents: number) => {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 1 }).format(amountInCents / 100);
 };
 
 const fetchData = async () => {
