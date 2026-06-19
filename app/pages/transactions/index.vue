@@ -2,7 +2,7 @@
   <div class="flex flex-col gap-6 lg:gap-10 min-w-0 mx-auto max-w-[1200px] w-full pb-20">
 
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div>
         <h1 class="text-3xl font-bold text-text-heading tracking-tight mb-2">Dépenses</h1>
         <p class="text-text-body/60 font-medium">Vue d'ensemble et historique de toutes vos transactions.</p>
