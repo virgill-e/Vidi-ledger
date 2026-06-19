@@ -3,15 +3,7 @@ import { expenses, categories } from '../../database/schema';
 import { db, fetchAll } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await getUserSession(event);
-    if (!session.user) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-        });
-    }
-
-    const user = session.user as { id: number };
+    const user = await requireAuth(event);
     const userExpenses = await fetchAll(db.select({
         id: expenses.id,
         amount: expenses.amount,

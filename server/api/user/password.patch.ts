@@ -4,17 +4,9 @@ import { users } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await getUserSession(event);
-    if (!session.user) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-        });
-    }
+    const userSession = await requireAuth(event);
 
     const { currentPassword, newPassword } = await validateBody(event, passwordUpdateSchema);
-
-    const userSession = session.user as { id: number; email: string; name: string };
 
     // Use any to avoid dialect mismatch issues in TS
     const dbAny = db as any;

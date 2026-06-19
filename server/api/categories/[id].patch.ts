@@ -2,8 +2,7 @@ import { eq, and } from 'drizzle-orm';
 import { categories } from '../../database/schema';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    const user = session.user as { id: number };
+    const user = await requireAuth(event);
     const id = getRouterParam(event, 'id');
 
     if (!id) {

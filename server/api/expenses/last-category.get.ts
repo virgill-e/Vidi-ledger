@@ -3,20 +3,14 @@ import { expenses } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await getUserSession(event);
-    if (!session.user) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-        });
-    }
+    const user = await requireAuth(event);
 
     const { merchant } = getQuery(event);
     if (!merchant) {
         return null;
     }
 
-    const userId = (session.user as { id: number }).id;
+    const userId = user.id;
 
     try {
         const query = (db as any)

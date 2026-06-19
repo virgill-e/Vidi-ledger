@@ -3,13 +3,7 @@ import { users, expenses, categories, sessions } from '../../../database/schema'
 import { db, fetchOne } from '../../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    if (session.user.role !== 'admin') {
-        throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden: Admin access required',
-        });
-    }
+    await requireAdmin(event);
 
     const id = getRouterParam(event, 'id');
     if (!id) {
