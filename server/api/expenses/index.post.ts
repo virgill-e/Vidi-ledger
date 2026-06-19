@@ -5,6 +5,9 @@ export default defineEventHandler(async (event) => {
     const user = await requireAuth(event);
 
     const { categoryId, amount, merchant, date, note } = await validateBody(event, expenseCreateSchema);
+
+    await assertCategoryOwned(categoryId, user.id);
+
     const newExpense = await fetchOne(db.insert(expenses as any).values({
         userId: user.id,
         categoryId,

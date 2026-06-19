@@ -15,6 +15,10 @@ export default defineEventHandler(async (event) => {
 
     const { categoryId, amount, merchant, date, note } = await validateBody(event, expenseUpdateSchema);
 
+    if (categoryId !== undefined) {
+        await assertCategoryOwned(categoryId, user.id);
+    }
+
     const updated = await fetchOne((db as any).update(expenses as any)
         .set({
             categoryId,
