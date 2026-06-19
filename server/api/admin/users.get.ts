@@ -3,13 +3,7 @@ import { users } from '../../database/schema';
 import { db, fetchAll } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    if (session.user.role !== 'admin') {
-        throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden: Admin access required',
-        });
-    }
+    await requireAdmin(event);
 
     const allUsers = await fetchAll(db.select({
         id: users.id,

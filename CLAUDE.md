@@ -24,7 +24,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - Money stored as integer cents. Multiply on write (`Math.round(amount * 100)`), divide on read.
 - Schema must stay dialect-agnostic: use the helpers in `schema.ts` (`text`, `int`, `real`, `dateColumn`, `idColumn`), never raw `sqliteTable`/`pgTable`.
 - DB queries: use `fetchOne`/`fetchAll` from `server/utils/db.ts`, never call `.all()`/`.get()` directly (Postgres lacks them).
-- Every API handler: guard with `getUserSession(event)` → 401 if no `session.user`; scope queries by `user.id`.
+- Every API handler: guard with `const user = await requireAuth(event)` (auto-imported from `server/utils/auth.ts`) → throws 401 if no session, returns the typed user; scope queries by `user.id`. Admin-only routes: `await requireAdmin(event)` (401/403).
 - Validate request bodies with `validateBody(event, schema)` (auto-imported from `server/utils/validation.ts`); define/reuse a Zod schema there rather than hand-rolling `if (!field)` checks. Route params (`getRouterParam`) are still guarded inline.
 - Frontend: `<script setup lang="ts">`, Composition API, typed `defineProps`. Tailwind utility classes only.
 - Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported).

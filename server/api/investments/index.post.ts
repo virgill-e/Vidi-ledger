@@ -2,12 +2,7 @@ import { db, fetchOne } from '../../utils/db';
 import { investments } from '../../database/schema';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    if (!session.user) {
-        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-    }
-
-    const user = session.user as { id: number };
+    const user = await requireAuth(event);
     const { type, asset, amount, quantity, date, note } = await validateBody(event, investmentCreateSchema);
 
     // For dividends quantity is optional and defaults to 0; for buy/sell the

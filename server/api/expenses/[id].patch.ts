@@ -3,8 +3,7 @@ import { expenses } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    const user = session.user as { id: number };
+    const user = await requireAuth(event);
     const id = getRouterParam(event, 'id');
 
     if (!id) {

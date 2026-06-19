@@ -3,12 +3,7 @@ import { investments } from '../../database/schema';
 import { eq, and } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
-    const session = await requireUserSession(event);
-    if (!session.user) {
-        throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-    }
-
-    const user = session.user as { id: number };
+    const user = await requireAuth(event);
     const id = getRouterParam(event, 'id');
 
     if (!id) {

@@ -8,13 +8,7 @@ export default defineEventHandler(async (event) => {
     // Rate limit: 10 resets per minute for the admin
     await defineRateLimit({ max: 10, window: 60 })(event);
 
-    const session = await requireUserSession(event);
-    if (session.user.role !== 'admin') {
-        throw createError({
-            statusCode: 403,
-            statusMessage: 'Forbidden: Admin access required',
-        });
-    }
+    await requireAdmin(event);
 
     const id = getRouterParam(event, 'id');
     const targetId = Number(id);

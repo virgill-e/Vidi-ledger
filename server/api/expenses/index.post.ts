@@ -2,17 +2,9 @@ import { expenses } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
-    const session = await getUserSession(event);
-    if (!session.user) {
-        throw createError({
-            statusCode: 401,
-            statusMessage: 'Unauthorized',
-        });
-    }
+    const user = await requireAuth(event);
 
     const { categoryId, amount, merchant, date, note } = await validateBody(event, expenseCreateSchema);
-
-    const user = session.user as { id: number };
     const newExpense = await fetchOne(db.insert(expenses as any).values({
         userId: user.id,
         categoryId,

@@ -282,14 +282,8 @@ const timeFilterLabel = computed(() => {
 
 const investments = ref<any[]>([]);
 
-const formatCurrency = (amountInCents: number, exact = false) => {
-  const val = amountInCents / 100;
-  return new Intl.NumberFormat('fr-FR', { 
-    style: 'currency', 
-    currency: 'EUR', 
-    maximumFractionDigits: exact ? 2 : 0 
-  }).format(val);
-};
+const fmt = useFormat();
+const formatCurrency = (amountInCents: number, exact = false) => fmt.formatCurrency(amountInCents, { exact });
 
 const fetchData = async () => {
   try {
