@@ -1,4 +1,5 @@
 import { hash } from 'bcrypt';
+import { randomInt } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { users } from '../../../../database/schema';
 import { db, fetchOne } from '../../../../utils/db';
@@ -16,14 +17,13 @@ export default defineEventHandler(async (event) => {
     }
 
     const id = getRouterParam(event, 'id');
-    if (!id) {
+    const targetId = Number(id);
+    if (!id || !Number.isInteger(targetId) || targetId <= 0) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'User ID is required',
+            statusMessage: 'A valid user ID is required',
         });
     }
-
-    const targetId = Number(id);
 
     // Fetch the user to check their role before resetting
     const targetUser = await fetchOne(db.select().from(users as any).where(eq((users as any).id, targetId)));
@@ -43,11 +43,11 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    // Generate random 10 character password
+    // Generate a cryptographically secure random 12 character password
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()';
     let newRawPassword = '';
-    for (let i = 0; i < 10; i++) {
-        newRawPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    for (let i = 0; i < 12; i++) {
+        newRawPassword += chars.charAt(randomInt(chars.length));
     }
 
     // Hash it for DB
