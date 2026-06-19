@@ -349,9 +349,8 @@ const onDatePicked = (event: Event) => {
   }
 };
 
-const formatCurrency = (valueInCents: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(valueInCents / 100);
-};
+// Rounded to whole euros (no decimals) — useFormat default.
+const { formatCurrency } = useFormat();
 
 const getWeekNumber = (date: Date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

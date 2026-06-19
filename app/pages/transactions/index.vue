@@ -292,13 +292,9 @@ const timeFilterLabel = computed(() => {
 const categories = ref<any[]>([]);
 const expenses = ref<any[]>([]);
 
-const formatCurrency = (amountInCents: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(amountInCents / 100);
-};
-
-const formatCompact = (amountInCents: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amountInCents / 100);
-};
+const fmt = useFormat();
+const formatCurrency = (amountInCents: number) => fmt.formatCurrency(amountInCents, { exact: true });
+const formatCompact = (amountInCents: number) => fmt.formatCurrency(amountInCents);
 
 const fetchData = async () => {
   const [cats, exps] = await Promise.all([

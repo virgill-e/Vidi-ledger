@@ -379,17 +379,9 @@ const chartAreaPath = computed(() => {
   return d;
 });
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
-};
-
-const formatCurrency = (amountInCents: number, exact = false) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: exact ? 2 : 0
-  }).format(amountInCents / 100);
-};
+const fmt = useFormat();
+const formatDate = (date: string) => fmt.formatDate(date);
+const formatCurrency = (amountInCents: number, exact = false) => fmt.formatCurrency(amountInCents, { exact });
 
 const handleEdit = (tx: any) => {
   navigateTo(`/investments/edit/${tx.id}`);

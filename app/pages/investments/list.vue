@@ -374,21 +374,10 @@ const netTotalValue = computed(() => {
   return investments.value.reduce((acc, tx) => acc + (tx.type === 'buy' ? tx.amount : tx.type === 'sell' ? -tx.amount : 0), 0);
 });
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric'
-  });
-};
-
-const formatCurrency = (amount: number, minimal = false) => {
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency: 'EUR',
-    maximumFractionDigits: minimal && amount % 100 === 0 ? 0 : 2
-  }).format(amount / 100);
-};
+const fmt = useFormat();
+const formatDate = (date: string) => fmt.formatDate(date);
+const formatCurrency = (amount: number, minimal = false) =>
+  fmt.formatCurrency(amount, minimal ? { minimal: true } : { exact: true });
 
 const handleEdit = (tx: any) => {
   navigateTo(`/investments/edit/${tx.id}`);

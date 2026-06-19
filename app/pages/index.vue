@@ -203,14 +203,11 @@ const timeFilterLabel = computed(() => {
 const expensesList = ref<any[]>([]);
 const investmentsList = ref<any[]>([]);
 
-const formatCompact = (amountInCents: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(amountInCents / 100);
-};
+const fmt = useFormat();
+const formatCompact = (amountInCents: number) => fmt.formatCurrency(amountInCents);
 
 // Short currency for tight spaces (e.g. "1,2 k €")
-const compactNumber = (amountInCents: number) => {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', notation: 'compact', maximumFractionDigits: 1 }).format(amountInCents / 100);
-};
+const compactNumber = (amountInCents: number) => fmt.formatCurrency(amountInCents, { compact: true });
 
 const fetchData = async () => {
   const [exps, invs] = await Promise.all([
