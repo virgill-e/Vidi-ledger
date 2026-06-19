@@ -10,15 +10,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const body = await readBody(event);
-    const { categoryId, amount, merchant, date, note } = body;
-
-    if (!categoryId || amount === undefined || !merchant || !date) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'CategoryId, amount, merchant and date are required',
-        });
-    }
+    const { categoryId, amount, merchant, date, note } = await validateBody(event, expenseCreateSchema);
 
     const user = session.user as { id: number };
     const newExpense = await fetchOne(db.insert(expenses as any).values({

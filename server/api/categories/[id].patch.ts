@@ -5,7 +5,6 @@ export default defineEventHandler(async (event) => {
     const session = await requireUserSession(event);
     const user = session.user as { id: number };
     const id = getRouterParam(event, 'id');
-    const body = await readBody(event);
 
     if (!id) {
         throw createError({
@@ -14,14 +13,14 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const { name, color, icon, maxBudget } = body;
+    const { name, color, icon, maxBudget } = await validateBody(event, categoryUpdateSchema);
 
     const updated = await fetchOne(db.update(categories as any)
         .set({
             name,
             color,
             icon,
-            maxBudget: maxBudget !== undefined ? (maxBudget ? Math.round(Number(maxBudget) * 100) : null) : undefined,
+            maxBudget: maxBudget !== undefined ? (maxBudget ? Math.round(maxBudget * 100) : null) : undefined,
         } as any)
         .where(
             and(

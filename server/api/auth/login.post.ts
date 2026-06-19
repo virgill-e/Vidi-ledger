@@ -7,15 +7,7 @@ export default defineEventHandler(async (event) => {
     // Rate limit: 5 attempts per minute
     await defineRateLimit({ max: 5, window: 60 })(event);
 
-    const body = await readBody(event);
-    const { email, password } = body;
-
-    if (!email || !password) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Email and password are required',
-        });
-    }
+    const { email, password } = await validateBody(event, loginSchema);
 
     // Find user
     const user = await fetchOne(db.select().from(users as any).where(eq((users as any).email, email)));

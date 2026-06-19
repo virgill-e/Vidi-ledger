@@ -8,39 +8,17 @@ export default defineEventHandler(async (event) => {
     }
 
     const user = session.user as { id: number };
-    const body = await readBody(event);
-    const { type, asset, amount, quantity, date, note } = body;
+    const { type, asset, amount, quantity, date, note } = await validateBody(event, investmentCreateSchema);
 
-    // Validate
-    if (!type || (type !== 'buy' && type !== 'sell' && type !== 'dividend')) {
-        throw createError({ statusCode: 400, statusMessage: 'Invalid type (buy, sell or dividend)' });
-    }
-    if (!asset || typeof asset !== 'string') {
-        throw createError({ statusCode: 400, statusMessage: 'Asset is required' });
-    }
-    if (amount === undefined || isNaN(Number(amount))) {
-        throw createError({ statusCode: 400, statusMessage: 'Amount is required' });
-    }
-    
-    let parsedQuantity = 0;
-    if (type === 'dividend') {
-        parsedQuantity = (quantity !== undefined && quantity !== null && quantity !== '') ? Number(quantity) : 0;
-    } else {
-        if (quantity === undefined || quantity === null || quantity === '' || isNaN(Number(quantity))) {
-            throw createError({ statusCode: 400, statusMessage: 'Quantity is required' });
-        }
-        parsedQuantity = Number(quantity);
-    }
-
-    if (!date) {
-        throw createError({ statusCode: 400, statusMessage: 'Date is required' });
-    }
+    // For dividends quantity is optional and defaults to 0; for buy/sell the
+    // schema guarantees it is present.
+    const parsedQuantity = type === 'dividend' ? (quantity ?? 0) : quantity!;
 
     const newInvestment = await fetchOne(db.insert(investments as any).values({
         userId: user.id,
         type,
         asset,
-        amount: Number(amount),
+        amount,
         quantity: parsedQuantity,
         date: new Date(date),
         note: note || null,
