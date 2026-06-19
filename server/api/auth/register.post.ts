@@ -7,15 +7,7 @@ export default defineEventHandler(async (event) => {
     // Rate limit: 3 registrations per hour per IP
     await defineRateLimit({ max: 3, window: 3600 })(event);
 
-    const body = await readBody(event);
-    const { email, password, name } = body;
-
-    if (!email || !password || !name) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Email, password and name are required',
-        });
-    }
+    const { email, password, name } = await validateBody(event, registerSchema);
 
     // Check if user already exists
     const existingUser = await fetchOne(db.select().from(users as any).where(eq((users as any).email, email)));

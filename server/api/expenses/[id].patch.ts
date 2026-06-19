@@ -6,7 +6,6 @@ export default defineEventHandler(async (event) => {
     const session = await requireUserSession(event);
     const user = session.user as { id: number };
     const id = getRouterParam(event, 'id');
-    const body = await readBody(event);
 
     if (!id) {
         throw createError({
@@ -15,7 +14,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const { categoryId, amount, merchant, date, note } = body;
+    const { categoryId, amount, merchant, date, note } = await validateBody(event, expenseUpdateSchema);
 
     const updated = await fetchOne((db as any).update(expenses as any)
         .set({

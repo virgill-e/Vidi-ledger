@@ -9,15 +9,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const body = await readBody(event);
-    const { name, icon, color, maxBudget } = body;
-
-    if (!name || !icon || !color) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Name, icon and color are required',
-        });
-    }
+    const { name, icon, color, maxBudget } = await validateBody(event, categoryCreateSchema);
 
     const user = session.user as { id: number; email: string; name: string };
     const [newCategory] = await db.insert(categories).values({

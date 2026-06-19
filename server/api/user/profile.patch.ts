@@ -12,14 +12,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const { name } = await readBody(event);
-
-    if (!name) {
-        throw createError({
-            statusCode: 400,
-            statusMessage: 'Name is required',
-        });
-    }
+    const { name } = await validateBody(event, profileUpdateSchema);
 
     const user = session.user as { id: number; email: string; name: string };
 

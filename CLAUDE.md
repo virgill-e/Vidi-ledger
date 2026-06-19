@@ -25,7 +25,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - Schema must stay dialect-agnostic: use the helpers in `schema.ts` (`text`, `int`, `real`, `dateColumn`, `idColumn`), never raw `sqliteTable`/`pgTable`.
 - DB queries: use `fetchOne`/`fetchAll` from `server/utils/db.ts`, never call `.all()`/`.get()` directly (Postgres lacks them).
 - Every API handler: guard with `getUserSession(event)` → 401 if no `session.user`; scope queries by `user.id`.
-- Validate/guard required body fields; throw `createError({ statusCode, statusMessage })`.
+- Validate request bodies with `validateBody(event, schema)` (auto-imported from `server/utils/validation.ts`); define/reuse a Zod schema there rather than hand-rolling `if (!field)` checks. Route params (`getRouterParam`) are still guarded inline.
 - Frontend: `<script setup lang="ts">`, Composition API, typed `defineProps`. Tailwind utility classes only.
 - Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported).
 - After schema changes run `npm run db:generate` (commit migration) then `npm run db:push`.
