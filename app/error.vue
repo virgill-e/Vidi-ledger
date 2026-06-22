@@ -126,7 +126,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
                 <h2 class="text-text-heading text-[20px] font-medium">Croissance du capital</h2>
-                <p class="text-text-body/50 text-sm font-medium mt-0.5">Projection sur {{ years }} {{ years > 1 ? 'ans' : 'an' }}</p>
+                <p class="text-text-body/50 text-sm font-medium mt-0.5">Projection sur {{ safeYears }} {{ safeYears > 1 ? 'ans' : 'an' }}</p>
               </div>
               <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
@@ -172,7 +172,7 @@
               </div>
             </div>
             <p class="text-[12px] text-text-body/40 font-medium mt-4 text-center">
-              Sur {{ years }} {{ years > 1 ? 'ans' : 'an' }}, vos intérêts représentent
+              Sur {{ safeYears }} {{ safeYears > 1 ? 'ans' : 'an' }}, vos intérêts représentent
               <span class="font-bold text-primary">{{ interestShare }} %</span> du capital final.
             </p>
           </div>
@@ -183,8 +183,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-
 const props = defineProps<{
   error: { statusCode?: number; statusMessage?: string; message?: string };
 }>();
@@ -195,8 +193,16 @@ const heading = computed(() =>
 );
 
 const { formatCurrency } = useFormat();
-// Inputs are in whole euros; the centralized formatter works on cents.
-const fmtEur = (euros: number) => formatCurrency(Math.round((euros || 0) * 100));
+// Converts any value to a finite non-negative number; empty / NaN / Infinity → fallback.
+const fin = (v: unknown, fallback = 0): number => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+// Amounts are whole euros; formatter works on cents.
+const fmtEur = (euros: number) => {
+  const safe = Number.isFinite(euros) ? euros : 0;
+  return formatCurrency(Math.round(safe * 100));
+};
 
 // Calculator inputs
 const initial = ref(1000);
@@ -204,32 +210,49 @@ const monthly = ref(150);
 const rate = ref(7);
 const years = ref(20);
 
+// Sanitized inputs — NaN / empty / negative → safe defaults; rate capped at 100 % to keep
+// Math.pow from producing Infinity (which crashes Intl.NumberFormat on Safari).
+const safeInitial = computed(() => fin(initial.value));
+const safeMonthly = computed(() => fin(monthly.value));
+const safeRate = computed(() => Math.min(fin(rate.value), 100));
+const safeYears = computed(() => Math.max(1, Math.min(60, Math.round(fin(years.value, 1)))));
+
 // Monthly-compounded projection, end-of-month contributions.
 const projectAt = (yrs: number) => {
-  const r = (rate.value || 0) / 100 / 12;
-  const m = Math.max(0, Math.round(yrs * 12));
-  const cap = Math.max(0, initial.value || 0);
-  const pmt = Math.max(0, monthly.value || 0);
+  const r = safeRate.value / 100 / 12;
+  const m = Math.max(0, Math.round(fin(yrs, 1) * 12));
+  const cap = safeInitial.value;
+  const pmt = safeMonthly.value;
 
-  const fvCapital = cap * Math.pow(1 + r, m);
-  const fvContrib = r === 0 ? pmt * m : pmt * ((Math.pow(1 + r, m) - 1) / r);
+  const factor = Math.pow(1 + r, m);
+  const fvCapital = cap * factor;
+  const fvContrib = r === 0 ? pmt * m : pmt * ((factor - 1) / r);
 
-  const total = fvCapital + fvContrib;
+  const raw = fvCapital + fvContrib;
   const contributed = cap + pmt * m;
+  // Guard any remaining non-finite result (should never happen with sanitized inputs).
+  const total = Number.isFinite(raw) ? raw : contributed;
   return { total, contributed, interest: Math.max(0, total - contributed) };
 };
 
 const series = computed(() => {
-  const n = Math.max(1, Math.min(60, Math.round(years.value || 1)));
+  const n = safeYears.value;
   const pts = [];
   for (let y = 0; y <= n; y++) pts.push({ year: y, ...projectAt(y) });
   return pts;
 });
 
-const result = computed(() => projectAt(Math.max(1, years.value || 1)));
+const result = computed(() => projectAt(safeYears.value));
 
-const chartMax = computed(() => Math.max(...series.value.map((p) => p.total), 1));
-const barPct = (v: number) => `${Math.max(v > 0 ? 2 : 0, (v / chartMax.value) * 100)}%`;
+// Math.max(NaN, …) === NaN in JS, so filter before spreading.
+const chartMax = computed(() => {
+  const vals = series.value.map((p) => p.total).filter(Number.isFinite);
+  return Math.max(...vals, 1);
+});
+const barPct = (v: number) => {
+  if (!Number.isFinite(v) || chartMax.value <= 0) return '0%';
+  return `${Math.max(v > 0 ? 2 : 0, (v / chartMax.value) * 100)}%`;
+};
 
 // Keep the x-axis readable regardless of duration.
 const labelStep = computed(() => {
