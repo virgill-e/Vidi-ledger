@@ -137,6 +137,51 @@
           </button>
         </form>
       </div>
+
+      <!-- Devices Section -->
+      <div class="bg-card-inner rounded-[40px] p-8 lg:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1]">
+        <h2 class="text-xl font-bold text-text-heading mb-8 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+            </svg>
+          </div>
+          Appareils connectés
+        </h2>
+
+        <div v-if="isLoadingSessions" class="text-text-body/60 font-medium py-4">Chargement…</div>
+
+        <div v-else-if="deviceSessions.length === 0" class="text-text-body/60 font-medium py-4">
+          Aucune session active.
+        </div>
+
+        <div v-else class="flex flex-col gap-4">
+          <div
+            v-for="s in deviceSessions"
+            :key="s.id"
+            class="flex items-center justify-between gap-4 bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4"
+          >
+            <div class="flex flex-col gap-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-text-heading">{{ parseDevice(s.userAgent) }}</span>
+                <span v-if="s.current" class="text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  Cet appareil
+                </span>
+              </div>
+              <span class="text-text-body/60 text-sm font-medium truncate">
+                {{ s.ipAddress || 'IP inconnue' }} · Actif {{ formatDate(s.lastActiveAt, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) }}
+              </span>
+            </div>
+            <button
+              @click="revokeSession(s.id, s.current)"
+              :disabled="revokingSessionId === s.id"
+              class="shrink-0 px-5 py-3 rounded-[16px] font-bold text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+            >
+              {{ s.current ? 'Se déconnecter' : 'Déconnecter' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Success Feedback Overlay -->
@@ -166,9 +211,23 @@ definePageMeta({
 
 const { user, fetch: fetchSession } = useUserSession();
 const currentUser = computed(() => user.value as { name?: string; email?: string } | null);
+const { formatDate } = useFormat();
 
 const isUpdatingProfile = ref(false);
 const isUpdatingPassword = ref(false);
+
+interface DeviceSession {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  lastActiveAt: string;
+  current: boolean;
+}
+
+const deviceSessions = ref<DeviceSession[]>([]);
+const isLoadingSessions = ref(false);
+const revokingSessionId = ref<string | null>(null);
 
 const profileForm = reactive({
   name: currentUser.value?.name || ''
@@ -258,6 +317,54 @@ const updatePassword = async () => {
 watch(() => currentUser.value?.name, (newName) => {
   if (newName) profileForm.name = newName;
 }, { immediate: true });
+
+const parseDevice = (ua: string | null) => {
+  if (!ua) return 'Appareil inconnu';
+  const browser = /Edg\//.test(ua) ? 'Edge'
+    : /Chrome\//.test(ua) ? 'Chrome'
+    : /Firefox\//.test(ua) ? 'Firefox'
+    : /Safari\//.test(ua) ? 'Safari'
+    : 'Navigateur';
+  const os = /Windows/.test(ua) ? 'Windows'
+    : /Mac OS X/.test(ua) ? 'macOS'
+    : /Android/.test(ua) ? 'Android'
+    : /iPhone|iPad/.test(ua) ? 'iOS'
+    : /Linux/.test(ua) ? 'Linux'
+    : 'Système inconnu';
+  return `${browser} · ${os}`;
+};
+
+const loadSessions = async () => {
+  isLoadingSessions.value = true;
+  try {
+    const { sessions } = await $fetch('/api/user/sessions');
+    deviceSessions.value = sessions;
+  } catch (err: any) {
+    showFeedback(err.statusMessage || 'Impossible de charger les sessions.', true);
+  } finally {
+    isLoadingSessions.value = false;
+  }
+};
+
+const revokeSession = async (id: string, isCurrent: boolean) => {
+  if (revokingSessionId.value) return;
+  revokingSessionId.value = id;
+  try {
+    await $fetch(`/api/user/sessions/${id}`, { method: 'DELETE' });
+    if (isCurrent) {
+      await navigateTo('/login');
+      return;
+    }
+    deviceSessions.value = deviceSessions.value.filter((s) => s.id !== id);
+    showFeedback('Session déconnectée.');
+  } catch (err: any) {
+    showFeedback(err.statusMessage || 'Impossible de déconnecter cette session.', true);
+  } finally {
+    revokingSessionId.value = null;
+  }
+};
+
+onMounted(loadSessions);
 </script>
 
 <style scoped>
