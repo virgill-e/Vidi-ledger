@@ -8,6 +8,13 @@
       "when": 1772741942903,
       "tag": "0000_thankful_the_fallen",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784206076567,
+      "tag": "0002_add_session_device_tracking",
+      "breakpoints": true
     }
   ]
 }

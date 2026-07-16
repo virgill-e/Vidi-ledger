@@ -47,7 +47,11 @@ export const users = table('users', {
 export const sessions = table('sessions', {
     id: text('id').primaryKey(),
     userId: int('user_id').notNull().references(() => users.id),
-    expiresAt: int('expires_at').notNull(),
+    userAgent: text('user_agent'),
+    ipAddress: text('ip_address'),
+    createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
+    lastActiveAt: dateColumn('last_active_at').notNull().$defaultFn(() => new Date()),
+    expiresAt: dateColumn('expires_at').notNull(),
 });
 
 export const categories = table('categories', {

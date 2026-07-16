@@ -1,6 +1,7 @@
 import { hash } from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { users, categories } from '../../database/schema';
+import { users, categories, sessions } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
 export default defineEventHandler(async (event) => {
@@ -51,7 +52,20 @@ export default defineEventHandler(async (event) => {
         } as any).execute();
     }
 
-    // Create session
+    // Create a device row so this session can be listed/revoked independently
+    // of any other device the user is logged in on.
+    const sessionId = randomUUID();
+    const now = new Date();
+    await db.insert(sessions as any).values({
+        id: sessionId,
+        userId: newUser.id,
+        userAgent: getHeader(event, 'user-agent') || null,
+        ipAddress: getRequestIP(event) || null,
+        createdAt: now,
+        lastActiveAt: now,
+        expiresAt: new Date(now.getTime() + SESSION_MAX_AGE_SECONDS * 1000),
+    } as any).execute();
+
     await setUserSession(event, {
         user: {
             id: newUser.id,
@@ -59,6 +73,7 @@ export default defineEventHandler(async (event) => {
             name: newUser.name,
             role: newUser.role,
         },
+        sessionId,
     });
 
     return {
