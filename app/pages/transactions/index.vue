@@ -10,7 +10,7 @@
 
       <div class="flex items-center gap-3">
         <!-- Export Dropdown -->
-        <div class="relative z-50">
+        <div class="relative z-20">
           <button @click="isExportMenuOpen = !isExportMenuOpen"
                   class="w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl bg-card-inner border border-[#eff3f1] shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-text-body/50 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all group"
                   :class="isExportMenuOpen ? 'border-primary/20 bg-primary/5 text-primary' : ''"
@@ -62,13 +62,13 @@
     <div class="flex flex-col md:flex-row gap-6 lg:gap-8 min-w-0">
 
       <!-- Total Expenses & Chart Widget -->
-      <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden relative flex flex-col h-[320px] w-full md:w-[55%] transition-transform hover:-translate-y-1 duration-300">
-        <div class="relative z-10 flex flex-col h-full">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
-            <h2 class="text-text-heading text-[22px] font-medium">Total Dépenses</h2>
-            <div class="flex items-center bg-[#f0f4f2] p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit min-w-0">
+      <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-6 md:pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden md:relative flex flex-col md:h-[320px] w-full md:w-[55%] transition-transform hover:-translate-y-1 duration-300">
+        <div class="md:relative md:z-10 flex flex-col md:h-full">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-4 gap-4 xl:gap-0">
+            <h2 class="text-text-heading text-[22px] font-medium min-w-0 truncate">Total Dépenses</h2>
+            <div class="flex items-center bg-[#f0f4f2] p-1 xl:p-1.5 rounded-2xl w-full xl:w-fit min-w-0 shrink-0">
               <button v-for="f in filters" :key="f.id" @click="timeFilter = f.id"
-                :class="['flex-1 sm:flex-none px-2 sm:px-4 py-1.5 rounded-xl text-[12px] sm:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === f.id ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                :class="['flex-1 xl:flex-none px-2 xl:px-4 py-1.5 rounded-xl text-[12px] xl:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === f.id ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                 {{ f.label }}
               </button>
             </div>
@@ -78,24 +78,8 @@
           </div>
         </div>
 
-        <div class="absolute bottom-4 left-6 right-6 h-[140px] flex flex-col justify-end pointer-events-none transition-opacity duration-300">
-          <svg viewBox="0 0 500 120" preserveAspectRatio="none" class="w-full h-[100px] overflow-visible">
-            <defs>
-              <linearGradient id="expensesGradient" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#294b3c" stop-opacity="0.25" />
-                <stop offset="100%" stop-color="#294b3c" stop-opacity="0.0" />
-              </linearGradient>
-            </defs>
-            <path :d="chartAreaPath" fill="url(#expensesGradient)" />
-            <polyline :points="chartLinePoints" fill="none" stroke="#294b3c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          <div class="flex justify-between mt-2 pt-1 border-t border-input-border/30">
-            <span v-for="(pt, i) in chartData" :key="'label-'+i"
-              :class="['text-[11px] font-medium text-text-body/50', (chartData.length > 7 && i % 2 !== 0) ? 'hidden sm:block' : 'block']"
-              :style="{ width: (100 / (chartData.length > 7 ? (chartData.length/2) : chartData.length)) + '%', textAlign: 'center' }">
-              {{ pt.label }}
-            </span>
-          </div>
+        <div class="mt-6 h-[140px] shrink-0 md:mt-0 md:absolute md:bottom-4 md:left-6 md:right-6">
+          <UiLineChart :points="chartData" :format-value="formatChartValue" />
         </div>
       </div>
 
@@ -295,6 +279,7 @@ const expenses = ref<any[]>([]);
 const fmt = useFormat();
 const formatCurrency = (amountInCents: number) => fmt.formatCurrency(amountInCents, { exact: true });
 const formatCompact = (amountInCents: number) => fmt.formatCurrency(amountInCents);
+const formatChartValue = (amountInCents: number) => fmt.formatCurrency(amountInCents, { compact: true });
 
 const fetchData = async () => {
   const [cats, exps] = await Promise.all([
@@ -455,36 +440,7 @@ const chartData = computed(() => {
     }
   }
 
-  const values = labels.map(l => buckets[l] || 0);
-  const max = Math.max(...values, 100);
-  const width = 500;
-  const height = 100;
-
-  return labels.map((label, i) => {
-    const x = labels.length > 1 ? (i / (labels.length - 1)) * width : width / 2;
-    const y = height - ((values[i] || 0) / max) * height;
-    const paddedY = Math.max(10, Math.min(y, height - 10));
-    const paddedX = Math.max(10, Math.min(x, width - 10));
-    return { label, value: values[i], x: paddedX, y: paddedY };
-  });
-});
-
-const chartLinePoints = computed(() => chartData.value.map(pt => `${pt.x},${pt.y}`).join(' '));
-
-const chartAreaPath = computed(() => {
-  const pts = chartData.value;
-  if (!pts || pts.length === 0) return '';
-  const firstPt = pts[0];
-  const lastPt = pts[pts.length - 1];
-  if (!firstPt || !lastPt) return '';
-  const width = 500;
-  const height = 120;
-  let d = `M${firstPt.x},${height} L${firstPt.x},${firstPt.y} `;
-  pts.forEach((pt, i) => {
-    if (i > 0) d += `L${pt.x},${pt.y} `;
-  });
-  d += `L${lastPt.x},${height} Z`;
-  return d;
+  return labels.map(label => ({ label, value: buckets[label] || 0 }));
 });
 </script>
 

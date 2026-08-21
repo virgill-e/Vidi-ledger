@@ -7,32 +7,32 @@
       <div class="flex flex-col gap-6 lg:gap-8 w-full md:w-[55%]">
         
         <!-- Total Invested & Chart Widget -->
-        <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden relative flex flex-col h-[400px] md:h-[320px] transition-transform hover:-translate-y-1 duration-300">
-          
-          <div class="relative z-10 flex flex-col h-full">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4 sm:gap-0">
-              <h2 class="text-text-heading text-[22px] font-medium">Investissements</h2>
-              
-              <div class="flex items-center gap-4 justify-end sm:justify-start">
-                
+        <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-6 md:pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden md:relative flex flex-col md:h-[320px] transition-transform hover:-translate-y-1 duration-300">
+
+          <div class="md:relative md:z-10 flex flex-col md:h-full">
+            <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-4 gap-4 xl:gap-0">
+              <h2 class="text-text-heading text-[22px] font-medium min-w-0 truncate">Investissements</h2>
+
+              <div class="flex items-center gap-3 w-full xl:w-auto">
+
                 <!-- Time Filter Toggle -->
-                <div class="flex items-center bg-[#f0f4f2] p-1.5 rounded-2xl w-fit">
-                  <button @click="timeFilter = 'week'" :class="['px-3 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                <div class="flex items-center bg-[#f0f4f2] p-1 xl:p-1.5 rounded-2xl min-w-0 flex-1 xl:flex-none xl:w-fit">
+                  <button @click="timeFilter = 'week'" :class="['flex-1 xl:flex-none px-2 xl:px-3 py-1.5 rounded-xl text-[12px] xl:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'week' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Semaine
                   </button>
-                  <button @click="timeFilter = 'month'" :class="['px-3 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'month'" :class="['flex-1 xl:flex-none px-2 xl:px-3 py-1.5 rounded-xl text-[12px] xl:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'month' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Mois
                   </button>
-                  <button @click="timeFilter = 'year'" :class="['px-3 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'year'" :class="['flex-1 xl:flex-none px-2 xl:px-3 py-1.5 rounded-xl text-[12px] xl:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'year' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Année
                   </button>
-                  <button @click="timeFilter = 'all'" :class="['px-3 py-1.5 rounded-xl text-[13px] font-medium transition-all', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
+                  <button @click="timeFilter = 'all'" :class="['flex-1 xl:flex-none px-2 xl:px-3 py-1.5 rounded-xl text-[12px] xl:text-[13px] font-medium transition-all whitespace-nowrap', timeFilter === 'all' ? 'bg-white shadow-sm text-primary' : 'text-text-body/60 hover:text-text-heading']">
                     Tout
                   </button>
                 </div>
 
                 <!-- Export Dropdown -->
-                <div class="relative z-50">
+                <div class="relative z-20 shrink-0">
                   <button @click="isExportMenuOpen = !isExportMenuOpen" 
                           class="w-11 h-11 flex items-center justify-center rounded-2xl bg-white border border-[#eff3f1] shadow-[0_2px_10px_rgb(0,0,0,0.02)] text-text-body/50 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all group"
                           :class="isExportMenuOpen ? 'border-primary/20 bg-primary/5 text-primary' : ''"
@@ -81,8 +81,8 @@
             </div>
 
             <!-- Dynamic Amount -->
-            <div class="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-6">
-              <div class="flex flex-col">
+            <div class="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-6">
+              <div class="flex flex-col min-w-0">
                 <div class="text-[42px] sm:text-[48px] leading-none tracking-tight font-semibold text-text-heading">
                   {{ currentTotal }}
                 </div>
@@ -90,12 +90,12 @@
                   Net investi {{ timeFilterLabel.toLowerCase() }}
                 </div>
               </div>
-              
-              <div v-if="timeFilter === 'all'" class="flex flex-col pb-1">
-                <div class="text-[18px] sm:text-[22px] font-bold" :class="totalRealizedPnL >= 0 ? 'text-primary' : 'text-red-500'">
+
+              <div v-if="timeFilter === 'all'" class="flex flex-col pb-1 min-w-0 shrink-0">
+                <div class="text-[18px] sm:text-[22px] font-bold whitespace-nowrap" :class="totalRealizedPnL >= 0 ? 'text-primary' : 'text-red-500'">
                   {{ totalRealizedPnL >= 0 ? '+' : '' }}{{ formatCurrency(totalRealizedPnL) }}
                 </div>
-                <div class="text-[11px] text-text-body/40 font-bold uppercase tracking-wider">
+                <div class="text-[11px] text-text-body/40 font-bold uppercase tracking-wider whitespace-nowrap">
                   Profit réalisé total
                 </div>
               </div>
@@ -103,26 +103,8 @@
           </div>
           
           <!-- Dynamic Chart inside card -->
-          <div class="absolute bottom-4 left-6 right-6 h-[140px] flex flex-col justify-end pointer-events-none transition-opacity duration-300">
-            <!-- SVG Line Chart -->
-            <svg viewBox="0 0 500 120" preserveAspectRatio="none" class="w-full h-[100px] overflow-visible">
-              <defs>
-                <linearGradient id="dynamicGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#294b3c" stop-opacity="0.25" />
-                  <stop offset="100%" stop-color="#294b3c" stop-opacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path :d="chartAreaPath" fill="url(#dynamicGradient)" />
-              <polyline :points="chartLinePoints" fill="none" stroke="#294b3c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <!-- X Axis Labels -->
-            <div class="flex justify-between mt-2 pt-1 border-t border-input-border/30">
-              <span v-for="(pt, i) in chartData" :key="'label-'+i" 
-                :class="['text-[11px] font-medium text-text-body/50', (chartData.length > 7 && i % 2 !== 0) ? 'hidden sm:block' : 'block']" 
-                :style="{ width: (100 / (chartData.length > 7 ? (chartData.length/2) : chartData.length)) + '%', textAlign: 'center' }">
-                {{ pt.label }}
-              </span>
-            </div>
+          <div class="mt-6 h-[140px] shrink-0 md:mt-0 md:absolute md:bottom-4 md:left-6 md:right-6">
+            <UiLineChart :points="chartData" :format-value="formatChartValue" />
           </div>
         </div>
 
@@ -284,6 +266,7 @@ const investments = ref<any[]>([]);
 
 const fmt = useFormat();
 const formatCurrency = (amountInCents: number, exact = false) => fmt.formatCurrency(amountInCents, { exact });
+const formatChartValue = (amountInCents: number) => fmt.formatCurrency(amountInCents, { compact: true });
 
 const fetchData = async () => {
   try {
@@ -494,43 +477,8 @@ const chartData = computed(() => {
     }
   }
 
-  // To draw a line chart of net investments per bucket
-  // We actually want a cumulative chart if it's 'all' or 'year' perhaps? 
-  // Let's stick to the bar/line style of volumes for now, same as dashboard
-  const values = labels.map(l => Math.max(0, buckets[l] || 0)); // Avoid negative spikes for simple visual
-  const max = Math.max(...values, 100); 
-  const width = 500;
-  const height = 100;
-  
-  return labels.map((label, i) => {
-    const x = labels.length > 1 ? (i / (labels.length - 1)) * width : width / 2;
-    const y = height - ((values[i] || 0) / max) * height;
-    const paddedY = Math.max(10, Math.min(y, height - 10));
-    const paddedX = Math.max(10, Math.min(x, width - 10));
-    return { label, value: values[i], x: paddedX, y: paddedY };
-  });
-});
-
-const chartLinePoints = computed(() => {
-  return chartData.value.map(pt => `${pt.x},${pt.y}`).join(' ');
-});
-
-const chartAreaPath = computed(() => {
-  const pts = chartData.value;
-  if (!pts || pts.length === 0) return '';
-  const firstPt = pts[0];
-  const lastPt = pts[pts.length - 1];
-  
-  if (!firstPt || !lastPt) return '';
-  
-  const width = 500;
-  const height = 120;
-  let d = `M${firstPt.x},${height} L${firstPt.x},${firstPt.y} `;
-  pts.forEach((pt, i) => {
-    if (i > 0) d += `L${pt.x},${pt.y} `;
-  });
-  d += `L${lastPt.x},${height} Z`;
-  return d;
+  // Net invested per bucket; negative spikes are floored to 0 for a simple visual.
+  return labels.map(label => ({ label, value: Math.max(0, buckets[label] || 0) }));
 });
 </script>
 

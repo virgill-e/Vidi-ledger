@@ -159,12 +159,12 @@
           <div
             v-for="s in deviceSessions"
             :key="s.id"
-            class="flex items-center justify-between gap-4 bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4"
+            class="flex flex-wrap items-center justify-between gap-3 bg-white border border-[#e3ece8] rounded-[22px] px-6 py-4"
           >
-            <div class="flex flex-col gap-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-text-heading">{{ parseDevice(s.userAgent) }}</span>
-                <span v-if="s.current" class="text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+            <div class="flex flex-col gap-1 min-w-[160px]">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="font-bold text-text-heading whitespace-nowrap">{{ parseDevice(s.userAgent) }}</span>
+                <span v-if="s.current" class="text-[11px] font-bold uppercase tracking-wide text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                   Cet appareil
                 </span>
               </div>
