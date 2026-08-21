@@ -9,7 +9,7 @@
         <!-- Total Invested & Chart Widget -->
         <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-6 md:pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden md:relative flex flex-col md:h-[320px] transition-transform hover:-translate-y-1 duration-300">
 
-          <div class="md:relative md:z-10 flex flex-col md:h-full">
+          <div class="flex flex-col">
             <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-4 gap-4 xl:gap-0">
               <h2 class="text-text-heading text-[22px] font-medium min-w-0 truncate">Investissements</h2>
 
