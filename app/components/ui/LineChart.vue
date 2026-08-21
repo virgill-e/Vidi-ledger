@@ -31,18 +31,17 @@
             :class="hoveredIndex === i ? 'opacity-100' : 'opacity-0'" stroke-width="2" />
         </svg>
 
-        <!-- Hover hit-zones + tooltip -->
-        <div class="absolute inset-0 flex">
-          <div v-for="(pt, i) in plotted" :key="`h-${i}`" class="relative flex-1 h-full cursor-pointer"
-            @mouseenter="hoveredIndex = i" @mouseleave="hoveredIndex = null"
-            @click="hoveredIndex = hoveredIndex === i ? null : i">
-            <div v-if="hoveredIndex === i"
-              class="pointer-events-none absolute z-20 w-max"
-              :class="tipAlign(i)" :style="tipStyle(pt)">
-              <div class="bg-text-heading text-white rounded-xl px-3 py-2 shadow-xl shadow-black/20">
-                <div class="text-[10px] font-bold text-white/50 uppercase tracking-wider whitespace-nowrap">{{ points[i]?.label }}</div>
-                <div class="text-[13px] font-bold tabular-nums whitespace-nowrap">{{ formatValue(points[i]?.value ?? 0) }}</div>
-              </div>
+        <!-- Hover/touch overlay: a single tracked area is far more reliable than one
+             narrow hit-zone per point, which can miss fast mouse movement or small taps. -->
+        <div class="absolute inset-0 cursor-pointer"
+          @mousemove="handlePointer" @mouseleave="hoveredIndex = null"
+          @touchstart="handlePointer">
+          <div v-if="hoveredIndex !== null && plotted[hoveredIndex]"
+            class="pointer-events-none absolute z-20 w-max"
+            :class="tipAlign(hoveredIndex)" :style="tipStyle(plotted[hoveredIndex])">
+            <div class="bg-text-heading text-white rounded-xl px-3 py-2 shadow-xl shadow-black/20">
+              <div class="text-[10px] font-bold text-white/50 uppercase tracking-wider whitespace-nowrap">{{ points[hoveredIndex]?.label }}</div>
+              <div class="text-[13px] font-bold tabular-nums whitespace-nowrap">{{ formatValue(points[hoveredIndex]?.value ?? 0) }}</div>
             </div>
           </div>
         </div>
@@ -98,6 +97,19 @@ const plotted = computed(() => {
 });
 
 const linePointsAttr = computed(() => plotted.value.map((pt) => `${pt.x},${pt.y}`).join(' '));
+
+// Track the pointer continuously over the whole chart area and snap to the
+// nearest point, instead of relying on one narrow hit-zone div per point
+// (which can miss a fast mouse move or a small tap between zones).
+const handlePointer = (e: MouseEvent | TouchEvent) => {
+  const target = e.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  const clientX = 'touches' in e ? e.touches[0]?.clientX : e.clientX;
+  if (clientX === undefined || !rect.width) return;
+  const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+  const n = props.points.length;
+  hoveredIndex.value = n > 1 ? Math.round(ratio * (n - 1)) : 0;
+};
 
 const areaPath = computed(() => {
   const pts = plotted.value;
