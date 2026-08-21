@@ -109,15 +109,15 @@
             <div class="bg-primary rounded-[28px] p-6 text-white relative overflow-hidden shadow-[0_12px_40px_rgba(41,75,60,0.15)] min-w-0">
               <div class="absolute top-0 right-0 w-28 h-28 bg-white/5 rounded-full blur-2xl -mr-8 -mt-8"></div>
               <span class="text-[11px] font-bold text-white/60 uppercase tracking-widest relative z-10">Capital final</span>
-              <span class="text-2xl sm:text-[28px] font-semibold leading-none tracking-tight mt-2 block relative z-10 truncate tabular-nums">{{ fmtEur(result.total) }}</span>
+              <span class="text-xl sm:text-2xl lg:text-xl xl:text-[28px] font-semibold leading-none tracking-tight mt-2 block relative z-10 truncate tabular-nums">{{ fmtEur(result.total) }}</span>
             </div>
             <div class="bg-card-inner rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] min-w-0">
               <span class="text-[11px] font-bold text-text-body/40 uppercase tracking-widest">Total investi</span>
-              <span class="text-2xl sm:text-[28px] font-semibold text-text-heading leading-none tracking-tight mt-2 block truncate tabular-nums">{{ fmtEur(result.contributed) }}</span>
+              <span class="text-xl sm:text-2xl lg:text-xl xl:text-[28px] font-semibold text-text-heading leading-none tracking-tight mt-2 block truncate tabular-nums">{{ fmtEur(result.contributed) }}</span>
             </div>
             <div class="bg-card-inner rounded-[28px] p-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] min-w-0">
               <span class="text-[11px] font-bold text-text-body/40 uppercase tracking-widest">Intérêts générés</span>
-              <span class="text-2xl sm:text-[28px] font-semibold text-primary leading-none tracking-tight mt-2 block truncate tabular-nums">+{{ fmtEur(result.interest) }}</span>
+              <span class="text-xl sm:text-2xl lg:text-xl xl:text-[28px] font-semibold text-primary leading-none tracking-tight mt-2 block truncate tabular-nums">+{{ fmtEur(result.interest) }}</span>
             </div>
           </div>
 

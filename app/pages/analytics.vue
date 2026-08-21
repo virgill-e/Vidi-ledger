@@ -2,14 +2,14 @@
   <div class="flex flex-col gap-6 lg:gap-10 min-w-0 mx-auto max-w-[1200px] w-full">
     
     <!-- Header Section -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden">
+    <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-6">
       <div>
         <h1 class="text-3xl font-bold text-text-heading tracking-tight mb-2">Analyses & Statistiques</h1>
         <p class="text-text-body/60 font-medium">Visualisez vos habitudes de consommation et optimisez votre budget.</p>
       </div>
-      
+
       <!-- Filters & Navigation Controls -->
-      <div class="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
+      <div class="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6 w-full sm:w-auto">
         <!-- Range Type Selector -->
         <div class="flex items-center bg-[#e3ece8] p-1 rounded-[24px] w-full sm:w-fit shadow-sm border border-white/50">
           <button v-for="filter in filters" :key="filter.id" 

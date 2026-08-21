@@ -18,25 +18,25 @@
       <form @submit.prevent="handleSubmit" class="flex flex-col gap-8">
         
         <!-- Type Selection -->
-        <div class="flex justify-center gap-4">
-          <button 
+        <div class="grid grid-cols-3 gap-2 sm:flex sm:justify-center sm:gap-4">
+          <button
             type="button"
             @click="form.type = 'buy'"
-            :class="['px-8 py-4 rounded-[22px] font-bold text-[16px] transition-all', form.type === 'buy' ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-105' : 'bg-[#e3ece8] text-text-body/60 hover:bg-[#d1e0d9]']"
+            :class="['w-full sm:w-auto px-3 sm:px-8 py-3 sm:py-4 rounded-[18px] sm:rounded-[22px] font-bold text-sm sm:text-[16px] whitespace-nowrap transition-all', form.type === 'buy' ? 'bg-primary text-white shadow-lg shadow-primary/20 sm:scale-105' : 'bg-[#e3ece8] text-text-body/60 hover:bg-[#d1e0d9]']"
           >
             Achat
           </button>
-          <button 
+          <button
             type="button"
             @click="form.type = 'sell'"
-            :class="['px-8 py-4 rounded-[22px] font-bold text-[16px] transition-all', form.type === 'sell' ? 'bg-[#e74c3c] text-white shadow-lg shadow-red-500/20 scale-105' : 'bg-[#f5e6e6] text-text-body/60 hover:bg-[#eedbdb]']"
+            :class="['w-full sm:w-auto px-3 sm:px-8 py-3 sm:py-4 rounded-[18px] sm:rounded-[22px] font-bold text-sm sm:text-[16px] whitespace-nowrap transition-all', form.type === 'sell' ? 'bg-[#e74c3c] text-white shadow-lg shadow-red-500/20 sm:scale-105' : 'bg-[#f5e6e6] text-text-body/60 hover:bg-[#eedbdb]']"
           >
             Vente
           </button>
-          <button 
+          <button
             type="button"
             @click="form.type = 'dividend'"
-            :class="['px-8 py-4 rounded-[22px] font-bold text-[16px] transition-all', form.type === 'dividend' ? 'bg-[#3498db] text-white shadow-lg shadow-blue-500/20 scale-105' : 'bg-[#e8f4fc] text-text-body/60 hover:bg-[#d4ebf8]']"
+            :class="['w-full sm:w-auto px-3 sm:px-8 py-3 sm:py-4 rounded-[18px] sm:rounded-[22px] font-bold text-sm sm:text-[16px] whitespace-nowrap transition-all', form.type === 'dividend' ? 'bg-[#3498db] text-white shadow-lg shadow-blue-500/20 sm:scale-105' : 'bg-[#e8f4fc] text-text-body/60 hover:bg-[#d4ebf8]']"
           >
             Dividende
           </button>

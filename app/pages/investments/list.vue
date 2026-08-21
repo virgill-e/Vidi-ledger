@@ -26,26 +26,26 @@
     </div>
 
     <!-- Filters & Stats -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <div class="lg:col-span-3 bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1]">
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6">
+      <div class="xl:col-span-3 bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1]">
         
         <!-- Filter Bar -->
         <div class="flex flex-col gap-6 mb-8">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex flex-col md:flex-row md:flex-wrap md:items-center justify-between gap-4 md:gap-6">
             <!-- Buy/Sell Toggle -->
-            <div class="flex items-center gap-2 bg-bg-base p-1.5 rounded-[20px] w-fit">
-              <button 
-                v-for="filter in ['all', 'buy', 'sell', 'dividend']" 
+            <div class="flex items-center gap-1 md:gap-2 bg-bg-base p-1.5 rounded-[20px] w-full md:w-fit md:shrink-0">
+              <button
+                v-for="filter in ['all', 'buy', 'sell', 'dividend']"
                 :key="filter"
                 @click="typeFilter = filter"
-                :class="['px-5 py-2.5 rounded-[14px] text-sm font-bold transition-all', typeFilter === filter ? 'bg-white text-primary shadow-sm' : 'text-text-body/40 hover:text-text-body/60']"
+                :class="['flex-1 md:flex-none px-2 md:px-5 py-2.5 rounded-[14px] text-xs md:text-sm font-bold transition-all whitespace-nowrap', typeFilter === filter ? 'bg-white text-primary shadow-sm' : 'text-text-body/40 hover:text-text-body/60']"
               >
                 {{ filter === 'all' ? 'Tous' : filter === 'buy' ? 'Achats' : filter === 'sell' ? 'Ventes' : 'Dividendes' }}
               </button>
             </div>
 
             <!-- Search -->
-            <div class="relative w-full md:max-w-[300px]">
+            <div class="relative w-full md:flex-1 md:min-w-[220px] md:max-w-[300px]">
               <input 
                 v-model="search"
                 type="text" 
@@ -242,24 +242,24 @@
         <div class="bg-card-inner rounded-[36px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1]">
           <h3 class="text-lg font-bold text-text-heading mb-6">Répartition par type</h3>
           <div class="flex flex-col gap-4">
-            <div class="flex justify-between items-center bg-bg-base p-4 rounded-[20px]">
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-primary"></div>
-                <span class="text-sm font-bold text-text-body/60">Achats</span>
+            <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 bg-bg-base p-4 rounded-[20px]">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-2 h-2 rounded-full bg-primary shrink-0"></div>
+                <span class="text-sm font-bold text-text-body/60 whitespace-nowrap">Achats</span>
               </div>
               <span class="font-bold text-text-heading">{{ buyCount }}</span>
             </div>
-            <div class="flex justify-between items-center bg-bg-base p-4 rounded-[20px]">
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-red-500"></div>
-                <span class="text-sm font-bold text-text-body/60">Ventes</span>
+            <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 bg-bg-base p-4 rounded-[20px]">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-2 h-2 rounded-full bg-red-500 shrink-0"></div>
+                <span class="text-sm font-bold text-text-body/60 whitespace-nowrap">Ventes</span>
               </div>
               <span class="font-bold text-text-heading">{{ sellCount }}</span>
             </div>
-            <div class="flex justify-between items-center bg-bg-base p-4 rounded-[20px]">
-              <div class="flex items-center gap-3">
-                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span class="text-sm font-bold text-text-body/60">Dividendes</span>
+            <div class="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 bg-bg-base p-4 rounded-[20px]">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></div>
+                <span class="text-sm font-bold text-text-body/60 whitespace-nowrap">Dividendes</span>
               </div>
               <span class="font-bold text-text-heading">{{ dividendCount }}</span>
             </div>

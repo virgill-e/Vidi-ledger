@@ -159,16 +159,16 @@
       </div>
     </div>
 
-    <!-- Mobile quick-add FAB (sits above the layout's GitHub button) -->
+    <!-- Mobile quick-add FAB (icon-only to minimize overlap with scrolled-under content; sits above the layout's GitHub button) -->
     <NuxtLink
       to="/transactions/add"
-      class="md:hidden fixed bottom-24 right-6 z-50 flex items-center gap-2 bg-primary text-white pl-4 pr-5 py-4 rounded-full shadow-lg shadow-primary/30 active:scale-95 transition-all border border-white/10"
+      class="md:hidden fixed bottom-24 right-6 z-30 flex items-center justify-center w-14 h-14 bg-primary text-white rounded-full shadow-lg shadow-primary/30 active:scale-95 transition-all border border-white/10"
       aria-label="Ajouter une dépense"
+      title="Ajouter une dépense"
     >
       <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
       </svg>
-      <span class="text-sm font-bold whitespace-nowrap">Dépense</span>
     </NuxtLink>
   </div>
 </template>
