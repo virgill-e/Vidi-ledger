@@ -63,7 +63,7 @@
 
       <!-- Total Expenses & Chart Widget -->
       <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-6 md:pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden md:relative flex flex-col md:h-[320px] w-full md:w-[55%] transition-transform hover:-translate-y-1 duration-300">
-        <div class="md:relative md:z-10 flex flex-col md:h-full">
+        <div class="flex flex-col">
           <div class="flex flex-col xl:flex-row xl:items-center justify-between mb-4 gap-4 xl:gap-0">
             <h2 class="text-text-heading text-[22px] font-medium min-w-0 truncate">Total Dépenses</h2>
             <div class="flex items-center bg-[#f0f4f2] p-1 xl:p-1.5 rounded-2xl w-full xl:w-fit min-w-0 shrink-0">
