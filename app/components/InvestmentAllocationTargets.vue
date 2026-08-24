@@ -47,13 +47,13 @@
       <div
         v-for="row in visibleRows"
         :key="row.name"
-        class="group relative flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 py-4 rounded-[20px] border border-transparent hover:border-primary/20 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-black/[0.02] transition-all cursor-default"
+        class="group relative flex flex-col sm:grid sm:grid-cols-[1.3fr_0.9fr_1fr_0.8fr_1fr_1.2fr_auto] gap-3 sm:gap-4 sm:items-center px-4 py-4 rounded-[20px] border border-transparent hover:border-primary/20 hover:bg-primary/[0.04] hover:shadow-md hover:shadow-black/[0.02] transition-all cursor-default"
       >
-        <div class="flex items-center gap-2 sm:w-[22%] min-w-0">
+        <div class="flex items-center gap-2 min-w-0">
           <span class="font-bold text-text-heading truncate">{{ row.name }}</span>
         </div>
 
-        <div class="flex items-center gap-2 sm:w-[14%]">
+        <div class="flex items-center gap-2 min-w-0">
           <template v-if="editingAsset === row.name">
             <input
               v-model.number="editPercentInput"
@@ -73,7 +73,7 @@
           </template>
         </div>
 
-        <div class="flex flex-col sm:w-[16%]">
+        <div class="flex flex-col min-w-0">
           <template v-if="editingAsset === row.name">
             <input
               v-model.number="editValueInput"
@@ -94,7 +94,7 @@
           </template>
         </div>
 
-        <div class="flex items-center sm:w-[14%]">
+        <div class="flex items-center min-w-0">
           <span
             class="px-2.5 py-1 rounded-lg text-[12px] font-bold"
             :class="row.currentPercent + 0.01 >= row.targetPercent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'"
@@ -103,21 +103,21 @@
           </span>
         </div>
 
-        <div class="flex flex-col sm:w-[16%]">
+        <div class="flex flex-col min-w-0">
           <span class="font-semibold text-text-body/70 text-sm">{{ goal && row.targetPercent > 0 ? formatCurrency(row.targetValue) : '—' }}</span>
         </div>
 
-        <div class="flex-1 min-w-0 sm:w-[18%]">
-          <div v-if="goal && row.targetPercent > 0 && row.delta > 1" class="text-[12px] font-bold text-red-500 truncate">
+        <div>
+          <div v-if="goal && row.targetPercent > 0 && row.delta > 1" class="text-[12px] font-bold text-red-500 whitespace-nowrap">
             Déposer {{ formatCurrency(row.delta) }}
           </div>
-          <div v-else-if="goal && row.targetPercent > 0" class="text-[12px] font-bold text-primary truncate">
+          <div v-else-if="goal && row.targetPercent > 0" class="text-[12px] font-bold text-primary whitespace-nowrap">
             Objectif atteint
           </div>
         </div>
 
         <!-- Hover actions: more visible affordance to edit -->
-        <div class="flex items-center gap-2 sm:opacity-40 group-hover:opacity-100 group-hover:scale-105 transition-all shrink-0">
+        <div class="flex items-center gap-2 sm:opacity-40 group-hover:opacity-100 group-hover:scale-105 transition-all shrink-0 sm:justify-self-end">
           <button
             v-if="editingAsset !== row.name"
             @click="startEditTarget(row)"
