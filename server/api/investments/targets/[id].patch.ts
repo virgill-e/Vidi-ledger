@@ -10,11 +10,12 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'ID is required' });
     }
 
-    const { asset, targetPercent } = await validateBody(event, investmentTargetUpdateSchema);
+    const { asset, targetPercent, currentValueOverride } = await validateBody(event, investmentTargetUpdateSchema);
 
     const updateData: any = {};
     if (asset !== undefined) updateData.asset = asset;
     if (targetPercent !== undefined) updateData.targetPercent = targetPercent;
+    if (currentValueOverride !== undefined) updateData.currentValueOverride = currentValueOverride;
 
     const updated = await fetchOne(
         db.update(investmentTargets as any)

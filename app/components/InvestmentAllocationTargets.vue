@@ -5,7 +5,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-text-heading text-[22px] font-medium">Objectifs d'allocation</h2>
-        <p class="text-text-body/50 text-sm font-medium mt-0.5">Assignez un objectif % à vos actifs existants</p>
+        <p class="text-text-body/50 text-sm font-medium mt-0.5">Assignez un objectif % à vos actifs existants — la valeur actuelle peut être ajustée manuellement</p>
       </div>
 
       <!-- Editable total goal -->
@@ -74,7 +74,24 @@
         </div>
 
         <div class="flex flex-col sm:w-[16%]">
-          <span class="font-semibold text-text-heading text-sm">{{ formatCurrency(row.currentValue) }}</span>
+          <template v-if="editingAsset === row.name">
+            <input
+              v-model.number="editValueInput"
+              type="number"
+              min="0"
+              step="1"
+              :placeholder="`${(Math.max(0, row.investedValue) / 100).toFixed(0)} (investi)`"
+              class="w-28 bg-white border border-primary/30 rounded-lg px-2 py-1 font-semibold text-text-heading text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              @keydown.enter="saveTargetEdit(row)"
+              @keydown.esc="cancelTargetEdit"
+            />
+          </template>
+          <template v-else>
+            <div class="flex items-center gap-1.5">
+              <span class="font-semibold text-text-heading text-sm">{{ formatCurrency(row.currentValue) }}</span>
+              <span v-if="row.isManual" class="text-[9px] text-text-body/40 font-bold uppercase bg-bg-base px-1.5 py-0.5 rounded">manuel</span>
+            </div>
+          </template>
         </div>
 
         <div class="flex items-center sm:w-[14%]">
@@ -118,6 +135,14 @@
             title="Enregistrer"
           >
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+          </button>
+          <button
+            v-if="editingAsset !== row.name && row.isManual"
+            @click="clearOverride(row)"
+            class="w-9 h-9 rounded-xl bg-white border border-[#e3ece8] text-text-body/50 hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5 transition-all flex items-center justify-center"
+            title="Revenir à la valeur investie"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
       </div>
@@ -185,7 +210,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 
 type AssetSummary = { name: string; netInvested: number };
-type Target = { id: number; asset: string; targetPercent: number };
+type Target = { id: number; asset: string; targetPercent: number; currentValueOverride: number | null };
 type Goal = { id: number; totalTarget: number } | null;
 
 const props = defineProps<{ assets: AssetSummary[] }>();
@@ -218,12 +243,18 @@ onMounted(() => {
   fetchGoal();
 });
 
-const totalCurrentValue = computed(() =>
-  props.assets.reduce((acc, a) => acc + Math.max(0, a.netInvested), 0)
-);
-
 const findTarget = (assetName: string) =>
   targets.value.find(t => t.asset.toLowerCase() === assetName.toLowerCase());
+
+// The current value of an asset defaults to its invested cost basis, but can
+// be overridden manually — useful since we have no live market price feed
+// and the market value can differ a lot from what was actually put in.
+const resolvedValue = (asset: AssetSummary, target: Target | undefined) =>
+  target?.currentValueOverride ?? Math.max(0, asset.netInvested);
+
+const totalCurrentValue = computed(() =>
+  props.assets.reduce((acc, a) => acc + resolvedValue(a, findTarget(a.name)), 0)
+);
 
 // One row per asset actually held in the portfolio — targets are assigned
 // directly on top of existing holdings, never as a free-standing entry.
@@ -231,11 +262,13 @@ const rows = computed(() => {
   return props.assets.map(asset => {
     const target = findTarget(asset.name);
     const targetPercent = target?.targetPercent ?? 0;
-    const currentValue = Math.max(0, asset.netInvested);
+    const investedValue = Math.max(0, asset.netInvested);
+    const currentValue = resolvedValue(asset, target);
+    const isManual = target?.currentValueOverride != null;
     const currentPercent = totalCurrentValue.value > 0 ? (currentValue / totalCurrentValue.value) * 100 : 0;
     const targetValue = goal.value ? Math.round(goal.value.totalTarget * (targetPercent / 100)) : 0;
     const delta = targetValue - currentValue;
-    return { name: asset.name, targetPercent, currentValue, currentPercent, targetValue, delta };
+    return { name: asset.name, id: target?.id ?? null, targetPercent, investedValue, currentValue, isManual, currentPercent, targetValue, delta };
   });
 });
 
@@ -280,10 +313,12 @@ const saveGoal = async () => {
 // --- Per-asset target editing (upsert directly on the asset row) ---
 const editingAsset = ref<string | null>(null);
 const editPercentInput = ref<number | null>(null);
+const editValueInput = ref<number | null>(null);
 
-const startEditTarget = (row: { name: string; targetPercent: number }) => {
+const startEditTarget = (row: { name: string; targetPercent: number; isManual: boolean; currentValue: number }) => {
   editingAsset.value = row.name;
   editPercentInput.value = row.targetPercent;
+  editValueInput.value = row.isManual ? row.currentValue / 100 : null;
 };
 
 const cancelTargetEdit = () => { editingAsset.value = null; };
@@ -293,7 +328,11 @@ const saveTargetEdit = async (row: { name: string }) => {
   try {
     const saved = await $fetch('/api/investments/targets', {
       method: 'POST',
-      body: { asset: row.name, targetPercent: editPercentInput.value },
+      body: {
+        asset: row.name,
+        targetPercent: editPercentInput.value,
+        currentValueOverride: editValueInput.value !== null ? Math.round(editValueInput.value * 100) : null,
+      },
     }) as Target;
     const idx = targets.value.findIndex(t => t.asset.toLowerCase() === row.name.toLowerCase());
     if (idx !== -1) targets.value[idx] = saved;
@@ -301,6 +340,20 @@ const saveTargetEdit = async (row: { name: string }) => {
     editingAsset.value = null;
   } catch (err) {
     console.error('Failed to save investment target', err);
+  }
+};
+
+const clearOverride = async (row: { id: number | null }) => {
+  if (row.id === null) return;
+  try {
+    const updated = await $fetch(`/api/investments/targets/${row.id}`, {
+      method: 'PATCH',
+      body: { currentValueOverride: null },
+    }) as Target;
+    const idx = targets.value.findIndex(t => t.id === row.id);
+    if (idx !== -1) targets.value[idx] = updated;
+  } catch (err) {
+    console.error('Failed to clear investment target override', err);
   }
 };
 

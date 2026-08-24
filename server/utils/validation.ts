@@ -40,6 +40,13 @@ const optionalNumber = z.preprocess(
     z.coerce.number().optional(),
 );
 
+// Like optionalNumber, but keeps `null` distinct from "not provided" so a
+// handler can tell "clear this field" apart from "leave it untouched".
+const clearableNumber = z.preprocess(
+    (v) => (v === '' || v === undefined ? undefined : v),
+    z.coerce.number().nullable().optional(),
+);
+
 const requiredNumber = z.coerce.number();
 const isoDateString = z.string().min(1, 'Date is required');
 const optionalNote = z.string().nullable().optional();
@@ -113,11 +120,13 @@ export const investmentUpdateSchema = z.object({
 export const investmentTargetUpsertSchema = z.object({
     asset: z.string().min(1, 'Asset is required'),
     targetPercent: z.coerce.number().min(0).max(100),
+    currentValueOverride: clearableNumber,
 });
 
 export const investmentTargetUpdateSchema = z.object({
     asset: z.string().min(1).optional(),
     targetPercent: z.coerce.number().min(0).max(100).optional(),
+    currentValueOverride: clearableNumber,
 });
 
 export const investmentGoalUpsertSchema = z.object({

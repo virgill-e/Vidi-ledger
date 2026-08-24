@@ -92,6 +92,7 @@ export const investmentTargets = table('investment_targets', {
     userId: int('user_id').notNull().references(() => users.id),
     asset: text('asset').notNull(),
     targetPercent: real('target_percent').notNull(),
+    currentValueOverride: int('current_value_override'), // In cents; manual current value when the market price differs from the cost basis
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
 });
 

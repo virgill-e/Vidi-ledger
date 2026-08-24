@@ -4,7 +4,7 @@ import { db, fetchOne } from '../../../utils/db';
 
 export default defineEventHandler(async (event) => {
     const user = await requireAuth(event);
-    const { asset, targetPercent } = await validateBody(event, investmentTargetUpsertSchema);
+    const { asset, targetPercent, currentValueOverride } = await validateBody(event, investmentTargetUpsertSchema);
 
     const existing = await fetchOne(
         db.select()
@@ -16,9 +16,12 @@ export default defineEventHandler(async (event) => {
     );
 
     if (existing) {
+        const updateData: any = { targetPercent };
+        if (currentValueOverride !== undefined) updateData.currentValueOverride = currentValueOverride;
+
         return await fetchOne(
             db.update(investmentTargets as any)
-              .set({ targetPercent })
+              .set(updateData)
               .where(eq((investmentTargets as any).id, existing.id))
               .returning()
         );
@@ -29,6 +32,7 @@ export default defineEventHandler(async (event) => {
             userId: user.id,
             asset,
             targetPercent,
+            currentValueOverride: currentValueOverride ?? null,
             createdAt: new Date(),
         }).returning()
     );

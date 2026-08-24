@@ -1,0 +1,1 @@
+ALTER TABLE "investment_targets" ADD COLUMN "current_value_override" integer;
