@@ -15,6 +15,13 @@
       "when": 1784206076567,
       "tag": "0002_add_session_device_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787565346495,
+      "tag": "0003_naive_daredevil",
+      "breakpoints": true
     }
   ]
 }

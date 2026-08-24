@@ -121,7 +121,7 @@
             <div v-for="(asset, index) in currentAssets" :key="index" class="group/asset">
               <NuxtLink
                 :to="`/investments/asset/${encodeURIComponent(asset.name)}`"
-                class="block rounded-2xl -mx-2 px-2 py-1.5 transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                class="block rounded-2xl -mx-2 px-2 py-1.5 transition-all ring-1 ring-transparent hover:bg-white/10 hover:ring-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                 :aria-label="`Voir le détail de ${asset.name}`"
               >
               <div class="flex justify-between items-start mb-2">
@@ -130,6 +130,9 @@
                     <span class="font-bold text-[18px] sm:text-[20px] text-white">{{ asset.name }}</span>
                     <span v-if="asset.netInvested > 0" class="font-bold text-[11px] text-white/60 bg-white/10 px-2 py-0.5 rounded-md">{{ asset.portfolioPercentage.toFixed(1) }}%</span>
                     <span class="font-medium text-[12px] text-white/50 bg-white/10 px-2 py-0.5 rounded-md">{{ asset.quantity.toLocaleString('fr-FR') }} unités</span>
+                    <svg class="w-3.5 h-3.5 text-white/0 group-hover/asset:text-white/70 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
                   </div>
                   <div class="flex flex-col gap-1 mt-1">
                     <div class="flex items-center gap-2" title="Prix d'achat moyen (Pondéré par vos achats et ventes)">
@@ -235,6 +238,9 @@
          </div>
       </div>
     </div>
+
+    <!-- Allocation Targets -->
+    <InvestmentAllocationTargets :assets="currentAssets" />
   </div>
 </template>
 

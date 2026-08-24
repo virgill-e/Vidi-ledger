@@ -110,6 +110,20 @@ export const investmentUpdateSchema = z.object({
     note: optionalNote,
 });
 
+export const investmentTargetUpsertSchema = z.object({
+    asset: z.string().min(1, 'Asset is required'),
+    targetPercent: z.coerce.number().min(0).max(100),
+});
+
+export const investmentTargetUpdateSchema = z.object({
+    asset: z.string().min(1).optional(),
+    targetPercent: z.coerce.number().min(0).max(100).optional(),
+});
+
+export const investmentGoalUpsertSchema = z.object({
+    totalTarget: requiredNumber,
+});
+
 // ----------------------------------------------------------------------------
 // Categories
 // ----------------------------------------------------------------------------

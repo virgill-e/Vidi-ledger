@@ -90,7 +90,7 @@
               <tr 
                 v-for="tx in paginatedInvestments" 
                 :key="tx.id" 
-                class="bg-white border border-[#e3ece8] rounded-[22px] transition-all hover:shadow-lg hover:shadow-black/[0.02] hover:-translate-y-0.5 group"
+                class="bg-white border border-[#e3ece8] rounded-[22px] transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/[0.06] hover:-translate-y-0.5 group"
               >
                 <td class="py-5 pl-4 rounded-l-[22px] font-medium text-text-body/60 text-sm">
                   {{ formatDate(tx.date) }}
@@ -110,10 +110,10 @@
                   {{ formatCurrency(tx.amount) }}
                 </td>
                 <td class="py-5 pr-4 text-right rounded-r-[22px]">
-                  <div class="flex items-center justify-end gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button 
+                  <div class="flex items-center justify-end gap-2 md:opacity-30 md:group-hover:opacity-100 md:group-hover:scale-105 transition-all">
+                    <button
                       @click="handleEdit(tx)"
-                      class="w-10 h-10 rounded-xl bg-bg-base text-text-body/40 hover:text-primary hover:bg-primary/5 transition-all flex items-center justify-center"
+                      class="w-10 h-10 rounded-xl bg-bg-base text-text-body/40 hover:text-primary hover:bg-primary/10 hover:ring-2 hover:ring-primary/20 transition-all flex items-center justify-center"
                       title="Modifier"
                     >
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">

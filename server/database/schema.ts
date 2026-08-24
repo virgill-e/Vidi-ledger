@@ -86,3 +86,18 @@ export const investments = table('investments', {
     note: text('note'),
     createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
 });
+
+export const investmentTargets = table('investment_targets', {
+    id: idColumn('id'),
+    userId: int('user_id').notNull().references(() => users.id),
+    asset: text('asset').notNull(),
+    targetPercent: real('target_percent').notNull(),
+    createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
+});
+
+export const investmentGoals = table('investment_goals', {
+    id: idColumn('id'),
+    userId: int('user_id').notNull().references(() => users.id).unique(),
+    totalTarget: int('total_target').notNull(), // In cents
+    createdAt: dateColumn('created_at').notNull().$defaultFn(() => new Date()),
+});
