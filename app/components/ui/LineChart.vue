@@ -51,11 +51,11 @@
     <!-- X-axis labels -->
     <div class="flex gap-2 mt-2 pt-1 border-t border-input-border/30">
       <div class="w-9 sm:w-11 shrink-0"></div>
-      <div class="flex justify-between grow min-w-0">
-        <span v-for="(pt, i) in points" :key="`x-${i}`"
-          :class="['text-[11px] font-medium text-text-body/50 truncate', (points.length > 7 && i % 2 !== 0) ? 'hidden sm:block' : 'block']"
-          :style="{ width: (100 / (points.length > 7 ? (points.length / 2) : points.length)) + '%', textAlign: 'center' }">
-          {{ pt.label }}
+      <div class="relative grow min-w-0 h-4">
+        <span v-for="lbl in visibleLabels" :key="`x-${lbl.index}`"
+          class="absolute text-[11px] font-medium text-text-body/50 whitespace-nowrap"
+          :style="labelStyle(lbl.xPercent)">
+          {{ lbl.label }}
         </span>
       </div>
     </div>
@@ -97,6 +97,38 @@ const plotted = computed(() => {
 });
 
 const linePointsAttr = computed(() => plotted.value.map((pt) => `${pt.x},${pt.y}`).join(' '));
+
+// Cap the number of x-axis labels shown regardless of point count — with many
+// points (e.g. one per transaction), a label per point is too narrow to read.
+// Always show the first and last, evenly spaced otherwise. Positioned
+// absolutely (rather than in equal-width flex boxes) so each label gets its
+// natural width instead of being squeezed and truncated.
+const MAX_X_LABELS = 7;
+const visibleLabels = computed(() => {
+  const n = props.points.length;
+  const indices = n <= MAX_X_LABELS
+    ? Array.from({ length: n }, (_, i) => i)
+    : (() => {
+        const step = (n - 1) / (MAX_X_LABELS - 1);
+        const set = new Set<number>();
+        for (let i = 0; i < MAX_X_LABELS; i++) set.add(Math.round(i * step));
+        return [...set].sort((a, b) => a - b);
+      })();
+
+  return indices.map((i) => ({
+    index: i,
+    label: props.points[i]?.label ?? '',
+    xPercent: n > 1 ? (i / (n - 1)) * 100 : 50,
+  }));
+});
+
+// Anchor first/last labels to the edge instead of centering them, so they
+// never overflow past the chart bounds.
+const labelStyle = (xPercent: number) => {
+  if (xPercent <= 1) return { left: '0%' };
+  if (xPercent >= 99) return { left: '100%', transform: 'translateX(-100%)' };
+  return { left: `${xPercent}%`, transform: 'translateX(-50%)' };
+};
 
 // Track the pointer continuously over the whole chart area and snap to the
 // nearest point, instead of relying on one narrow hit-zone div per point
