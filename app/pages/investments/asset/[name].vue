@@ -85,28 +85,12 @@
         <div class="lg:col-span-2 flex flex-col gap-6">
 
           <!-- Cumulative Invested Chart -->
-          <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-0 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden relative flex flex-col h-[320px]">
+          <div class="bg-card-inner rounded-[36px] pt-8 px-8 pb-6 shadow-[0_8px_30px_rgb(0,0,0,0.02)] border border-[#eff3f1] overflow-hidden relative flex flex-col h-[320px]">
             <h2 class="text-text-heading text-[22px] font-medium mb-1">Évolution de la position</h2>
-            <p class="text-text-body/50 text-sm font-medium">Capital net investi au fil du temps</p>
+            <p class="text-text-body/50 text-sm font-medium mb-4">Capital net investi au fil du temps</p>
 
-            <div class="absolute bottom-4 left-6 right-6 h-[180px] flex flex-col justify-end pointer-events-none">
-              <svg viewBox="0 0 500 120" preserveAspectRatio="none" class="w-full h-[140px] overflow-visible">
-                <defs>
-                  <linearGradient id="assetGradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#294b3c" stop-opacity="0.25" />
-                    <stop offset="100%" stop-color="#294b3c" stop-opacity="0.0" />
-                  </linearGradient>
-                </defs>
-                <path :d="chartAreaPath" fill="url(#assetGradient)" />
-                <polyline :points="chartLinePoints" fill="none" stroke="#294b3c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-              <div class="flex justify-between mt-2 pt-1 border-t border-input-border/30">
-                <span v-for="(pt, i) in chartData" :key="'label-'+i"
-                  :class="['text-[11px] font-medium text-text-body/50', (chartData.length > 7 && i % 2 !== 0) ? 'hidden sm:block' : 'block']"
-                  :style="{ width: (100 / (chartData.length > 7 ? (chartData.length/2) : chartData.length)) + '%', textAlign: 'center' }">
-                  {{ pt.label }}
-                </span>
-              </div>
+            <div class="grow min-h-0">
+              <UiLineChart v-if="chartData.length > 0" :points="chartData" :format-value="formatChartValue" />
             </div>
           </div>
 
@@ -357,41 +341,11 @@ const chartData = computed(() => {
     });
   });
 
-  const values = points.map(p => p.value);
-  const max = Math.max(...values, 100);
-  const width = 500;
-  const height = 100;
-
-  return points.map((pt, i) => {
-    const x = points.length > 1 ? (i / (points.length - 1)) * width : width / 2;
-    const y = height - (pt.value / max) * height;
-    return {
-      label: pt.label,
-      value: pt.value,
-      x: Math.max(10, Math.min(x, width - 10)),
-      y: Math.max(10, Math.min(y, height - 10))
-    };
-  });
-});
-
-const chartLinePoints = computed(() => chartData.value.map(pt => `${pt.x},${pt.y}`).join(' '));
-
-const chartAreaPath = computed(() => {
-  const pts = chartData.value;
-  if (!pts || pts.length === 0) return '';
-  const firstPt = pts[0];
-  const lastPt = pts[pts.length - 1];
-  if (!firstPt || !lastPt) return '';
-  const height = 120;
-  let d = `M${firstPt.x},${height} L${firstPt.x},${firstPt.y} `;
-  pts.forEach((pt, i) => {
-    if (i > 0) d += `L${pt.x},${pt.y} `;
-  });
-  d += `L${lastPt.x},${height} Z`;
-  return d;
+  return points;
 });
 
 const fmt = useFormat();
+const formatChartValue = (amountInCents: number) => fmt.formatCurrency(amountInCents, { compact: true });
 const formatDate = (date: string) => fmt.formatDate(date);
 const formatCurrency = (amountInCents: number, exact = false) => fmt.formatCurrency(amountInCents, { exact });
 
