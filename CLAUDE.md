@@ -19,10 +19,10 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.
 - `app/`: Nuxt frontend (auto-imported). Subdirs below.
-- `app/pages/`: file-based routes. `app/components/` (TheHeader) + `app/components/ui/` (Button, Input).
-- `app/layouts/`: `default` (gradient app shell + header), `auth` (centered card, login).
-- `app/middleware/`: `auth` (signed-in only), `guest` (signed-out only).
-- `app/composables/`: shared state (useState), `useFormat`. `app/assets/css/main.css`: theme tokens.
+- `app/pages/`: file-based routes. `app/components/` (TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs) + `app/components/ui/` (Button, Input, Toggle, Group).
+- `app/layouts/`: `default` (gradient app shell + header), `sheet` (white panel over the gradient, with `SheetHeader`), `auth` (centered card: login, onboarding).
+- `app/middleware/`: `wallet` (signed-in with a wallet — default for app pages), `onboarding` (signed-in without wallet), `auth` (signed-in), `guest` (signed-out).
+- `app/composables/`: shared state (useState): `useWallet`, `useCategories` (reset both on login/logout), `useFormat` (`formatMoney` in the wallet currency). `app/assets/css/main.css`: theme tokens.
 - `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`).
 - `server/database/schema.ts`: dual-dialect Drizzle schema. `server/utils/db.ts`: `db`, `fetchOne`, `fetchAll`.
 - `server/middleware/`: global (rateLimit). `shared/types/`: shared TS types + `auth.d.ts` (User session).
@@ -35,7 +35,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - Schema must stay dialect-agnostic: use the helpers in `schema.ts` (`table` — 3rd arg for `index`/`uniqueIndex`/`check` —, `text`, `int`, `bigint`, `bool`, `localDate`, `dateColumn`, `idColumn`), never raw `sqliteTable`/`pgTable`.
 - DB queries: use `fetchOne`/`fetchAll` from `server/utils/db.ts`, never call `.all()`/`.get()` directly (Postgres lacks them).
 - Every API handler: guard with `const user = await requireAuth(event)` (auto-imported from `server/utils/auth.ts`) → throws 401 if no session, returns `{ id, email, name, isAdmin }`. Admin-only routes: `await requireAdmin(event)` (401/403).
-- Data is scoped by wallet (`wallet_id`); one wallet per user (`wallets.user_id` unique). Resolve the user's wallet first, then scope every query by its id.
+- Data is scoped by wallet (`wallet_id`); one wallet per user (`wallets.user_id` unique). Wallet-scoped handlers start with `const { user, wallet } = await requireWallet(event)` (404 if none), then filter every query by `wallet.id`.
 - Validate request bodies with `validateBody(event, schema)` (auto-imported from `server/utils/validation.ts`); define/reuse a Zod schema there rather than hand-rolling `if (!field)` checks. Route params (`getRouterParam`) are still guarded inline.
 - Frontend: `<script setup lang="ts">`, Composition API, typed `defineProps`. Tailwind utility classes only. Icons: `<Icon name="lucide:…" />`.
 - Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported).

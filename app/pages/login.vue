@@ -69,6 +69,8 @@ const loading = ref(false);
 const error = ref('');
 
 const { fetch: refreshSession } = useUserSession();
+const { reset: resetWallet } = useWallet();
+const { reset: resetCategories } = useCategories();
 
 const switchMode = (value: Mode) => {
   mode.value = value;
@@ -97,6 +99,9 @@ const submit = async () => {
         : { name: name.value, email: email.value, password: password.value },
     });
     await refreshSession();
+    // Drop any state cached for a previous user of this tab.
+    resetWallet();
+    resetCategories();
     await navigateTo('/');
   } catch (err) {
     error.value = errorMessage(err);

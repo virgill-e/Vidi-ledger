@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive';
   type?: 'button' | 'submit';
   loading?: boolean;
   disabled?: boolean;
@@ -30,5 +30,6 @@ const variantClass = computed(() => ({
   secondary: 'bg-primary-soft text-primary hover:brightness-[0.98]',
   ghost: 'bg-transparent text-primary hover:bg-primary-soft/60',
   danger: 'bg-surface text-negative border border-line hover:bg-negative/5',
+  destructive: 'bg-negative text-white shadow-lg shadow-negative/25 hover:brightness-105',
 }[props.variant]));
 </script>
