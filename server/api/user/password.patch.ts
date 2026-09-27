@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
         });
     }
 
-    const isCorrect = await compare(currentPassword, user.password);
+    const isCorrect = await compare(currentPassword, user.passwordHash);
     if (!isCorrect) {
         throw createError({
             statusCode: 400,
@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     const hashedNewPassword = await hash(newPassword, 10);
 
     await dbAny.update(usersAny)
-        .set({ password: hashedNewPassword })
+        .set({ passwordHash: hashedNewPassword })
         .where(eq(usersAny.id, user.id))
         .execute();
 

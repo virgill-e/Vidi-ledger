@@ -9,17 +9,17 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "DB_TYPE=postgres drizzle-kit generate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@iconify-json/lucide": "^1.2.137",
+    "@nuxt/icon": "^2.5.1",
     "@tailwindcss/vite": "^4.2.1",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.6.2",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
-    "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8",
     "nuxt": "^4.3.1",
     "nuxt-auth-utils": "^0.5.29",
     "postgres": "^3.4.8",
@@ -31,6 +31,8 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/better-sqlite3": "^7.6.13",
-    "drizzle-kit": "^0.31.9"
+    "drizzle-kit": "^0.31.9",
+    "typescript": "~5.9",
+    "vue-tsc": "^3.3.11"
   }
 }

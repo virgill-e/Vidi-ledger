@@ -15,11 +15,15 @@ const getDb = () => {
     } else {
         // SQLite for Local Development (Default)
         const sqlite = new Database(dbUrl || 'sqlite.db');
+        // SQLite ignores foreign keys (and ON DELETE CASCADE) unless enabled per connection.
+        sqlite.pragma('foreign_keys = ON');
         return drizzleSqlite(sqlite, { schema });
     }
 };
 
-export const db = getDb();
+// Typed `any` on purpose: the union of both dialects' drizzle instances has no
+// callable query builder, so every call site would otherwise need a cast.
+export const db: any = getDb();
 
 // Dialect-agnostic helpers
 export const fetchAll = async (query: any) => {

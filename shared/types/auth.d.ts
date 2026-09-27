@@ -3,7 +3,7 @@ declare module '#auth-utils' {
         id: number;
         email: string;
         name: string;
-        role: string;
+        isAdmin: boolean;
     }
 
     interface UserSession {

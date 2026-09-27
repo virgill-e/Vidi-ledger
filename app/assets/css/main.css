@@ -1,17 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #294b3c;
-  --color-primary-light: #e1ede3;
-  --color-bg-base: #ebf0f4;
-  --color-card: #f8fbfa;
-  --color-card-inner: #fdfffe;
-  --color-text-heading: #0a1410;
-  --color-text-body: #2c3e34;
-  --color-input-bg: #f4f6f8;
-  --color-input-border: #d4d8db;
+  /* App background gradient (teal → blue) */
+  --color-brand-teal: #56c2b2;
+  --color-brand-blue: #3f86ee;
+
+  /* Actions */
+  --color-primary: #3a82f0;
+  --color-primary-soft: #d6e6fd;
+
+  /* Surfaces & text */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f2f3f7;
+  --color-ink: #14171f;
+  --color-ink-muted: #6b7280;
+  --color-line: #e3e5ea;
+
+  /* Amount semantics */
+  --color-positive: #2fae5b;
+  --color-negative: #e5484d;
 }
 
 html, body {
-  @apply bg-bg-base text-text-body antialiased;
+  @apply bg-surface-muted text-ink antialiased;
 }

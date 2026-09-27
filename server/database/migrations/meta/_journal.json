@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772741942903,
-      "tag": "0000_thankful_the_fallen",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1784206076567,
-      "tag": "0002_add_session_device_tracking",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1787565346495,
-      "tag": "0003_naive_daredevil",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1787572994828,
-      "tag": "0004_acoustic_reavers",
+      "when": 1790523737889,
+      "tag": "0000_v2_baseline",
       "breakpoints": true
     }
   ]

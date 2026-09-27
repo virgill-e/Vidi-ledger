@@ -1,4 +1,5 @@
 import type { H3Event } from 'h3';
+import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { sessions } from '../database/schema';
 import { db, fetchOne } from './db';
@@ -12,7 +13,7 @@ export interface SessionUser {
     id: number;
     email: string;
     name: string;
-    role: string;
+    isAdmin: boolean;
 }
 
 // Must match nuxt.config.ts `runtimeConfig.session.maxAge`. Also used as the
@@ -29,7 +30,7 @@ const SESSION_RENEW_THRESHOLD_MS = 1000 * 60 * 60 * 24; // 1 day
  * revoked/expired server-side (logout-elsewhere, "end session" from another
  * device, or the sliding window lapsing from inactivity).
  * On success, slides the session forward if it's getting old.
- * Returns the typed session user (`{ id, email, name, role }`) so handlers
+ * Returns the typed session user (`{ id, email, name, isAdmin }`) so handlers
  * don't need to re-cast it.
  *
  * Auto-imported by Nitro (like `defineRateLimit` / `validateBody`).
@@ -83,11 +84,44 @@ export const requireAuth = async (event: H3Event): Promise<SessionUser> => {
  */
 export const requireAdmin = async (event: H3Event): Promise<SessionUser> => {
     const user = await requireAuth(event);
-    if (user.role !== 'admin') {
+    if (!user.isAdmin) {
         throw createError({
             statusCode: 403,
             statusMessage: 'Forbidden: Admin access required',
         });
     }
     return user;
+};
+
+/**
+ * Log `user` in on this device: creates its `sessions` row (so it can be
+ * listed/revoked independently of the user's other devices) and seals the
+ * cookie. Returns the session user, safe to send back to the client.
+ */
+export const createUserSession = async (
+    event: H3Event,
+    user: { id: number; email: string; name: string; isAdmin: boolean },
+): Promise<SessionUser> => {
+    const sessionUser: SessionUser = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isAdmin: user.isAdmin,
+    };
+
+    const sessionId = randomUUID();
+    const now = new Date();
+    await db.insert(sessions).values({
+        id: sessionId,
+        userId: user.id,
+        userAgent: getHeader(event, 'user-agent') || null,
+        ipAddress: getRequestIP(event) || null,
+        createdAt: now,
+        lastActiveAt: now,
+        expiresAt: new Date(now.getTime() + SESSION_MAX_AGE_SECONDS * 1000),
+    }).execute();
+
+    await setUserSession(event, { user: sessionUser, sessionId });
+
+    return sessionUser;
 };

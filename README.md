@@ -1,14 +1,17 @@
 # 💰 Vidi Ledger
 
-Vidi Ledger est une application de finances personnelles permettant de suivre ses dépenses quotidiennes et de gérer le suivi de ses investissements (achats, ventes et dividendes d'actifs).
+Vidi Ledger est une application de finances personnelles basée sur un **budget journalier** : les revenus et charges récurrents sont lissés par jour, le budget non dépensé se reporte, l'épargne se range dans des pots, et les investissements (achats, ventes, dividendes) se saisissent comme des dépenses et des revenus.
 
-![Vidi Ledger Mockup](mockup-vidiledger.webp)
+> **V2 en cours de développement** sur `main` — spécification : [`docs/v2/analyse.md`](docs/v2/analyse.md).
+> La V1 (suivi de dépenses + investissements) est figée sur la branche `V1/main`.
+> La V2 utilise une **nouvelle base de données** : ne jamais la pointer vers la base V1.
 
 ## 🚀 Technologies utilisées
 
 - **Framework** : [Nuxt 4](https://nuxt.com/) (Vue.js 3)
 - **Styling** : [Tailwind CSS 4](https://tailwindcss.com/)
 - **Base de données** : [Drizzle ORM](https://orm.drizzle.team/) (SQLite ou PostgreSQL)
+- **Icônes** : [@nuxt/icon](https://github.com/nuxt/icon) (Lucide, embarqué localement)
 - **Conteneurisation** : Docker & Docker Compose.
 - **Node.js** : v22.x ou supérieur
 - **npm** : v10.x ou supérieur
