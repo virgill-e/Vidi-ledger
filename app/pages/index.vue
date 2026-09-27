@@ -27,10 +27,15 @@
 
     <BudgetChart v-if="visibleDays.length && data" :days="visibleDays" :today="data.today" class="grow min-h-80 w-screen relative left-1/2 -translate-x-1/2 mt-4 -mb-8" />
 
-    <NuxtLink to="/history" class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-30 h-14 px-5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur flex items-center gap-2 font-medium transition-colors">
-      <Icon name="lucide:history" class="size-5" />
-      Historique
-    </NuxtLink>
+    <nav class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 z-30 flex items-center gap-2">
+      <NuxtLink to="/history" class="h-14 px-5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur flex items-center gap-2 font-medium transition-colors">
+        <Icon name="lucide:history" class="size-5" />
+        Historique
+      </NuxtLink>
+      <NuxtLink to="/investments" class="size-14 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur flex items-center justify-center transition-colors" aria-label="Investissements" title="Investissements">
+        <Icon name="lucide:chart-line" class="size-6" />
+      </NuxtLink>
+    </nav>
     <NuxtLink
       to="/add"
       class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 z-30 size-16 rounded-full bg-sky-300/90 text-ink shadow-xl shadow-black/15 flex items-center justify-center hover:brightness-105 transition"

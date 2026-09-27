@@ -35,10 +35,11 @@ export default defineEventHandler(async (event) => {
         if (body.potId !== null) await requirePot(wallet.id, body.potId, { active: true });
         changes.potId = body.potId;
     }
-    // An expense paid from a pot must stay covered by it after the edit.
-    const potId = changes.potId !== undefined ? changes.potId as number | null : tx.potId;
-    if (tx.type === 'expense' && potId !== null && (changes.potId !== undefined || changes.amount !== undefined)) {
-        await assertPotCovers(wallet.id, potId, (changes.amount as number | undefined) ?? tx.amount, tx.id);
+    if (changes.potId !== undefined || changes.amount !== undefined) {
+        await assertPotsAfterEdit(wallet.id, tx, {
+            potId: changes.potId !== undefined ? changes.potId as number | null : tx.potId,
+            amount: (changes.amount as number | undefined) ?? tx.amount,
+        });
     }
 
     if (Object.keys(changes).length === 0) return tx;

@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     assertDateInWallet(wallet, body.date);
 
     const amount = toCents(body.amount);
-    if (body.direction === 'from_pot') await assertPotCovers(wallet.id, pot.id, amount);
+    if (body.direction === 'from_pot') await assertPotBalance(wallet.id, pot.id, { delta: -amount });
 
     const transfer = await fetchOne(db.insert(potTransfers).values({
         walletId: wallet.id,

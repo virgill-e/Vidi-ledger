@@ -34,7 +34,7 @@
       <p v-if="!movements.length" class="text-center text-ink-muted py-6">Aucun mouvement pour l'instant.</p>
       <UiGroup v-else title="Mouvements">
         <template v-for="m in movements" :key="`${m.kind}-${m.id}`">
-          <NuxtLink v-if="m.kind === 'transaction'" :to="`/transactions/${m.id}`" class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60">
+          <NuxtLink v-if="m.kind === 'transaction'" :to="['buy', 'sell', 'dividend'].includes(m.type) ? `/trades/${m.id}?from=/pots/${pot.id}` : `/transactions/${m.id}`" class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60">
             <Icon :name="categoryOf(m.categoryId)?.icon ?? 'lucide:tag'" class="size-6 shrink-0" :style="{ color: categoryOf(m.categoryId)?.color }" />
             <span class="grow min-w-0">
               <span class="block truncate">{{ m.memo || categoryOf(m.categoryId)?.name }}</span>

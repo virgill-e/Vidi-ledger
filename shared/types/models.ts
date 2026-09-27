@@ -1,6 +1,7 @@
 // Shapes returned by the API (dates as 'YYYY-MM-DD', money in cents).
 
 import type { Frequency } from '../utils/budget';
+import type { Position } from '../utils/portfolio';
 
 export type CategoryKind = 'expense' | 'income';
 
@@ -67,3 +68,36 @@ export interface Pot {
 export type PotMovement =
     | { kind: 'transfer'; id: number; date: string; memo: string | null; direction: 'to_pot' | 'from_pot'; amount: number }
     | { kind: 'transaction'; id: number; date: string; memo: string | null; type: TransactionType; categoryId: number; amount: number };
+
+export type AssetClass = 'etf' | 'stock' | 'crypto' | 'bond' | 'other';
+
+export interface Asset {
+    id: number;
+    name: string;
+    ticker: string | null;
+    assetClass: AssetClass | null;
+}
+
+// GET /api/assets
+export interface AssetSummary extends Asset {
+    position: Position;
+    tradeCount: number;
+    lastTradeDate: string | null;
+}
+
+export interface AssetPrice {
+    id: number;
+    date: string;
+    /** × UNIT_PRICE_SCALE */
+    unitPrice: number;
+}
+
+// GET /api/assets/:id
+export interface AssetDetail {
+    asset: Asset;
+    position: Position;
+    /** Newest first; `unitPrice` in cents per unit (null for dividends). */
+    trades: (Transaction & { unitPrice: number | null })[];
+    prices: AssetPrice[];
+    averageCostHistory: { date: string; averageCost: number | null }[];
+}

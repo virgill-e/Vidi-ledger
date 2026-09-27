@@ -180,3 +180,54 @@ export const potTransferCreateSchema = z.object({
     date: localDateString,
     memo: optionalMemo,
 });
+
+// ----------------------------------------------------------------------------
+// Investments (quantities / unit prices as exact decimal text → scaled ints)
+// ----------------------------------------------------------------------------
+
+const scaledDecimal = (decimals: number, message: string) => z
+    .union([z.string(), z.number()])
+    .transform((v) => parseScaled(String(v), decimals))
+    .refine((v): v is number => v !== null, message);
+
+const quantityField = scaledDecimal(QUANTITY_DECIMALS, 'Invalid quantity');
+const feesField = z.coerce.number().min(0).max(1_000_000);
+const optionalPotId = z.coerce.number().int().positive().nullable().optional();
+
+export const investmentCreateSchema = z
+    .object({
+        type: z.enum(['buy', 'sell', 'dividend']),
+        categoryId: z.coerce.number().int().positive(),
+        // An existing asset, or a name (the asset is created if unknown).
+        assetId: z.coerce.number().int().positive().optional(),
+        assetName: z.string().trim().min(1).max(60).optional(),
+        amount: positiveAmount,
+        quantity: quantityField.optional(),
+        fees: feesField.default(0),
+        date: localDateString,
+        memo: optionalMemo,
+        potId: optionalPotId,
+    })
+    .refine((d) => d.assetId !== undefined || d.assetName !== undefined, { message: 'Asset is required', path: ['assetName'] })
+    .refine((d) => d.type === 'dividend' || d.quantity !== undefined, { message: 'Quantity is required', path: ['quantity'] });
+
+// No defaults: omitted fields stay untouched. The type and asset never change.
+export const investmentUpdateSchema = z.object({
+    amount: positiveAmount,
+    quantity: quantityField.nullable(),
+    fees: feesField,
+    date: localDateString,
+    memo: optionalMemo,
+    potId: optionalPotId,
+}).partial();
+
+export const assetUpdateSchema = z.object({
+    name: z.string().trim().min(1).max(60),
+    ticker: z.string().trim().max(20).nullable(),
+    assetClass: z.enum(['etf', 'stock', 'crypto', 'bond', 'other']).nullable(),
+}).partial();
+
+export const assetPriceSchema = z.object({
+    date: localDateString,
+    unitPrice: scaledDecimal(UNIT_PRICE_DECIMALS, 'Invalid price'),
+});

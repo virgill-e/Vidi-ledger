@@ -19,28 +19,28 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.
 - `app/`: Nuxt frontend (auto-imported). Subdirs below.
-- `app/pages/`: file-based routes (`add/` picker + form, `history`, `transactions/[id]`, `recurrences/[id]`, `pots/` list, detail, transfer, edit, `settings/`). `app/components/`: TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs, AmountInput, DateChoice, SelectRow, ConfirmDelete, BudgetChart, IconColorPicker, PotForm, PotProgress; `app/components/ui/`: Button, Input, Toggle, Group, Segmented.
+- `app/pages/`: file-based routes (`add/` picker + form, `history`, `transactions/[id]`, `recurrences/[id]`, `pots/` list, detail, transfer, edit, `invest/[categoryId]` + `trades/[id]` (trade form), `investments/` portfolio + asset, `settings/`). `app/components/`: TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs, AmountInput, DateChoice, SelectRow, ConfirmDelete, BudgetChart, IconColorPicker, PotForm, PotProgress, InvestmentForm, PriceChart, MetricCell; `app/components/ui/`: Button, Input, Toggle, Group, Segmented.
 - `app/utils/`: `money.ts` (`parseAmount`, `centsToInput`), `labels.ts`, `categoryStyles.ts`.
 - `app/layouts/`: `default` (gradient app shell + header), `sheet` (white panel over the gradient, with `SheetHeader`), `auth` (centered card: login, onboarding).
 - `app/middleware/`: `wallet` (signed-in with a wallet — default for app pages), `onboarding` (signed-in without wallet), `auth` (signed-in), `guest` (signed-out).
 - `app/composables/`: shared state (useState): `useWallet`, `useCategories` (reset both on login/logout), `useFormat` (`formatMoney` in the wallet currency), `useLastAdded` (home flash after saving). `app/assets/css/main.css`: theme tokens.
 - `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`). `budget.get.ts` runs the engine from today over `?days=N`.
 - `server/database/schema.ts`: dual-dialect Drizzle schema. `server/utils/db.ts`: `db`, `fetchOne`, `fetchAll`.
-- `server/utils/`: `wallet.ts` (`requireWallet`, default categories), `categories.ts` (`requireMovementCategory`, `assertDateInWallet`, `toCents`), `movements.ts` (`requireTransaction`, `requireRecurrence`), `pots.ts` (`walletPotBalances`, `requirePot`, `assertPotCovers`).
+- `server/utils/`: `wallet.ts` (`requireWallet`, default categories), `categories.ts` (`requireMovementCategory`, `assertDateInWallet`, `toCents`), `movements.ts` (`requireTransaction`, `requireRecurrence`), `pots.ts` (`walletPotBalances`, `requirePot`, `assertPotBalance`, `assertPotsAfterEdit`), `investments.ts` (`requireInvestmentCategory`, `findOrCreateAsset`, `assertNoOversell`).
 - `server/middleware/`: global (rateLimit). `shared/types/`: shared TS types + `auth.d.ts` (User session).
-- `shared/utils/`: pure logic auto-imported in app + server — `dates.ts` ('YYYY-MM-DD' helpers, `todayIn`), `budget.ts` (daily budget engine), `pots.ts` (pot balances). Import explicitly between shared files and in tests.
+- `shared/utils/`: pure logic auto-imported in app + server — `dates.ts` ('YYYY-MM-DD' helpers, `todayIn`), `budget.ts` (daily budget engine), `pots.ts` (pot balances), `portfolio.ts` (positions, PRU, exact decimal parsing, scales). Import explicitly between shared files and in tests.
 
 ## Rules
 - Money stored as integer cents, always positive (the sign comes from the row type). Multiply on write (`Math.round(amount * 100)`), divide on read.
 - Business dates are `'YYYY-MM-DD'` text in the wallet's timezone (`localDate`); timestamps only for `created_at`/`updated_at`/`archived_at`.
-- Quantities: `bigint` × `QUANTITY_SCALE` (10⁸); unit prices × `UNIT_PRICE_SCALE` (10⁶). Never floats.
+- Quantities: `bigint` × `QUANTITY_SCALE` (10⁸); unit prices × `UNIT_PRICE_SCALE` (10⁶) — constants and `parseScaled`/`formatScaled` in `shared/utils/portfolio.ts`. Never floats; send quantities/prices to the API as decimal text.
 - Schema must stay dialect-agnostic: use the helpers in `schema.ts` (`table` — 3rd arg for `index`/`uniqueIndex`/`check` —, `text`, `int`, `bigint`, `bool`, `localDate`, `dateColumn`, `idColumn`), never raw `sqliteTable`/`pgTable`.
 - DB queries: use `fetchOne`/`fetchAll` from `server/utils/db.ts`, never call `.all()`/`.get()` directly (Postgres lacks them).
 - Every API handler: guard with `const user = await requireAuth(event)` (auto-imported from `server/utils/auth.ts`) → throws 401 if no session, returns `{ id, email, name, isAdmin }`. Admin-only routes: `await requireAdmin(event)` (401/403).
 - Data is scoped by wallet (`wallet_id`); one wallet per user (`wallets.user_id` unique). Wallet-scoped handlers start with `const { user, wallet } = await requireWallet(event)` (404 if none), then filter every query by `wallet.id`.
 - Validate request bodies with `validateBody(event, schema)` (auto-imported from `server/utils/validation.ts`); define/reuse a Zod schema there rather than hand-rolling `if (!field)` checks. Route params (`getRouterParam`) are still guarded inline.
 - Frontend: `<script setup lang="ts">`, Composition API, typed `defineProps`. Tailwind utility classes only. Icons: `<Icon name="lucide:…" />`.
-- Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported).
+- Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported). Restart `nuxt dev` after adding exports to `shared/utils` (the auto-import registry does not pick them up live).
 - After schema changes run `npm run db:generate` (commit migration) then `npm run db:push`.
 
 ## Never

@@ -18,7 +18,7 @@
           :name="c.name"
           :icon="c.icon"
           :color="c.color"
-          :to="`/add/${c.id}`"
+          :to="c.isInvestment ? `/invest/${c.id}` : `/add/${c.id}`"
         />
         <NuxtLink
           :to="`/settings/categories/new?kind=${kind}`"
@@ -46,8 +46,8 @@ const kind = computed<CategoryKind>({
 const { categories, ensureLoaded } = useCategories();
 await ensureLoaded();
 
-// Investment categories open their own form (V2/investments).
+// Investment categories open the trade form (/invest/:categoryId).
 const available = computed(() =>
-  (categories.value ?? []).filter((c) => c.kind === kind.value && !c.archivedAt && !c.isInvestment),
+  (categories.value ?? []).filter((c) => c.kind === kind.value && !c.archivedAt),
 );
 </script>

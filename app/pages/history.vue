@@ -10,12 +10,12 @@
           <NuxtLink
             v-for="tx in day.items"
             :key="tx.id"
-            :to="`/transactions/${tx.id}`"
+            :to="tx.assetId ? `/trades/${tx.id}` : `/transactions/${tx.id}`"
             class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60"
           >
             <Icon :name="categoryOf(tx.categoryId)?.icon ?? 'lucide:tag'" class="size-6 shrink-0" :style="{ color: categoryOf(tx.categoryId)?.color }" />
             <span class="grow min-w-0">
-              <span class="block truncate">{{ tx.memo || categoryOf(tx.categoryId)?.name }}</span>
+              <span class="block truncate">{{ title(tx) }}</span>
               <span v-if="subtitle(tx)" class="block text-[13px] text-ink-muted truncate">{{ subtitle(tx) }}</span>
             </span>
             <span :class="['tabular-nums font-medium', isInflow(tx) ? 'text-positive' : '']">
@@ -66,20 +66,29 @@ const tab = computed<Tab>({
 
 const { wallet } = useWallet();
 const { categories, ensureLoaded } = useCategories();
-const { formatMoney, formatDate } = useFormat();
+const { formatMoney, formatDate, formatQuantity } = useFormat();
 const requestFetch = useRequestFetch();
 
-const [transactions, recurrences, pots] = await Promise.all([
+const [transactions, recurrences, pots, assets] = await Promise.all([
   requestFetch<Transaction[]>('/api/transactions'),
   requestFetch<Recurrence[]>('/api/recurrences'),
   requestFetch<Pot[]>('/api/pots'),
+  requestFetch<AssetSummary[]>('/api/assets'),
   ensureLoaded(),
 ]);
 
 const categoryOf = (id: number) => categories.value?.find((c) => c.id === id);
+const assetName = (tx: Transaction) => assets.find((a) => a.id === tx.assetId)?.name ?? '';
+// Trades read "Achat VWCE"; other movements show their memo or category.
+const title = (tx: Transaction) => {
+  if (tx.type === 'buy' || tx.type === 'sell' || tx.type === 'dividend') return `${TRADE_LABELS[tx.type]} ${assetName(tx)}`;
+  return tx.memo || categoryOf(tx.categoryId)?.name;
+};
 // "Courses · Vacances · étalé sur 3 jours": category (when a memo is shown), pot, spread.
 const subtitle = (tx: Transaction) => [
-  tx.memo ? categoryOf(tx.categoryId)?.name : null,
+  tx.assetId && tx.quantity ? `${formatQuantity(tx.quantity)} part(s)` : null,
+  tx.assetId ? tx.memo : null,
+  !tx.assetId && tx.memo ? categoryOf(tx.categoryId)?.name : null,
   tx.potId ? pots.find((p) => p.id === tx.potId)?.name : null,
   tx.spreadDays > 1 ? `étalé sur ${tx.spreadDays} jours` : null,
 ].filter(Boolean).join(' · ');

@@ -74,9 +74,8 @@ const bool = (name: string) => usePostgres ? pgBoolean(name) : sqliteInteger(nam
 const createdAt = () => dateColumn('created_at').notNull().$defaultFn(() => new Date());
 const updatedAt = () => dateColumn('updated_at').notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date());
 
-// Fixed-point scales for bigint columns.
-export const QUANTITY_SCALE = 100_000_000; // transactions.quantity
-export const UNIT_PRICE_SCALE = 1_000_000; // asset_prices.unit_price
+// Fixed-point scales of the bigint columns (transactions.quantity ×10⁸,
+// asset_prices.unit_price ×10⁶) live in shared/utils/portfolio.ts.
 
 // ----------------------------------------------------------------------------
 // Accounts

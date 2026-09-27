@@ -235,7 +235,7 @@ Répétition obligatoire sur une copie de la base de prod avant la bascule réel
 - **Conservée** : Nuxt 4, Drizzle (SQLite + Postgres), nuxt-auth-utils, zod, Tailwind 4, date-fns (+ `@date-fns/tz` pour le fuseau du portefeuille), bcrypt (hashes compatibles).
 - **Ajouts proposés** (outils existants plutôt que du code maison) :
   - Icônes : `@nuxt/icon` (Iconify). On stocke une clé du type `lucide:shopping-cart` en base.
-  - Graphiques : une librairie existante plutôt que le SVG maison de la V1, choix à faire en début de projet.
+  - Graphiques : finalement deux petits composants SVG (`BudgetChart`, `PriceChart`) — 3 à 7 points et un nuage de prix ne justifiaient pas une librairie.
   - Tests : vitest pour le moteur de budget.
 - **Retirés** : jspdf, jspdf-autotable (export hors périmètre).
 

@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     const potId = body.potId ?? null;
     if (potId !== null) {
         await requirePot(wallet.id, potId, { active: true });
-        if (category.kind === 'expense') await assertPotCovers(wallet.id, potId, toCents(body.amount));
+        if (category.kind === 'expense') await assertPotBalance(wallet.id, potId, { delta: -toCents(body.amount) });
     }
 
     const created = await fetchOne(db.insert(transactions).values({
