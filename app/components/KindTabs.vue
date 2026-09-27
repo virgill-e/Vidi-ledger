@@ -1,18 +1,5 @@
 <template>
-  <div class="flex p-1 bg-ink/5 rounded-xl">
-    <button
-      v-for="tab in tabs"
-      :key="tab.value"
-      type="button"
-      :class="[
-        'flex-1 py-1.5 rounded-lg text-sm font-semibold transition-all',
-        modelValue === tab.value ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted',
-      ]"
-      @click="$emit('update:modelValue', tab.value)"
-    >
-      {{ tab.label }}
-    </button>
-  </div>
+  <UiSegmented :model-value="modelValue" :options="tabs" @update:model-value="$emit('update:modelValue', $event)" />
 </template>
 
 <script setup lang="ts">

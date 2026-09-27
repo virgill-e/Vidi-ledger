@@ -4,14 +4,21 @@
       <span class="text-white/70 text-sm font-medium">Budget du jour</span>
       <span class="text-5xl font-light tracking-tight mt-2">—</span>
     </div>
-    <p class="text-white/85 text-center max-w-sm">
-      Bonjour {{ user?.name }}. Le portefeuille et le budget journalier arrivent dans les prochaines étapes.
-    </p>
+
+    <NuxtLink to="/history" class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-5 h-14 px-5 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur flex items-center gap-2 font-medium transition-colors">
+      <Icon name="lucide:history" class="size-5" />
+      Historique
+    </NuxtLink>
+    <NuxtLink
+      to="/add"
+      class="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-5 size-16 rounded-full bg-sky-300/90 text-ink shadow-xl shadow-black/15 flex items-center justify-center hover:brightness-105 transition"
+      aria-label="Ajouter un mouvement"
+    >
+      <Icon name="lucide:plus" class="size-8" />
+    </NuxtLink>
   </div>
 </template>
 
 <script setup lang="ts">
 definePageMeta({ middleware: 'wallet' });
-
-const { user } = useUserSession();
 </script>

@@ -107,3 +107,51 @@ export const categoryUpdateSchema = z.object({
     ...categoryFields,
     archived: z.boolean(),
 }).partial();
+
+// ----------------------------------------------------------------------------
+// Transactions & recurrences (amounts in euros on write → cents in the handler)
+// ----------------------------------------------------------------------------
+
+const positiveAmount = z.coerce.number().positive('Amount must be positive').max(10_000_000);
+const optionalMemo = z.string().trim().max(200).nullable().optional();
+const frequency = z.enum(['daily', 'weekly', 'monthly', 'yearly']);
+
+const transactionFields = {
+    categoryId: z.coerce.number().int().positive(),
+    amount: positiveAmount,
+    date: localDateString,
+    memo: optionalMemo,
+    spreadDays: z.coerce.number().int().min(1).max(365),
+};
+
+export const transactionCreateSchema = z.object({
+    ...transactionFields,
+    spreadDays: transactionFields.spreadDays.default(1),
+});
+
+// No defaults here: an omitted field must stay untouched.
+export const transactionUpdateSchema = z.object(transactionFields).partial();
+
+export const recurrenceCreateSchema = z
+    .object({
+        categoryId: z.coerce.number().int().positive(),
+        amount: positiveAmount,
+        frequency,
+        startDate: localDateString,
+        endDate: localDateString.nullable().optional(),
+        memo: optionalMemo,
+    })
+    .refine((d) => !d.endDate || d.endDate >= d.startDate, {
+        message: 'End date must be on or after the start date',
+        path: ['endDate'],
+    });
+
+// `effectiveFrom`: apply amount/frequency changes from that day on, keeping
+// the rule unchanged before it (the past budget does not move).
+export const recurrenceUpdateSchema = z.object({
+    amount: positiveAmount,
+    frequency,
+    memo: optionalMemo,
+    endDate: localDateString.nullable(),
+    effectiveFrom: localDateString,
+}).partial();

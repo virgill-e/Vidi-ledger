@@ -20,18 +20,9 @@
 
       <p v-if="error" class="text-sm text-negative bg-negative/5 rounded-xl px-3 py-2" role="alert">{{ error }}</p>
 
-      <div v-if="!confirmingDelete">
-        <UiButton variant="danger" @click="confirmingDelete = true">Supprimer</UiButton>
-      </div>
-      <div v-else class="bg-surface rounded-2xl p-4 flex flex-col gap-3 border border-negative/30">
-        <p class="text-sm">
-          Supprimer <strong>{{ wallet?.name }}</strong> efface définitivement ses catégories, pots, investissements et mouvements. Ton compte est conservé.
-        </p>
-        <div class="flex gap-2">
-          <UiButton variant="secondary" @click="confirmingDelete = false">Annuler</UiButton>
-          <UiButton variant="destructive" :loading="deleting" @click="remove">Supprimer</UiButton>
-        </div>
-      </div>
+      <ConfirmDelete :loading="deleting" @confirm="remove">
+        Supprimer <strong>{{ wallet?.name }}</strong> efface définitivement ses catégories, pots, investissements et mouvements. Ton compte est conservé.
+      </ConfirmDelete>
     </div>
   </form>
 </template>
@@ -77,7 +68,6 @@ const save = async () => {
   }
 };
 
-const confirmingDelete = ref(false);
 const deleting = ref(false);
 
 const remove = async () => {

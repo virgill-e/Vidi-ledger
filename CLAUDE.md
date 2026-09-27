@@ -19,12 +19,14 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.
 - `app/`: Nuxt frontend (auto-imported). Subdirs below.
-- `app/pages/`: file-based routes. `app/components/` (TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs) + `app/components/ui/` (Button, Input, Toggle, Group).
+- `app/pages/`: file-based routes (`add/` picker + form, `history`, `transactions/[id]`, `recurrences/[id]`, `settings/`). `app/components/`: TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs, AmountInput, DateChoice, SelectRow, ConfirmDelete; `app/components/ui/`: Button, Input, Toggle, Group, Segmented.
+- `app/utils/`: `money.ts` (`parseAmount`, `centsToInput`), `labels.ts`, `categoryStyles.ts`.
 - `app/layouts/`: `default` (gradient app shell + header), `sheet` (white panel over the gradient, with `SheetHeader`), `auth` (centered card: login, onboarding).
 - `app/middleware/`: `wallet` (signed-in with a wallet — default for app pages), `onboarding` (signed-in without wallet), `auth` (signed-in), `guest` (signed-out).
 - `app/composables/`: shared state (useState): `useWallet`, `useCategories` (reset both on login/logout), `useFormat` (`formatMoney` in the wallet currency). `app/assets/css/main.css`: theme tokens.
 - `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`).
 - `server/database/schema.ts`: dual-dialect Drizzle schema. `server/utils/db.ts`: `db`, `fetchOne`, `fetchAll`.
+- `server/utils/`: `wallet.ts` (`requireWallet`, default categories), `categories.ts` (`requireMovementCategory`, `assertDateInWallet`, `toCents`), `movements.ts` (`requireTransaction`, `requireRecurrence`).
 - `server/middleware/`: global (rateLimit). `shared/types/`: shared TS types + `auth.d.ts` (User session).
 - `shared/utils/`: pure logic auto-imported in app + server — `dates.ts` ('YYYY-MM-DD' helpers, `todayIn`), `budget.ts` (daily budget engine). Import explicitly between shared files and in tests.
 

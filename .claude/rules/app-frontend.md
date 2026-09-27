@@ -14,3 +14,5 @@ paths:
 - Styling: Tailwind 4 utility classes inline, mobile-first. Theme tokens (`main.css`): `brand-teal`/`brand-blue` (app gradient: `bg-linear-160 from-brand-teal to-brand-blue`), `primary`, `primary-soft`, `surface`, `surface-muted`, `ink`, `ink-muted`, `line`, `positive`, `negative`.
 - Icons: `<Icon name="lucide:…" />` (served locally, no external API).
 - Fetch data with `$fetch`/`useFetch` against `/api/...`. Display money by dividing cents by 100.
+- A `<select>` bound with `:value` (not `v-model`) must also set `:selected` on its options, or SSR shows the first option (see `SelectRow`).
+- Money inputs: parse with `parseAmount` (euros, comma or dot), send euros to the API; display cents with `formatMoney`.

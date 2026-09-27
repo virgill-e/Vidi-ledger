@@ -11,7 +11,10 @@
         <Icon name="lucide:chevron-left" class="size-6" />
       </NuxtLink>
       <span v-else class="size-11" />
-      <h1 class="text-center font-semibold text-[17px] truncate">{{ title }}</h1>
+      <h1 class="flex items-center justify-center gap-2 font-semibold text-[17px] min-w-0">
+        <Icon v-if="icon" :name="icon" class="size-6 shrink-0" :style="{ color: iconColor }" />
+        <span class="truncate">{{ title }}</span>
+      </h1>
       <div class="min-w-11 flex justify-end">
         <slot name="action" />
       </div>
@@ -23,5 +26,7 @@
 defineProps<{
   title: string;
   backTo?: string;
+  icon?: string;
+  iconColor?: string;
 }>();
 </script>
