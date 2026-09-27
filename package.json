@@ -10,7 +10,8 @@
     "postinstall": "nuxt prepare",
     "db:push": "drizzle-kit push",
     "db:generate": "DB_TYPE=postgres drizzle-kit generate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest run"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.137",
@@ -33,6 +34,7 @@
     "@types/better-sqlite3": "^7.6.13",
     "drizzle-kit": "^0.31.9",
     "typescript": "~5.9",
+    "vitest": "^3.2.7",
     "vue-tsc": "^3.3.11"
   }
 }

@@ -52,7 +52,7 @@ Refonte complète inspirée de **Today's Budget** : budget journalier calculé �
 | Annuel | montant / nombre de jours de l'année concernée |
 
 - Exemple des captures : 2 335 € mensuel en septembre (30 j) → 77,83 €/jour.
-- Répartition exacte au centime : la somme des parts sur la période est égale au montant (le reste est distribué sur les jours, pas d'arrondi cumulé). L'affichage « budget quotidien » peut donc varier d'1 centime d'un jour à l'autre.
+- Calcul en fractions de centime, arrondi uniquement à l'affichage (comme l'app de référence) : la somme sur la période est égale au montant, sans dérive d'arrondi. Conséquence visible : « Excédent + Budget quotidien » peut différer d'1 centime du total affiché (30,47 + 40,47 → 70,93 dans les captures).
 - Période d'application : début (par défaut, le début du portefeuille) et fin optionnelle. Modifier un montant « à partir du JJ/MM » clôt l'ancienne règle et en crée une nouvelle : le passé n'est pas recalculé.
 
 **Formule** (pour chaque jour `j` à partir de la date de début) :
@@ -68,7 +68,7 @@ Disponible(début − 1) = 0
 ```
 
 - Le déficit se reporte comme le surplus (disponible négatif affiché en rouge).
-- Étalement sur N jours : montant / N par jour à partir de la date de la dépense (répartition exacte au centime).
+- Étalement sur N jours : montant / N par jour à partir de la date de la dépense.
 - Vérification avec les captures : aujourd'hui 40,47 − 10,00 = **30,47** ; dimanche : excédent 30,47 + budget quotidien 40,47 = **70,93** ; lundi : 111,40.
 
 **Écran d'accueil**
@@ -187,7 +187,7 @@ Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement
 Une transaction datée avant `wallets.start_date` n'a **aucun impact** sur le budget ni sur les pots. C'est ce qui neutralise l'historique d'investissements migré.
 
 ### 3.4 Calcul
-- Calcul à la volée côté serveur, dans une fonction pure (`server/utils/budget.ts`) : pas de table de soldes à maintenir. Le volume (quelques centaines de jours × quelques dizaines de règles) est négligeable ; un cache pourra être ajouté plus tard si besoin.
+- Calcul à la volée côté serveur, dans une fonction pure (`shared/utils/budget.ts`, partagée avec le front pour les aperçus « €/jour ») : pas de table de soldes à maintenir. Le volume (quelques centaines de jours × quelques dizaines de règles) est négligeable ; un cache pourra être ajouté plus tard si besoin.
 - Tests unitaires (vitest) sur cette fonction : fin de mois, février et années bissextiles, étalement, déficit reporté, règle modifiée « à partir de », début de portefeuille en milieu de mois, fuseau horaire.
 
 ---

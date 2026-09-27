@@ -14,6 +14,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - db gen migration: `npm run db:generate` (always Postgres dialect)
 - db studio: `npm run db:studio`
 - typecheck: `npx nuxt typecheck`
+- tests: `npm test` (vitest, `tests/`)
 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.
@@ -25,6 +26,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`).
 - `server/database/schema.ts`: dual-dialect Drizzle schema. `server/utils/db.ts`: `db`, `fetchOne`, `fetchAll`.
 - `server/middleware/`: global (rateLimit). `shared/types/`: shared TS types + `auth.d.ts` (User session).
+- `shared/utils/`: pure logic auto-imported in app + server — `dates.ts` ('YYYY-MM-DD' helpers, `todayIn`), `budget.ts` (daily budget engine). Import explicitly between shared files and in tests.
 
 ## Rules
 - Money stored as integer cents, always positive (the sign comes from the row type). Multiply on write (`Math.round(amount * 100)`), divide on read.
