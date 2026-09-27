@@ -17,7 +17,7 @@ Refonte complète inspirée de **Today's Budget** : budget journalier calculé �
 | Comptes | Inscription ouverte. Drapeau `is_admin` en base, vue admin (suppression de compte ou de données, changement de mot de passe) |
 | Plateforme | Web responsive, design entièrement nouveau (aucun lien visuel avec la V1) |
 | Périmètre | Fonctionnalités de Today's Budget + vues prix d'achat/vente des investissements + admin. Rien d'autre de la V1 n'est repris |
-| Migration | Utilisateurs + investissements uniquement, vers une **nouvelle base**. Portefeuilles migrés démarrant le 1ᵉʳ du mois |
+| Migration | Utilisateurs + investissements uniquement, vers une **nouvelle base**. Portefeuilles migrés démarrant le jour de bascule, jours écoulés du mois réputés dépensés à la moyenne |
 
 ---
 
@@ -200,11 +200,14 @@ Une transaction datée avant `wallets.start_date` n'a **aucun impact** sur le bu
 - Les migrations Drizzle V2 repartent d'une baseline `0000` ; l'historique V1 reste sur `V1/main`.
 
 ### 4.2 Date de bascule
-Les portefeuilles migrés démarrent le **1ᵉʳ du mois de la bascule**. Les dépenses V1 n'étant pas migrées, une bascule en cours de mois pose deux problèmes :
-- les jours entre le 1ᵉʳ et la bascule reçoivent leur allocation sans aucune dépense : surplus artificiel ;
-- les opérations d'investissement V1 de cette période impactent le budget (elles sont postérieures à `start_date`).
+La bascule peut avoir lieu n'importe quel jour. Les dépenses V1 n'étant pas migrées, les jours du mois déjà écoulés sont **considérés comme dépensés à hauteur de la moyenne journalière**, et les jours restants gardent cette même moyenne.
 
-**Recommandation : basculer le 1ᵉʳ d'un mois.** Sinon, ressaisir à la main les dépenses de la période. Le script signale les opérations migrées postérieures à `start_date`.
+En pratique, cela revient à fixer `start_date` = **jour de bascule** avec un disponible de départ à 0 :
+- le lissage mensuel reste `montant / nombre de jours du mois` : chaque jour restant reçoit la moyenne, sans recalcul sur les seuls jours restants ;
+- les jours écoulés n'apportent ni surplus ni déficit ;
+- les opérations d'investissement V1 de ces jours-là sont antérieures à `start_date` : elles n'impactent pas le budget.
+
+Exemple : salaire de 2 335 €, bascule le 15 septembre (30 jours) → du 15 au 30, 16 jours × 77,83 € ; les 14 premiers jours sont réputés consommés.
 
 ### 4.3 Script `scripts/migrate-from-v1.ts`
 - Lit `V1_DATABASE_URL`, écrit dans `DATABASE_URL`. Exécuté une fois.
@@ -213,7 +216,7 @@ Les portefeuilles migrés démarrent le **1ᵉʳ du mois de la bascule**. Les d�
 | V1 | V2 | Règle |
 |---|---|---|
 | `users` | `users` | email, nom, hash bcrypt copié tel quel (les mots de passe restent valides), `created_at`. `role = 'admin'` → `is_admin = true` |
-| — | `wallets` | 1 par utilisateur : « Mon portefeuille », `start_date` = 1ᵉʳ du mois de la bascule, EUR, Europe/Brussels |
+| — | `wallets` | 1 par utilisateur : « Mon portefeuille », `start_date` = jour de bascule, EUR, Europe/Brussels |
 | — | `categories` | jeu par défaut, dont « Investissement » (dépense) et « Revenus d'investissement » (revenu) |
 | `investments.asset` (distinct, insensible à la casse) | `assets` | `name` = graphie la plus fréquente |
 | `investments` | `transactions` | `buy` → catégorie Investissement ; `sell` / `dividend` → catégorie Revenus d'investissement. `amount` identique (centimes) ; `quantity` = round(q × 10⁸) ; `fees` = 0 (frais déjà inclus dans le montant V1) ; `date` = partie UTC du timestamp V1 (la V1 enregistre `YYYY-MM-DD` à minuit UTC) ; `note` → `memo` ; `pot_id` nul |
@@ -251,7 +254,7 @@ Répétition obligatoire sur une copie de la base de prod avant la bascule réel
 | 7 | `V2/investments` | Actifs, achats/ventes/dividendes, vues portefeuille et actif, cours manuels |
 | 8 | `V2/admin` | Vue admin : comptes, mot de passe, réinitialisation, suppression |
 | 9 | `V2/migration-v1` | Script de migration + contrôles, répétition sur copie de la prod |
-| 10 | Bascule | Un 1ᵉʳ du mois : V2 déployée sur la nouvelle base, V1 arrêtée ou en lecture seule |
+| 10 | Bascule | V2 déployée sur la nouvelle base, V1 arrêtée ou en lecture seule |
 
 1 et 2 en premier. La 9 peut démarrer dès que le schéma de la 1 est figé.
 
@@ -262,5 +265,5 @@ Répétition obligatoire sur une copie de la base de prod avant la bascule réel
 1. **Inscription** : ouverte, drapeau `is_admin` en base, vue admin (section 2.8).
 2. **Ventes et dividendes** : revenus ponctuels via une catégorie de revenu dédiée, distincte du salaire. Ils alimentent le budget ou un pot. *(Remplace la décision initiale « seuls les achats impactent le budget ».)*
 3. **DCA** : pas de programmation. Chaque achat est saisi à la main pour conserver le prix réel et un PRU exact.
-4. **Date de début des portefeuilles migrés** : 1ᵉʳ du mois (voir 4.2 pour la bascule).
+4. **Date de début des portefeuilles migrés** : jour de bascule ; les jours écoulés du mois sont réputés dépensés à la moyenne journalière, les jours restants gardent la moyenne (voir 4.2).
 5. **Récurrents** : loyer, charges, salaire… restent récurrents et lissés dans le budget. Aucun récurrent payé par un pot : ces charges-là se saisissent à la main.
