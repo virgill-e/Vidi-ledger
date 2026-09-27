@@ -32,6 +32,15 @@
         <p v-if="perDay" class="text-right text-[13px] text-ink-muted -mt-3 mb-1">{{ perDay }} / jour</p>
 
         <SelectRow
+          v-if="repeat === 'none' && potOptions.length > 1"
+          v-model="potId"
+          :label="category.kind === 'expense' ? 'Payé depuis' : 'Versé sur'"
+          :options="potOptions"
+          :active="potId !== ''"
+        />
+        <p v-if="exceedsPot" class="text-right text-[13px] text-negative -mt-3 mb-1">Solde du pot insuffisant</p>
+
+        <SelectRow
           v-if="repeat === 'none' && category.kind === 'expense'"
           v-model="spread"
           label="Étaler sur plusieurs jours"
@@ -72,7 +81,7 @@ const route = useRoute();
 const { wallet: walletState } = useWallet();
 const wallet = walletState.value!;
 const { categories, ensureLoaded } = useCategories();
-await ensureLoaded();
+const [pots] = await Promise.all([useRequestFetch()<Pot[]>('/api/pots'), ensureLoaded()]);
 
 const found = categories.value?.find((c) => c.id === Number(route.params.categoryId));
 if (!found || found.archivedAt || found.isInvestment) {
@@ -101,6 +110,18 @@ const repeatOptions = [
 ];
 const spreadOptions = SPREAD_OPTIONS.map((n) => ({ value: String(n), label: n === 1 ? 'Non' : `${n} jours` }));
 
+// '' = the budget; recurring movements always go through the budget.
+const potId = ref('');
+const activePots = pots.filter((p) => !p.archivedAt);
+const potOptions = [
+  { value: '', label: 'Budget' },
+  ...activePots.map((p) => ({ value: String(p.id), label: `${p.name} (${formatMoney(p.balance)})` })),
+];
+const exceedsPot = computed(() => {
+  const pot = activePots.find((p) => String(p.id) === potId.value);
+  return repeat.value === 'none' && category.kind === 'expense' && !!pot && amount.value !== null && Math.round(amount.value * 100) > pot.balance;
+});
+
 const effectiveStart = computed(() => (fromWalletStart.value ? wallet.startDate : startDate.value));
 
 // "77,83 € / jour" preview, in the current month/year like the engine.
@@ -110,7 +131,7 @@ const perDay = computed(() => {
 });
 
 const canSubmit = computed(() => {
-  if (amount.value === null) return false;
+  if (amount.value === null || exceedsPot.value) return false;
   if (repeat.value !== 'none' && !noEnd.value && (!endDate.value || endDate.value < effectiveStart.value)) return false;
   return true;
 });
@@ -132,6 +153,7 @@ const submit = async () => {
           date: date.value,
           memo: memo.value || null,
           spreadDays: Number(spread.value),
+          potId: potId.value ? Number(potId.value) : null,
         },
       });
     } else {

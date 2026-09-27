@@ -122,11 +122,14 @@ const transactionFields = {
     date: localDateString,
     memo: optionalMemo,
     spreadDays: z.coerce.number().int().min(1).max(365),
+    // null = budget; otherwise the pot paying the expense / receiving the income.
+    potId: z.coerce.number().int().positive().nullable(),
 };
 
 export const transactionCreateSchema = z.object({
     ...transactionFields,
     spreadDays: transactionFields.spreadDays.default(1),
+    potId: transactionFields.potId.optional(),
 });
 
 // No defaults here: an omitted field must stay untouched.
@@ -155,3 +158,25 @@ export const recurrenceUpdateSchema = z.object({
     endDate: localDateString.nullable(),
     effectiveFrom: localDateString,
 }).partial();
+
+// ----------------------------------------------------------------------------
+// Pots
+// ----------------------------------------------------------------------------
+
+const potFields = {
+    name: z.string().trim().min(1, 'Name is required').max(40),
+    icon: categoryFields.icon,
+    color: categoryFields.color,
+    targetAmount: positiveAmount.nullable(),
+};
+
+export const potCreateSchema = z.object({ ...potFields, targetAmount: potFields.targetAmount.optional() });
+
+export const potUpdateSchema = z.object({ ...potFields, archived: z.boolean() }).partial();
+
+export const potTransferCreateSchema = z.object({
+    direction: z.enum(['to_pot', 'from_pot']),
+    amount: positiveAmount,
+    date: localDateString,
+    memo: optionalMemo,
+});

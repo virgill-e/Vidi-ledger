@@ -27,41 +27,7 @@
         Catégorie d'investissement : elle ouvre le formulaire {{ category.kind === 'expense' ? "d'achat" : 'de vente et de dividende' }}.
       </p>
 
-      <section class="flex flex-col gap-2">
-        <h2 class="text-[13px] font-medium text-ink-muted px-1">Couleur</h2>
-        <div class="flex flex-wrap gap-2.5">
-          <button
-            v-for="c in CATEGORY_COLORS"
-            :key="c"
-            type="button"
-            :aria-label="`Couleur ${c}`"
-            :aria-pressed="form.color === c"
-            :class="['size-9 rounded-full transition-transform', form.color === c ? 'ring-3 ring-offset-2 ring-offset-surface-muted scale-110' : '']"
-            :style="{ backgroundColor: c, '--tw-ring-color': c }"
-            @click="form.color = c"
-          />
-        </div>
-      </section>
-
-      <section v-for="group in CATEGORY_ICON_GROUPS" :key="group.title" class="flex flex-col gap-2">
-        <h2 class="text-[13px] font-medium text-ink-muted px-1">{{ group.title }}</h2>
-        <div class="grid grid-cols-6 sm:grid-cols-8 gap-2">
-          <button
-            v-for="icon in group.icons"
-            :key="icon"
-            type="button"
-            :aria-label="icon.replace('lucide:', '')"
-            :aria-pressed="form.icon === icon"
-            :class="[
-              'aspect-square rounded-xl border flex items-center justify-center transition-colors',
-              form.icon === icon ? 'border-primary bg-primary-soft' : 'border-line bg-surface hover:border-primary/40',
-            ]"
-            @click="form.icon = icon"
-          >
-            <Icon :name="icon" class="size-5" :style="{ color: form.icon === icon ? form.color : undefined }" />
-          </button>
-        </div>
-      </section>
+      <IconColorPicker v-model:icon="form.icon" v-model:color="form.color" />
 
       <p v-if="error" class="text-sm text-negative bg-negative/5 rounded-xl px-3 py-2" role="alert">{{ error }}</p>
 

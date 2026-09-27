@@ -12,6 +12,11 @@ export default defineEventHandler(async (event) => {
     if (category.kind === 'income' && body.spreadDays > 1) {
         throw createError({ statusCode: 400, statusMessage: 'spreadDays: Only expenses can be spread' });
     }
+    const potId = body.potId ?? null;
+    if (potId !== null) {
+        await requirePot(wallet.id, potId, { active: true });
+        if (category.kind === 'expense') await assertPotCovers(wallet.id, potId, toCents(body.amount));
+    }
 
     const created = await fetchOne(db.insert(transactions).values({
         walletId: wallet.id,
@@ -21,6 +26,7 @@ export default defineEventHandler(async (event) => {
         amount: toCents(body.amount),
         memo: body.memo || null,
         spreadDays: body.spreadDays,
+        potId,
     }).returning());
 
     setResponseStatus(event, 201);

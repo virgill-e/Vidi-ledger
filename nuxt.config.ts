@@ -20,6 +20,8 @@ export default defineNuxtConfig({
     // no request ever leaves for the public Iconify API.
     serverBundle: { collections: ['lucide'] },
     fallbackToApi: false,
+    // Inline <svg>: Tailwind size-* classes apply (CSS mode forces 1em).
+    mode: 'svg',
   },
   runtimeConfig: {
     session: {

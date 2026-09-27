@@ -31,6 +31,16 @@ export default defineEventHandler(async (event) => {
         changes.spreadDays = body.spreadDays;
     }
 
+    if (body.potId !== undefined && body.potId !== tx.potId) {
+        if (body.potId !== null) await requirePot(wallet.id, body.potId, { active: true });
+        changes.potId = body.potId;
+    }
+    // An expense paid from a pot must stay covered by it after the edit.
+    const potId = changes.potId !== undefined ? changes.potId as number | null : tx.potId;
+    if (tx.type === 'expense' && potId !== null && (changes.potId !== undefined || changes.amount !== undefined)) {
+        await assertPotCovers(wallet.id, potId, (changes.amount as number | undefined) ?? tx.amount, tx.id);
+    }
+
     if (Object.keys(changes).length === 0) return tx;
 
     return fetchOne(db.update(transactions).set(changes).where(eq(transactions.id, tx.id)).returning());

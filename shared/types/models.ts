@@ -50,3 +50,20 @@ export interface Recurrence {
     endDate: string | null;
     memo: string | null;
 }
+
+export interface Pot {
+    id: number;
+    name: string;
+    icon: string;
+    color: string;
+    targetAmount: number | null;
+    position: number;
+    archivedAt: string | null;
+    /** Current balance, cents. */
+    balance: number;
+}
+
+// GET /api/pots/:id/movements — `amount` is signed from the pot's point of view.
+export type PotMovement =
+    | { kind: 'transfer'; id: number; date: string; memo: string | null; direction: 'to_pot' | 'from_pot'; amount: number }
+    | { kind: 'transaction'; id: number; date: string; memo: string | null; type: TransactionType; categoryId: number; amount: number };

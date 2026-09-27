@@ -30,6 +30,13 @@
       <div class="flex flex-col">
         <SelectRow v-model="categoryId" label="Catégorie" :options="categoryOptions" />
         <SelectRow
+          v-if="potOptions.length > 1"
+          v-model="potId"
+          :label="tx.type === 'expense' ? 'Payé depuis' : 'Versé sur'"
+          :options="potOptions"
+          :active="potId !== ''"
+        />
+        <SelectRow
           v-if="tx.type === 'expense'"
           v-model="spread"
           label="Étaler sur plusieurs jours"
@@ -56,8 +63,9 @@ const { wallet: walletState } = useWallet();
 const wallet = walletState.value!;
 const { categories, ensureLoaded } = useCategories();
 
-const [tx] = await Promise.all([
+const [tx, pots] = await Promise.all([
   requestFetch<Transaction>(`/api/transactions/${route.params.id}`).catch(() => null),
+  requestFetch<Pot[]>('/api/pots'),
   ensureLoaded(),
 ]);
 if (!tx || (tx.type !== 'expense' && tx.type !== 'income')) {
@@ -79,6 +87,13 @@ const categoryOptions = computed(() =>
     .filter((c) => c.kind === tx.type && !c.isInvestment && (!c.archivedAt || c.id === tx.categoryId))
     .map((c) => ({ value: String(c.id), label: c.name })),
 );
+// '' = the budget. The current pot stays listed even if archived since.
+const potId = ref(tx.potId ? String(tx.potId) : '');
+const { formatMoney } = useFormat();
+const potOptions = [
+  { value: '', label: 'Budget' },
+  ...pots.filter((p) => !p.archivedAt || p.id === tx.potId).map((p) => ({ value: String(p.id), label: `${p.name} (${formatMoney(p.balance)})` })),
+];
 const spreadOptions = SPREAD_OPTIONS.map((n) => ({ value: String(n), label: n === 1 ? 'Non' : `${n} jours` }));
 
 const saving = ref(false);
@@ -97,12 +112,15 @@ const save = async () => {
         amount: amount.value,
         date: date.value,
         memo: memo.value || null,
+        potId: potId.value ? Number(potId.value) : null,
         ...(tx.type === 'expense' ? { spreadDays: Number(spread.value) } : {}),
       },
     });
     await navigateTo('/history');
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || "Impossible d'enregistrer.";
+    error.value = err?.data?.statusMessage === 'Insufficient pot balance'
+      ? 'Solde du pot insuffisant.'
+      : err?.data?.statusMessage || "Impossible d'enregistrer.";
   } finally {
     saving.value = false;
   }

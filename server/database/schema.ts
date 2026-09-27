@@ -55,7 +55,7 @@ const dateColumn = (name: string) => {
     if (usePostgres) {
         return pgTimestamp(name, { mode: 'date' });
     } else {
-        return sqliteInteger(name, { mode: 'timestamp' });
+        return sqliteInteger(name, { mode: 'timestamp_ms' });
     }
 };
 

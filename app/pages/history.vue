@@ -16,9 +16,7 @@
             <Icon :name="categoryOf(tx.categoryId)?.icon ?? 'lucide:tag'" class="size-6 shrink-0" :style="{ color: categoryOf(tx.categoryId)?.color }" />
             <span class="grow min-w-0">
               <span class="block truncate">{{ tx.memo || categoryOf(tx.categoryId)?.name }}</span>
-              <span v-if="tx.memo || tx.spreadDays > 1" class="block text-[13px] text-ink-muted truncate">
-                {{ tx.memo ? categoryOf(tx.categoryId)?.name : '' }}{{ tx.memo && tx.spreadDays > 1 ? ' · ' : '' }}{{ tx.spreadDays > 1 ? `étalé sur ${tx.spreadDays} jours` : '' }}
-              </span>
+              <span v-if="subtitle(tx)" class="block text-[13px] text-ink-muted truncate">{{ subtitle(tx) }}</span>
             </span>
             <span :class="['tabular-nums font-medium', isInflow(tx) ? 'text-positive' : '']">
               {{ formatMoney(isInflow(tx) ? tx.amount : -tx.amount, { signed: true }) }}
@@ -71,13 +69,20 @@ const { categories, ensureLoaded } = useCategories();
 const { formatMoney, formatDate } = useFormat();
 const requestFetch = useRequestFetch();
 
-const [transactions, recurrences] = await Promise.all([
+const [transactions, recurrences, pots] = await Promise.all([
   requestFetch<Transaction[]>('/api/transactions'),
   requestFetch<Recurrence[]>('/api/recurrences'),
+  requestFetch<Pot[]>('/api/pots'),
   ensureLoaded(),
 ]);
 
 const categoryOf = (id: number) => categories.value?.find((c) => c.id === id);
+// "Courses · Vacances · étalé sur 3 jours": category (when a memo is shown), pot, spread.
+const subtitle = (tx: Transaction) => [
+  tx.memo ? categoryOf(tx.categoryId)?.name : null,
+  tx.potId ? pots.find((p) => p.id === tx.potId)?.name : null,
+  tx.spreadDays > 1 ? `étalé sur ${tx.spreadDays} jours` : null,
+].filter(Boolean).join(' · ');
 const isInflow = (tx: Transaction) => tx.type === 'income' || tx.type === 'sell' || tx.type === 'dividend';
 
 const days = computed(() => {
