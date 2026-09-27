@@ -13,6 +13,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - db push schema: `npm run db:push`
 - db gen migration: `npm run db:generate` (always Postgres dialect)
 - db studio: `npm run db:studio`
+- demo data (local SQLite only): `npm run db:seed` (`scripts/seed-dev.ts`, holds the demo login)
 - typecheck: `npx nuxt typecheck`
 - tests: `npm test` (vitest, `tests/`)
 - V1 → V2 migration: `V1_DATABASE_URL=… DATABASE_URL=… npm run migrate:v1 -- --dry-run [--start-date=YYYY-MM-DD]` (`scripts/migrate-from-v1/`, run with tsx; see README)

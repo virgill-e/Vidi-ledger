@@ -35,9 +35,9 @@ Créez un fichier `.env` à la racine du projet avec les variables suivantes :
 DB_TYPE=sqlite
 
 # URL de connexion
-# Pour SQLite : sqlite.db
+# Pour SQLite : v2-local.db
 # Pour PostgreSQL : postgresql://user:password@host:5432/dbname
-DATABASE_URL=sqlite.db
+DATABASE_URL=v2-local.db
 
 # Mot de passe secret pour la session (32 caractères minimum)
 NUXT_SESSION_PASSWORD=votre_secret_de_32_caracteres_minimum
@@ -53,11 +53,12 @@ NUXT_SESSION_PASSWORD=votre_secret_de_32_caracteres_minimum
    ```
 
 2. **Configurer le `.env`** :
-   Assurez-vous d'avoir `DB_TYPE=sqlite` et `DATABASE_URL=sqlite.db` pour le local.
+   Pour le local : `DB_TYPE=sqlite` et `DATABASE_URL=v2-local.db` (une base propre à la V2 — `sqlite.db` est celle de la V1).
 
-3. **Créer les tables** :
+3. **Créer les tables** puis, en option, des **données de démo** (compte et mot de passe dans `scripts/seed-dev.ts`) :
    ```bash
    npm run db:push
+   npm run db:seed
    ```
 
 4. **Lancer l'app** :

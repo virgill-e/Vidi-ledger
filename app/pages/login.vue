@@ -83,6 +83,7 @@ const errorMessage = (err: any): string => {
   if (status === 401) return 'Email ou mot de passe incorrect.';
   if (status === 409) return 'Un compte existe déjà avec cet email.';
   if (status === 429) return 'Trop de tentatives. Réessaie dans quelques minutes.';
+  if (status >= 500) return 'Erreur serveur. Réessaie dans un instant.';
   return err?.data?.statusMessage || 'Une erreur est survenue. Réessaie.';
 };
 

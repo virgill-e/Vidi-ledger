@@ -12,7 +12,8 @@
     "db:generate": "DB_TYPE=postgres drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "test": "vitest run",
-    "migrate:v1": "tsx scripts/migrate-from-v1/index.ts"
+    "migrate:v1": "tsx scripts/migrate-from-v1/index.ts",
+    "db:seed": "tsx scripts/seed-dev.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.137",
