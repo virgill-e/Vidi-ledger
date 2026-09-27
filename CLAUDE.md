@@ -15,6 +15,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - db studio: `npm run db:studio`
 - typecheck: `npx nuxt typecheck`
 - tests: `npm test` (vitest, `tests/`)
+- V1 → V2 migration: `V1_DATABASE_URL=… DATABASE_URL=… npm run migrate:v1 -- --dry-run [--start-date=YYYY-MM-DD]` (`scripts/migrate-from-v1/`, run with tsx; see README)
 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.

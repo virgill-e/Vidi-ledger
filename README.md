@@ -93,3 +93,20 @@ docker exec -it vidi-ledger-app npx drizzle-kit push
 
 ---
 
+---
+
+## 🔁 Migration V1 → V2
+
+Reprend les **utilisateurs** (mots de passe conservés, rôle admin) et les **investissements** (achats, ventes, dividendes, valeur manuelle → cours) de la V1 dans une **nouvelle** base V2. La base V1 n'est que lue. Détails : [`docs/v2/analyse.md`](docs/v2/analyse.md) §4.
+
+1. Créer une base V2 vide et y appliquer le schéma (`DATABASE_URL` pointant vers elle) :
+   ```bash
+   npm run db:push
+   ```
+2. Simuler (aucune écriture, contrôles V1 ↔ V2 bloquants) :
+   ```bash
+   V1_DATABASE_URL=<base V1> DATABASE_URL=<base V2> npm run migrate:v1 -- --dry-run --start-date=AAAA-MM-JJ
+   ```
+3. Lancer la migration réelle (même commande sans `--dry-run`). Le script refuse une base V2 non vide et revérifie les données écrites.
+
+`--start-date` : jour de bascule (par défaut aujourd'hui, Europe/Brussels). Les jours déjà écoulés du mois sont réputés dépensés ; les opérations V1 datées à partir de ce jour sont signalées car elles impactent le budget.

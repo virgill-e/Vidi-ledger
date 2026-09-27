@@ -209,9 +209,9 @@ En pratique, cela revient à fixer `start_date` = **jour de bascule** avec un di
 
 Exemple : salaire de 2 335 €, bascule le 15 septembre (30 jours) → du 15 au 30, 16 jours × 77,83 € ; les 14 premiers jours sont réputés consommés.
 
-### 4.3 Script `scripts/migrate-from-v1.ts`
+### 4.3 Script `scripts/migrate-from-v1/` (`npm run migrate:v1`)
 - Lit `V1_DATABASE_URL`, écrit dans `DATABASE_URL`. Exécuté une fois.
-- Mode `--dry-run`, exécution dans une transaction, refus si la base cible contient déjà des données.
+- Mode `--dry-run` ; tous les contrôles tournent avant toute écriture, puis à nouveau sur les données écrites ; refus si la base cible contient déjà des utilisateurs (en cas d'échec après écriture : recréer la base V2).
 
 | V1 | V2 | Règle |
 |---|---|---|
