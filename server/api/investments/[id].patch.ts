@@ -12,7 +12,6 @@ export default defineEventHandler(async (event) => {
     const body = await validateBody(event, investmentUpdateSchema);
     const changes: Record<string, unknown> = {};
     if (body.amount !== undefined) changes.amount = toCents(body.amount);
-    if (body.fees !== undefined) changes.fees = toCents(body.fees);
     if (body.date !== undefined) changes.date = body.date;
     if (body.memo !== undefined) changes.memo = body.memo || null;
     if (body.quantity !== undefined) {

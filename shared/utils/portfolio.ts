@@ -38,7 +38,6 @@ export interface Trade {
     date: string;
     amount: number; // cents
     quantity: number | null; // scaled
-    fees: number; // cents
 }
 
 export interface Position {

@@ -38,7 +38,6 @@ export interface Transaction {
     spreadDays: number;
     assetId: number | null;
     quantity: number | null;
-    fees: number;
 }
 
 export interface Recurrence {

@@ -8,7 +8,7 @@ let id = 1;
 const row = (type: string, asset: string, date: string, amount: number, quantity: number): V1Investment =>
     ({ id: id++, userId: 1, type, asset, amount, quantity, date, note: null });
 const asTrades = (rows: V1Investment[]): Trade[] =>
-    rows.map((r) => ({ ...(convertTrade(r) as { trade: ConvertedTrade }).trade, id: r.id, fees: 0 }));
+    rows.map((r) => ({ ...(convertTrade(r) as { trade: ConvertedTrade }).trade, id: r.id }));
 
 describe('V1 → V2 conversion', () => {
     it('groups assets case-insensitively and keeps the most frequent spelling', () => {

@@ -4,8 +4,8 @@ import {
 } from '../shared/utils/portfolio';
 
 let nextId = 1;
-const t = (type: Trade['type'], date: string, amount: number, units: number | null, fees = 0): Trade =>
-    ({ id: nextId++, type, date, amount, quantity: units === null ? null : Math.round(units * QUANTITY_SCALE), fees });
+const t = (type: Trade['type'], date: string, amount: number, units: number | null): Trade =>
+    ({ id: nextId++, type, date, amount, quantity: units === null ? null : Math.round(units * QUANTITY_SCALE) });
 
 describe('decimal parsing', () => {
     it('parses quantities exactly, comma or dot', () => {

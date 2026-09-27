@@ -221,7 +221,6 @@ export const transactions = table('transactions', {
     spreadDays: int('spread_days').notNull().default(1),
     assetId: int('asset_id').references(() => assets.id),
     quantity: bigint('quantity'), // × QUANTITY_SCALE
-    fees: int('fees').notNull().default(0), // In cents
     createdAt: createdAt(),
     updatedAt: updatedAt(),
 }, (t) => [
@@ -229,7 +228,6 @@ export const transactions = table('transactions', {
     index('transactions_asset_date_idx').on(t.assetId, t.date),
     check('transactions_type_check', sql`${t.type} IN ('expense', 'income', 'buy', 'sell', 'dividend')`),
     check('transactions_amount_check', sql`${t.amount} > 0`),
-    check('transactions_fees_check', sql`${t.fees} >= 0`),
     check('transactions_spread_check', sql`${t.spreadDays} = 1 OR (${t.type} = 'expense' AND ${t.spreadDays} > 1)`),
     check('transactions_investment_check', sql`
         (${t.type} IN ('buy', 'sell') AND ${t.assetId} IS NOT NULL AND ${t.quantity} IS NOT NULL AND ${t.quantity} > 0)

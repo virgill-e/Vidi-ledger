@@ -43,7 +43,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 - Validate request bodies with `validateBody(event, schema)` (auto-imported from `server/utils/validation.ts`); define/reuse a Zod schema there rather than hand-rolling `if (!field)` checks. Route params (`getRouterParam`) are still guarded inline.
 - Frontend: `<script setup lang="ts">`, Composition API, typed `defineProps`. Tailwind utility classes only. Icons: `<Icon name="lucide:…" />`.
 - Prefer Nuxt auto-imports (no manual import of `ref`, `useState`, `db` helpers where auto-imported). Restart `nuxt dev` after adding exports to `shared/utils` (the auto-import registry does not pick them up live).
-- After schema changes run `npm run db:generate` (commit migration) then `npm run db:push`.
+- After schema changes run `npm run db:generate` (commit migration) then `npm run db:push`. On SQLite, `db:push` can fail when a change rebuilds a table ("index … already exists"): for local data, back up the file first; the simple path is `rm v2-local.db && npm run db:push && npm run db:seed`.
 
 ## Never
 - Edit generated dirs: `.nuxt/`, `.output/`, `.nitro/`, `node_modules/`, `server/database/migrations/` (regenerate via drizzle-kit).

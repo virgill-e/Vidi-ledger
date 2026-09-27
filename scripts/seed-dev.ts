@@ -76,7 +76,7 @@ const main = async () => {
     const buy = cat('Investissement');
     const income = cat("Revenus d'investissement");
     await db.insert(transactions).values([
-        { walletId: wallet.id, categoryId: buy, type: 'buy', date: day(-120), amount: 20_100, assetId: vwce.id, quantity: q(2), fees: 100, memo: 'Premier achat' },
+        { walletId: wallet.id, categoryId: buy, type: 'buy', date: day(-120), amount: 20_100, assetId: vwce.id, quantity: q(2), memo: 'Premier achat' },
         { walletId: wallet.id, categoryId: buy, type: 'buy', date: day(-60), amount: 11_000, assetId: vwce.id, quantity: q(1) },
         { walletId: wallet.id, categoryId: income, type: 'sell', date: day(-30), amount: 12_000, assetId: vwce.id, quantity: q(1) },
         { walletId: wallet.id, categoryId: income, type: 'dividend', date: day(-20), amount: 300, assetId: vwce.id },

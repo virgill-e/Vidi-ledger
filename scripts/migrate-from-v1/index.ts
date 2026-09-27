@@ -112,7 +112,7 @@ const plan = (source: Awaited<ReturnType<typeof readV1>>) => {
                 else trades.push(result.trade);
             }
             const v1 = v1Aggregate(group.rows);
-            const asTrades: Trade[] = trades.map((t) => ({ ...t, id: t.v1Id, fees: 0 }));
+            const asTrades: Trade[] = trades.map((t) => ({ ...t, id: t.v1Id }));
             for (const issue of compareWithV1(v1, asTrades)) mismatches.push(`${user.email} / ${group.name}: ${issue}`);
 
             const late = trades.filter((t) => t.date >= startDate);
@@ -170,7 +170,6 @@ const write = async (plans: UserPlan[]) => {
                     memo: t.memo,
                     assetId: asset.id,
                     quantity: t.quantity,
-                    fees: 0,
                 }))).execute();
             }
             if (plan.quote !== null) {
@@ -213,7 +212,7 @@ const main = async () => {
         const tradeCount = assetPlans.reduce((n, a) => n + a.trades.length, 0);
         console.log(`• ${user.email}${user.role === 'admin' ? ' (admin)' : ''} — ${assetPlans.length} asset(s), ${tradeCount} operation(s)`);
         for (const a of assetPlans) {
-            const p = computePosition(a.trades.map((t) => ({ ...t, id: t.v1Id, fees: 0 })));
+            const p = computePosition(a.trades.map((t) => ({ ...t, id: t.v1Id })));
             console.log(`    ${a.name}: ${p.quantity / 1e8} unit(s), cost ${(p.costBasis / 100).toFixed(2)}, dividends ${(p.dividends / 100).toFixed(2)}${a.quote !== null ? `, quote ${(a.quote / 1e6).toFixed(2)}` : ''}`);
         }
     }

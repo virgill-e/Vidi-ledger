@@ -94,7 +94,7 @@ Disponible(début − 1) = 0
 | Budget ou un pot | source (ponctuel) | destination (ponctuel) | source | destination |
 | Actif (autocomplétion + création) | — | — | ✓ | ✓ |
 | Opération | — | — | Achat | Vente / Dividende |
-| Quantité, frais, prix unitaire calculé | — | — | ✓ | ✓ vente ; quantité optionnelle pour un dividende |
+| Quantité, prix unitaire calculé (frais compris) | — | — | ✓ | ✓ vente ; pas de quantité pour un dividende |
 
 3. Règles :
    - Une vente supérieure à la quantité détenue est refusée.
@@ -107,7 +107,7 @@ Disponible(début − 1) = 0
 - Solde négatif interdit.
 
 ### 2.5 Catégories
-- Type : dépense ou revenu, avec un drapeau « investissement » qui active les champs actif / quantité / frais.
+- Type : dépense ou revenu, avec un drapeau « investissement » qui active les champs actif / quantité.
 - Nom, icône, couleur, ordre, archivage (pas de suppression si utilisée).
 - Jeu par défaut à la création du portefeuille :
   - Dépenses : Logement, Charges, Transports, Courses, Sorties & restaurants, Santé, Loisirs, Autre, **Investissement**.
@@ -117,7 +117,7 @@ Disponible(début − 1) = 0
 ### 2.6 Investissements
 - **Vue portefeuille**, par actif : quantité détenue, PRU, investi net, dernier cours saisi, valeur, plus-value latente, plus-value réalisée, dividendes. Totaux.
 - **Vue actif** : courbe du cours saisi dans le temps avec les points d'achat et de vente (prix unitaire de chaque opération), ligne du PRU, liste des opérations, saisie d'un nouveau cours.
-- Calculs : PRU au coût moyen pondéré (même méthode que la V1), frais inclus dans le coût. Plus-value réalisée d'une vente = produit net − PRU × quantité vendue.
+- Calculs : PRU au coût moyen pondéré (même méthode que la V1), frais inclus dans le coût (ils ne sont pas suivis à part : le montant saisi les contient). Plus-value réalisée d'une vente = produit net − PRU × quantité vendue.
 
 ### 2.7 Historique
 - Liste groupée par jour, filtres par catégorie et type, modification et suppression.
@@ -168,7 +168,7 @@ Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement
 
 **recurrences** — `id`, `wallet_id`, `category_id`, `kind` (`expense` | `income`), `amount`, `frequency` (`daily` | `weekly` | `monthly` | `yearly`), `start_date`, `end_date?`, `memo?`, `created_at`, `updated_at`
 
-**transactions** — `id`, `wallet_id`, `category_id`, `type` (`expense` | `income` | `buy` | `sell` | `dividend`), `date`, `amount`, `memo?`, `pot_id?`, `spread_days` (≥ 1, défaut 1), `asset_id?`, `quantity?` (×10⁸), `fees` (défaut 0), `created_at`, `updated_at`
+**transactions** — `id`, `wallet_id`, `category_id`, `type` (`expense` | `income` | `buy` | `sell` | `dividend`), `date`, `amount`, `memo?`, `pot_id?`, `spread_days` (≥ 1, défaut 1), `asset_id?`, `quantity?` (×10⁸), `created_at`, `updated_at`
 - `buy` / `sell` ⇒ `asset_id` et `quantity > 0` obligatoires ; `dividend` ⇒ `asset_id` obligatoire ; `expense` / `income` ⇒ `asset_id` nul.
 - `spread_days > 1` uniquement pour `expense`.
 - Cohérence type ↔ catégorie, vérifiée côté API (contrainte inter-tables) : `buy` ⇒ catégorie dépense d'investissement ; `sell` / `dividend` ⇒ catégorie revenu d'investissement ; `expense` / `income` ⇒ catégorie non investissement du même sens.
@@ -219,7 +219,7 @@ Exemple : salaire de 2 335 €, bascule le 15 septembre (30 jours) → du 15 au 
 | — | `wallets` | 1 par utilisateur : « Mon portefeuille », `start_date` = jour de bascule, EUR, Europe/Brussels |
 | — | `categories` | jeu par défaut, dont « Investissement » (dépense) et « Revenus d'investissement » (revenu) |
 | `investments.asset` (distinct, insensible à la casse) | `assets` | `name` = graphie la plus fréquente |
-| `investments` | `transactions` | `buy` → catégorie Investissement ; `sell` / `dividend` → catégorie Revenus d'investissement. `amount` identique (centimes) ; `quantity` = round(q × 10⁸) ; `fees` = 0 (frais déjà inclus dans le montant V1) ; `date` = partie UTC du timestamp V1 (la V1 enregistre `YYYY-MM-DD` à minuit UTC) ; `note` → `memo` ; `pot_id` nul |
+| `investments` | `transactions` | `buy` → catégorie Investissement ; `sell` / `dividend` → catégorie Revenus d'investissement. `amount` identique (centimes) ; `quantity` = round(q × 10⁸)  (frais déjà inclus dans le montant V1) ; `date` = partie UTC du timestamp V1 (la V1 enregistre `YYYY-MM-DD` à minuit UTC) ; `note` → `memo` ; `pot_id` nul |
 | `investment_targets.current_value_override` | `asset_prices` | cours unitaire = valeur / quantité détenue, daté du jour de migration. Préserve la dernière valorisation manuelle |
 | `sessions`, `categories`, `expenses`, `investment_goals`, `investment_targets` (%) | — | non migrés |
 

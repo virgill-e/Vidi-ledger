@@ -191,7 +191,6 @@ const scaledDecimal = (decimals: number, message: string) => z
     .refine((v): v is number => v !== null, message);
 
 const quantityField = scaledDecimal(QUANTITY_DECIMALS, 'Invalid quantity');
-const feesField = z.coerce.number().min(0).max(1_000_000);
 const optionalPotId = z.coerce.number().int().positive().nullable().optional();
 
 export const investmentCreateSchema = z
@@ -203,7 +202,6 @@ export const investmentCreateSchema = z
         assetName: z.string().trim().min(1).max(60).optional(),
         amount: positiveAmount,
         quantity: quantityField.optional(),
-        fees: feesField.default(0),
         date: localDateString,
         memo: optionalMemo,
         potId: optionalPotId,
@@ -215,7 +213,6 @@ export const investmentCreateSchema = z
 export const investmentUpdateSchema = z.object({
     amount: positiveAmount,
     quantity: quantityField.nullable(),
-    fees: feesField,
     date: localDateString,
     memo: optionalMemo,
     potId: optionalPotId,

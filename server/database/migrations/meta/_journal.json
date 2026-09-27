@@ -8,6 +8,13 @@
       "when": 1790523737889,
       "tag": "0000_v2_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790544968428,
+      "tag": "0001_drop_trade_fees",
+      "breakpoints": true
     }
   ]
 }

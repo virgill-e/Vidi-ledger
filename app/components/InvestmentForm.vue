@@ -43,28 +43,16 @@
       <p class="text-[13px] font-medium text-ink-muted px-1 -mb-2">{{ amountLabel }}</p>
       <AmountInput v-model="amountText" :invalid="amountText !== '' && amount === null" />
 
-      <div v-if="type !== 'dividend'" class="grid grid-cols-2 gap-3">
-        <label class="flex flex-col gap-1">
-          <span class="text-[13px] font-medium text-ink-muted px-1">Quantité</span>
-          <input
-            v-model="quantityText"
-            type="text"
-            inputmode="decimal"
-            placeholder="ex. 1,5"
-            :class="['h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary', quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line']"
-          />
-        </label>
-        <label class="flex flex-col gap-1">
-          <span class="text-[13px] font-medium text-ink-muted px-1">Dont frais</span>
-          <input
-            v-model="feesText"
-            type="text"
-            inputmode="decimal"
-            placeholder="0,00"
-            :class="['h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary', fees === null ? 'border-negative' : 'border-line']"
-          />
-        </label>
-      </div>
+      <label v-if="type !== 'dividend'" class="flex flex-col gap-1">
+        <span class="text-[13px] font-medium text-ink-muted px-1">Quantité</span>
+        <input
+          v-model="quantityText"
+          type="text"
+          inputmode="decimal"
+          placeholder="ex. 1,5"
+          :class="['h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary', quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line']"
+        />
+      </label>
       <p v-if="oversell" class="text-[13px] text-negative text-center -mt-2">Tu ne détiens que {{ formatQuantity(selectedAsset!.position.quantity) }} part(s).</p>
       <p v-else-if="unitPrice !== null" class="text-center text-sm text-ink-muted -mt-1">
         Prix unitaire : <strong class="text-ink">{{ formatUnitPrice(unitPrice) }}</strong>
@@ -135,8 +123,6 @@ const amountText = ref(props.trade ? centsToInput(props.trade.amount) : '');
 const amount = computed(() => parseAmount(amountText.value));
 const quantityText = ref(props.trade?.quantity ? formatQuantity(props.trade.quantity) : '');
 const quantity = computed(() => parseScaled(quantityText.value, QUANTITY_DECIMALS));
-const feesText = ref(props.trade?.fees ? centsToInput(props.trade.fees) : '');
-const fees = computed(() => (feesText.value.trim() === '' || /^0+([,.]0*)?$/.test(feesText.value.trim()) ? 0 : parseAmount(feesText.value)));
 const memo = ref(props.trade?.memo ?? '');
 const date = ref(props.trade?.date ?? today);
 
@@ -164,7 +150,7 @@ const potOptions = [
 ];
 
 const canSubmit = computed(() => {
-  if (amount.value === null || fees.value === null) return false;
+  if (amount.value === null) return false;
   if (!props.trade && !assetName.value.trim()) return false;
   if (type.value !== 'dividend' && quantity.value === null) return false;
   return !oversell.value;
@@ -180,7 +166,6 @@ const submit = async () => {
   error.value = '';
   const common = {
     amount: amount.value,
-    fees: fees.value,
     date: date.value,
     memo: memo.value || null,
     potId: potId.value ? Number(potId.value) : null,

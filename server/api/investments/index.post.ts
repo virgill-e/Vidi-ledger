@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     }
     if (body.type === 'sell') {
         await assertNoOversell(wallet.id, asset.id, {
-            replace: { id: Number.MAX_SAFE_INTEGER, type: 'sell', date: body.date, amount, quantity, fees: 0 },
+            replace: { id: Number.MAX_SAFE_INTEGER, type: 'sell', date: body.date, amount, quantity },
         });
     }
 
@@ -36,7 +36,6 @@ export default defineEventHandler(async (event) => {
         potId,
         assetId: asset.id,
         quantity,
-        fees: toCents(body.fees),
     }).returning());
 
     setResponseStatus(event, 201);
