@@ -231,3 +231,11 @@ export const assetPriceSchema = z.object({
     date: localDateString,
     unitPrice: scaledDecimal(UNIT_PRICE_DECIMALS, 'Invalid price'),
 });
+
+// ----------------------------------------------------------------------------
+// Admin
+// ----------------------------------------------------------------------------
+
+export const adminPasswordSchema = z.object({
+    password: z.string().min(8, 'Password must be at least 8 characters long'),
+});

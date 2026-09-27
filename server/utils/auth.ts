@@ -1,7 +1,7 @@
 import type { H3Event } from 'h3';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { sessions } from '../database/schema';
+import { sessions, users } from '../database/schema';
 import { db, fetchOne } from './db';
 
 /**
@@ -80,11 +80,14 @@ export const requireAuth = async (event: H3Event): Promise<SessionUser> => {
 
 /**
  * Require an authenticated admin.
- * Throws 401 if not logged in, 403 if the user is not an admin.
+ * Throws 401 if not logged in, 403 if the user is not an admin. The flag is
+ * read from the database, not the session, so a revoked admin loses access
+ * immediately.
  */
 export const requireAdmin = async (event: H3Event): Promise<SessionUser> => {
     const user = await requireAuth(event);
-    if (!user.isAdmin) {
+    const row = await fetchOne(db.select({ isAdmin: users.isAdmin }).from(users).where(eq(users.id, user.id)));
+    if (!row?.isAdmin) {
         throw createError({
             statusCode: 403,
             statusMessage: 'Forbidden: Admin access required',

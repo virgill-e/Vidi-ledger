@@ -20,6 +20,16 @@
           <p class="font-medium">{{ user?.name }}</p>
           <p class="text-sm text-ink-muted">{{ user?.email }}</p>
         </div>
+        <NuxtLink to="/settings/password" class="flex items-center gap-3 px-4 min-h-13 hover:bg-surface-muted/60">
+          <Icon name="lucide:key-round" class="size-5 text-primary" />
+          <span class="grow">Changer mon mot de passe</span>
+          <Icon name="lucide:chevron-right" class="size-5 text-ink-muted" />
+        </NuxtLink>
+        <NuxtLink v-if="user?.isAdmin" to="/admin" class="flex items-center gap-3 px-4 min-h-13 hover:bg-surface-muted/60">
+          <Icon name="lucide:shield" class="size-5 text-primary" />
+          <span class="grow">Administration</span>
+          <Icon name="lucide:chevron-right" class="size-5 text-ink-muted" />
+        </NuxtLink>
         <button type="button" class="w-full flex items-center gap-3 px-4 min-h-13 text-negative hover:bg-negative/5" @click="logout">
           <Icon name="lucide:log-out" class="size-5" />
           Se déconnecter
