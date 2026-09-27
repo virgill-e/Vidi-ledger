@@ -81,6 +81,7 @@ if (!found || found.archivedAt || found.isInvestment) {
 const category: Category = found;
 
 const { formatMoney } = useFormat();
+const lastAdded = useLastAdded();
 const today = todayIn(wallet.timezone);
 
 const amountText = ref('');
@@ -146,6 +147,8 @@ const submit = async () => {
         },
       });
     }
+    const cents = Math.round(amount.value! * 100);
+    lastAdded.value = { amount: category.kind === 'expense' ? -cents : cents, name: category.name, icon: category.icon };
     await navigateTo('/');
   } catch (err: any) {
     error.value = err?.data?.statusMessage || "Impossible d'enregistrer.";

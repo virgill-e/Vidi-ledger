@@ -19,12 +19,12 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 ## Structure
 - `docs/v2/analyse.md`: V2 spec — source of truth for budget rules and the data model.
 - `app/`: Nuxt frontend (auto-imported). Subdirs below.
-- `app/pages/`: file-based routes (`add/` picker + form, `history`, `transactions/[id]`, `recurrences/[id]`, `settings/`). `app/components/`: TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs, AmountInput, DateChoice, SelectRow, ConfirmDelete; `app/components/ui/`: Button, Input, Toggle, Group, Segmented.
+- `app/pages/`: file-based routes (`add/` picker + form, `history`, `transactions/[id]`, `recurrences/[id]`, `settings/`). `app/components/`: TheHeader, SheetHeader, WalletForm, CategoryTile, KindTabs, AmountInput, DateChoice, SelectRow, ConfirmDelete, BudgetChart; `app/components/ui/`: Button, Input, Toggle, Group, Segmented.
 - `app/utils/`: `money.ts` (`parseAmount`, `centsToInput`), `labels.ts`, `categoryStyles.ts`.
 - `app/layouts/`: `default` (gradient app shell + header), `sheet` (white panel over the gradient, with `SheetHeader`), `auth` (centered card: login, onboarding).
 - `app/middleware/`: `wallet` (signed-in with a wallet — default for app pages), `onboarding` (signed-in without wallet), `auth` (signed-in), `guest` (signed-out).
-- `app/composables/`: shared state (useState): `useWallet`, `useCategories` (reset both on login/logout), `useFormat` (`formatMoney` in the wallet currency). `app/assets/css/main.css`: theme tokens.
-- `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`).
+- `app/composables/`: shared state (useState): `useWallet`, `useCategories` (reset both on login/logout), `useFormat` (`formatMoney` in the wallet currency), `useLastAdded` (home flash after saving). `app/assets/css/main.css`: theme tokens.
+- `server/api/`: Nitro endpoints, named `<resource>.<method>.ts` (e.g. `index.post.ts`). `budget.get.ts` runs the engine from today over `?days=N`.
 - `server/database/schema.ts`: dual-dialect Drizzle schema. `server/utils/db.ts`: `db`, `fetchOne`, `fetchAll`.
 - `server/utils/`: `wallet.ts` (`requireWallet`, default categories), `categories.ts` (`requireMovementCategory`, `assertDateInWallet`, `toCents`), `movements.ts` (`requireTransaction`, `requireRecurrence`).
 - `server/middleware/`: global (rateLimit). `shared/types/`: shared TS types + `auth.d.ts` (User session).
