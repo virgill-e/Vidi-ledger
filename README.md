@@ -110,4 +110,6 @@ Reprend les **utilisateurs** (mots de passe conservés, rôle admin) et les **in
    ```
 3. Lancer la migration réelle (même commande sans `--dry-run`). Le script refuse une base V2 non vide et revérifie les données écrites.
 
+Migration dans la **même** base Postgres : déplacer d'abord les tables V1 dans un autre schéma (`CREATE SCHEMA v1; ALTER TABLE public.<table> SET SCHEMA v1;` pour chaque table V1), appliquer les migrations V2 (`DB_TYPE=postgres npx drizzle-kit migrate`), puis passer `--v1-schema=v1` (et `--only=<email>` pour un seul compte).
+
 `--start-date` : jour de bascule (par défaut aujourd'hui, Europe/Brussels). Les jours déjà écoulés du mois sont réputés dépensés ; les opérations V1 datées à partir de ce jour sont signalées car elles impactent le budget.

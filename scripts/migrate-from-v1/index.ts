@@ -1,10 +1,12 @@
 // One-shot migration of V1 users and investments into a new, empty V2 database.
 //
 //   V1_DATABASE_URL=<V1 db> DATABASE_URL=<new V2 db> [DB_TYPE=postgres] \
-//     npm run migrate:v1 -- [--dry-run] [--start-date=YYYY-MM-DD]
+//     npm run migrate:v1 -- [--dry-run] [--start-date=YYYY-MM-DD] [--only=email] [--v1-schema=name]
 //
 // V1 is only read. The V2 schema must already exist (db:push / migrations)
-// and hold no user. Every check runs before writing (and again after, on the
+// and hold no user. --only migrates a single account; --v1-schema reads V1
+// tables from another Postgres schema (e.g. V1 moved to "v1" so V2 can live
+// in "public" of the same database). Every check runs before writing (and again after, on the
 // written rows); any error or mismatch exits with code 1.
 // Spec: docs/v2/analyse.md §4.
 
@@ -31,6 +33,8 @@ const isPostgresUrl = (url: string) => url.startsWith('postgres://') || url.star
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const startDate = args.find((a) => a.startsWith('--start-date='))?.split('=')[1] ?? todayIn(TIMEZONE);
+const only = args.find((a) => a.startsWith('--only='))?.slice('--only='.length).trim().toLowerCase();
+const v1Schema = args.find((a) => a.startsWith('--v1-schema='))?.slice('--v1-schema='.length).trim();
 const sourceUrl = process.env.V1_DATABASE_URL;
 const targetUrl = process.env.DATABASE_URL;
 
@@ -41,7 +45,10 @@ const fail = (message: string): never => {
 
 if (!sourceUrl) fail('V1_DATABASE_URL is required (the V1 database, read only).');
 if (!targetUrl) fail('DATABASE_URL is required (the new, empty V2 database).');
-if (sourceUrl === targetUrl) fail('V1_DATABASE_URL and DATABASE_URL must be different databases.');
+if (v1Schema !== undefined && !/^[a-z_][a-z0-9_]*$/.test(v1Schema)) fail('--v1-schema must be a plain schema name.');
+if (v1Schema !== undefined && !isPostgresUrl(sourceUrl!)) fail('--v1-schema only applies to a Postgres V1 database.');
+// Same database only when V1 sits in its own schema, away from V2's "public".
+if (sourceUrl === targetUrl && (v1Schema === undefined || v1Schema === 'public')) fail('V1 and V2 share the same database: move V1 to another schema and pass --v1-schema.');
 if (!isLocalDate(startDate)) fail(`--start-date must be YYYY-MM-DD (got "${startDate}").`);
 
 // ---------------------------------------------------------------------------
@@ -50,7 +57,7 @@ if (!isLocalDate(startDate)) fail(`--start-date must be YYYY-MM-DD (got "${start
 
 const readV1 = async (): Promise<{ users: V1User[]; investments: V1Investment[]; targets: V1Target[] }> => {
     if (isPostgresUrl(sourceUrl!)) {
-        const sql = postgres(sourceUrl!, { max: 1 });
+        const sql = postgres(sourceUrl!, { max: 1, ...(v1Schema ? { connection: { search_path: v1Schema } } : {}) });
         try {
             const u = await sql`SELECT id, email, name, password, role, (EXTRACT(EPOCH FROM created_at) * 1000)::bigint AS "createdAt" FROM users ORDER BY id`;
             const i = await sql`SELECT id, user_id AS "userId", type, asset, amount, quantity, to_char(date, 'YYYY-MM-DD') AS date, note FROM investments ORDER BY id`;
@@ -95,6 +102,19 @@ interface UserPlan {
     user: V1User;
     assets: AssetPlan[];
 }
+
+/** Keeps a single account (and its rows) when --only is given. */
+const selectUsers = (source: Awaited<ReturnType<typeof readV1>>) => {
+    if (!only) return source;
+    const users = source.users.filter((u) => u.email.trim().toLowerCase() === only);
+    if (!users.length) fail(`--only: no V1 account with the email ${only}.`);
+    const ids = new Set(users.map((u) => u.id));
+    return {
+        users,
+        investments: source.investments.filter((i) => ids.has(i.userId)),
+        targets: source.targets.filter((t) => ids.has(t.userId)),
+    };
+};
 
 const plan = (source: Awaited<ReturnType<typeof readV1>>) => {
     const errors: string[] = [];
@@ -204,8 +224,10 @@ const verifyWritten = async (plans: UserPlan[]) => {
 // ---------------------------------------------------------------------------
 
 const main = async () => {
-    console.log(`V1 → V2 migration${dryRun ? ' (dry run)' : ''} — wallets start on ${startDate} (${TIMEZONE})\n`);
-    const source = await readV1();
+    console.log(`V1 → V2 migration${dryRun ? ' (dry run)' : ''} — wallets start on ${startDate} (${TIMEZONE})${only ? ` — only ${only}` : ''}${v1Schema ? ` — V1 schema "${v1Schema}"` : ''}\n`);
+    const all = await readV1();
+    const source = selectUsers(all);
+    if (only) console.log(`(${all.users.length - source.users.length} other V1 account(s) left out)\n`);
     const { users: plans, errors, warnings, mismatches } = plan(source);
 
     for (const { user, assets: assetPlans } of plans) {
