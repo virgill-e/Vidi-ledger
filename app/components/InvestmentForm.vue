@@ -43,16 +43,32 @@
       <p class="text-[13px] font-medium text-ink-muted px-1 -mb-2">{{ amountLabel }}</p>
       <AmountInput v-model="amountText" :invalid="amountText !== '' && amount === null" />
 
-      <label v-if="type !== 'dividend'" class="flex flex-col gap-1">
-        <span class="text-[13px] font-medium text-ink-muted px-1">Quantité</span>
-        <input
-          v-model="quantityText"
-          type="text"
-          inputmode="decimal"
-          placeholder="ex. 1,5"
-          :class="['h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary', quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line']"
-        />
-      </label>
+      <div v-if="type !== 'dividend'" class="flex flex-col gap-1">
+        <label for="trade-quantity" class="text-[13px] font-medium text-ink-muted px-1">Quantité</label>
+        <div class="relative">
+          <input
+            id="trade-quantity"
+            v-model="quantityText"
+            type="text"
+            inputmode="decimal"
+            placeholder="ex. 1,5"
+            :class="[
+              'w-full h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary',
+              quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line',
+              maxQuantity !== null && 'pr-20',
+            ]"
+          />
+          <button
+            v-if="maxQuantity !== null"
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-xl bg-primary-soft text-primary font-semibold text-sm hover:brightness-95"
+            aria-label="Vendre toutes les parts"
+            @click="quantityText = formatQuantity(maxQuantity)"
+          >
+            Max
+          </button>
+        </div>
+      </div>
       <p v-if="oversell" class="text-[13px] text-negative text-center -mt-2">Tu ne détiens que {{ formatQuantity(selectedAsset!.position.quantity) }} part(s).</p>
       <p v-else-if="unitPrice !== null" class="text-center text-sm text-ink-muted -mt-1">
         Prix unitaire : <strong class="text-ink">{{ formatUnitPrice(unitPrice) }}</strong>
@@ -134,6 +150,13 @@ const amountLabel = computed(() => ({
 
 const unitPrice = computed(() =>
   amount.value === null ? null : tradeUnitPrice({ type: type.value, amount: Math.round(amount.value * 100), quantity: quantity.value }),
+);
+
+// Whole current holding, offered by the "Max" button when selling.
+const maxQuantity = computed(() =>
+  !props.trade && type.value === 'sell' && selectedAsset.value && selectedAsset.value.position.quantity > 0
+    ? selectedAsset.value.position.quantity
+    : null,
 );
 
 // Client-side hint only (current holding); the API checks the holding at the trade's date.
