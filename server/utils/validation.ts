@@ -182,7 +182,7 @@ export const potTransferCreateSchema = z.object({
 });
 
 // ----------------------------------------------------------------------------
-// Investments (quantities / unit prices as exact decimal text → scaled ints)
+// Investments (quantities as exact decimal text → scaled ints)
 // ----------------------------------------------------------------------------
 
 const scaledDecimal = (decimals: number, message: string) => z
@@ -223,11 +223,6 @@ export const assetUpdateSchema = z.object({
     ticker: z.string().trim().max(20).nullable(),
     assetClass: z.enum(['etf', 'stock', 'crypto', 'bond', 'other']).nullable(),
 }).partial();
-
-export const assetPriceSchema = z.object({
-    date: localDateString,
-    unitPrice: scaledDecimal(UNIT_PRICE_DECIMALS, 'Invalid price'),
-});
 
 // ----------------------------------------------------------------------------
 // Admin

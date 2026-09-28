@@ -11,11 +11,11 @@
 
 import { hash } from 'bcrypt';
 import { eq } from 'drizzle-orm';
-import { assetPrices, assets, categories, potTransfers, pots, recurrences, transactions, users, wallets } from '../server/database/schema';
+import { assets, categories, potTransfers, pots, recurrences, transactions, users, wallets } from '../server/database/schema';
 import { db, fetchAll, fetchOne } from '../server/utils/db';
 import { seedDefaultCategories } from '../server/utils/wallet';
 import { addDays, todayIn } from '../shared/utils/dates';
-import { QUANTITY_SCALE, UNIT_PRICE_SCALE } from '../shared/utils/portfolio';
+import { QUANTITY_SCALE } from '../shared/utils/portfolio';
 
 const DEMO_EMAIL = 'demo@vidi.local';
 const DEMO_PASSWORD = 'vidi-demo-2026';
@@ -82,10 +82,6 @@ const main = async () => {
         { walletId: wallet.id, categoryId: income, type: 'dividend', date: day(-20), amount: 300, assetId: vwce.id },
         { walletId: wallet.id, categoryId: buy, type: 'buy', date: day(-4), amount: 15_750, assetId: vwce.id, quantity: q(1.5) },
         { walletId: wallet.id, categoryId: buy, type: 'buy', date: day(-90), amount: 5_000, assetId: btc.id, quantity: q(0.00123456) },
-    ]).execute();
-    await db.insert(assetPrices).values([
-        { assetId: vwce.id, date: day(-45), unitPrice: 102.3 * UNIT_PRICE_SCALE },
-        { assetId: vwce.id, date: day(-1), unitPrice: 116 * UNIT_PRICE_SCALE },
     ]).execute();
 
     console.log(`✓ Demo data in ${url} — log in with ${DEMO_EMAIL} (password in scripts/seed-dev.ts).`);

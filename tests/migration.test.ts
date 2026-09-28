@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-    compareWithV1, convertTrade, groupByAsset, overrideToUnitPrice, v1Aggregate, type ConvertedTrade, type V1Investment,
+    compareWithV1, convertTrade, groupByAsset, v1Aggregate, type ConvertedTrade, type V1Investment,
 } from '../scripts/migrate-from-v1/convert';
-import { UNIT_PRICE_SCALE, type Trade } from '../shared/utils/portfolio';
+import type { Trade } from '../shared/utils/portfolio';
 
 let id = 1;
 const row = (type: string, asset: string, date: string, amount: number, quantity: number): V1Investment =>
@@ -45,11 +45,5 @@ describe('V1 → V2 conversion', () => {
         const trades = asTrades(rows);
         trades[0]!.amount = 20_000;
         expect(compareWithV1(v1Aggregate(rows), trades)).toEqual(['cost basis 20100 → 20000 cents']);
-    });
-
-    it('turns the V1 total-value override into a unit quote', () => {
-        expect(overrideToUnitPrice(23_200, 2 * 100_000_000)).toBe(116 * UNIT_PRICE_SCALE);
-        expect(overrideToUnitPrice(23_200, 0)).toBeNull();
-        expect(overrideToUnitPrice(null, 1)).toBeNull();
     });
 });

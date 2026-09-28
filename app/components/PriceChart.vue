@@ -2,12 +2,11 @@
   <div class="flex flex-col gap-2">
     <div class="relative h-60 bg-surface rounded-2xl border border-line select-none overflow-hidden">
       <p v-if="!hasData" class="absolute inset-0 flex items-center justify-center text-sm text-ink-muted px-6 text-center">
-        Ajoute un achat ou un cours pour voir le graphique.
+        Ajoute un achat pour voir le graphique.
       </p>
       <template v-else>
         <svg class="absolute inset-0 size-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           <line v-if="pruY !== null" x1="0" x2="100" :y1="pruY" :y2="pruY" class="stroke-ink-muted" stroke-width="1.5" stroke-dasharray="5 4" vector-effect="non-scaling-stroke" />
-          <polyline v-if="quotes.length > 1" :points="quoteLine" fill="none" class="stroke-primary" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
         </svg>
 
         <span class="absolute left-2 top-1.5 text-[11px] text-ink-muted tabular-nums">{{ formatUnitPrice(hi) }}</span>
@@ -18,13 +17,6 @@
         <span v-if="pruY !== null" class="absolute left-[12%] -translate-y-full text-[11px] font-semibold text-ink-muted bg-surface/80 px-1 rounded" :style="{ top: `${pruY}%` }">
           PRU {{ formatUnitPrice(averageCost!) }}
         </span>
-
-        <span
-          v-for="q in quotes"
-          :key="`q-${q.date}`"
-          class="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
-          :style="{ left: `${x(q.date)}%`, top: `${y(q.value)}%` }"
-        />
 
         <button
           v-for="(t, i) in tradePoints"
@@ -54,7 +46,6 @@
     <div v-if="hasData" class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[12px] text-ink-muted">
       <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-positive" /> Achat</span>
       <span class="flex items-center gap-1.5"><span class="size-2.5 rounded-full bg-negative" /> Vente</span>
-      <span v-if="quotes.length" class="flex items-center gap-1.5"><span class="w-4 h-0.5 bg-primary" /> Cours saisis</span>
       <span v-if="averageCost !== null" class="flex items-center gap-1.5"><span class="w-4 border-t-2 border-dashed border-ink-muted" /> PRU</span>
     </div>
   </div>
@@ -63,32 +54,29 @@
 <script setup lang="ts">
 const props = defineProps<{
   trades: AssetDetail['trades'];
-  prices: AssetPrice[];
   /** Current PRU, cents per unit. */
   averageCost: number | null;
 }>();
 
 const { formatMoney, formatUnitPrice, formatQuantity, formatDate } = useFormat();
 
-const quotes = computed(() => props.prices.map((p) => ({ date: p.date, value: unitPriceToCents(p.unitPrice) })));
 const tradePoints = computed(() =>
   props.trades
     .filter((t) => t.unitPrice !== null && (t.type === 'buy' || t.type === 'sell'))
     .map((t) => ({ id: t.id, type: t.type as 'buy' | 'sell', date: t.date, value: t.unitPrice!, quantity: t.quantity ?? 0, amount: t.amount }))
     .reverse(),
 );
-const hasData = computed(() => quotes.value.length > 0 || tradePoints.value.length > 0);
+const hasData = computed(() => tradePoints.value.length > 0);
 
 // Time axis: first to last point (±3 days when everything is on one day).
-const days = computed(() => [...quotes.value, ...tradePoints.value].map((p) => toDayNumber(p.date)));
+const days = computed(() => tradePoints.value.map((p) => toDayNumber(p.date)));
 const minDay = computed(() => (days.value.length ? Math.min(...days.value) - (spread.value ? 0 : 3) : 0));
 const maxDay = computed(() => (days.value.length ? Math.max(...days.value) + (spread.value ? 0 : 3) : 0));
 const spread = computed(() => days.value.length > 0 && Math.max(...days.value) > Math.min(...days.value));
 const x = (date: string) => 8 + ((toDayNumber(date) - minDay.value) / Math.max(1, maxDay.value - minDay.value)) * 84;
 
-// Price axis: every quote, trade price and the PRU, with some headroom.
+// Price axis: every buy/sell price and the PRU, with some headroom.
 const values = computed(() => [
-  ...quotes.value.map((q) => q.value),
   ...tradePoints.value.map((t) => t.value),
   ...(props.averageCost !== null ? [props.averageCost] : []),
 ]);
@@ -102,7 +90,6 @@ const lo = computed(() => range.value.lo);
 const hi = computed(() => range.value.hi);
 const y = (value: number) => 10 + (1 - (value - lo.value) / (hi.value - lo.value)) * 74;
 
-const quoteLine = computed(() => quotes.value.map((q) => `${x(q.date)},${y(q.value)}`).join(' '));
 const pruY = computed(() => (props.averageCost !== null ? y(props.averageCost) : null));
 
 const selected = ref<number | null>(null);

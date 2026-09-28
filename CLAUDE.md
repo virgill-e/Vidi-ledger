@@ -35,7 +35,7 @@ Nuxt 4 (Vue 3, Nitro) + TypeScript. Tailwind CSS 4. Drizzle ORM (SQLite local / 
 ## Rules
 - Money stored as integer cents, always positive (the sign comes from the row type). Multiply on write (`Math.round(amount * 100)`), divide on read.
 - Business dates are `'YYYY-MM-DD'` text in the wallet's timezone (`localDate`); timestamps only for `created_at`/`updated_at`/`archived_at`.
-- Quantities: `bigint` × `QUANTITY_SCALE` (10⁸); unit prices × `UNIT_PRICE_SCALE` (10⁶) — constants and `parseScaled`/`formatScaled` in `shared/utils/portfolio.ts`. Never floats; send quantities/prices to the API as decimal text.
+- Quantities: `bigint` × `QUANTITY_SCALE` (10⁸) — constant and `parseScaled`/`formatScaled` in `shared/utils/portfolio.ts`. Never floats; send quantities to the API as decimal text. Positions are followed at cost: no market value or quotes.
 - Schema must stay dialect-agnostic: use the helpers in `schema.ts` (`table` — 3rd arg for `index`/`uniqueIndex`/`check` —, `text`, `int`, `bigint`, `bool`, `localDate`, `dateColumn`, `idColumn`), never raw `sqliteTable`/`pgTable`.
 - DB queries: use `fetchOne`/`fetchAll` from `server/utils/db.ts`, never call `.all()`/`.get()` directly (Postgres lacks them).
 - Every API handler: guard with `const user = await requireAuth(event)` (auto-imported from `server/utils/auth.ts`) → throws 401 if no session, returns `{ id, email, name, isAdmin }`. Admin-only routes: `await requireAdmin(event)` (401/403, flag read from the DB). The first admin is set by hand (`UPDATE users SET is_admin = true …`) or migrated from V1; admin actions never target admin accounts.

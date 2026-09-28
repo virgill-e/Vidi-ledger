@@ -12,7 +12,7 @@ Refonte complète inspirée de **Today's Budget** : budget journalier calculé �
 | Épargne | Plusieurs pots nommés, alimentés manuellement depuis le surplus, utilisables comme source d'une dépense |
 | Investissements | Achat = dépense (catégorie d'investissement dans l'onglet Dépense). Vente et dividende = revenu ponctuel (catégorie de revenu dédiée, distincte du salaire). Chaque opération est saisie à la main, **pas de DCA programmé** |
 | Récurrents | Revenus et charges récurrents (salaire, loyer, charges…) lissés dans le budget. Toujours imputés au budget, jamais à un pot |
-| Cours des actifs | Saisie manuelle, historisée |
+| Cours des actifs | Aucun : pas de valeur actuelle, les positions sont suivies au prix de revient (retiré le 28/09/2026) |
 | Portefeuille | Un seul par utilisateur |
 | Comptes | Inscription ouverte. Drapeau `is_admin` en base, vue admin (suppression de compte ou de données, changement de mot de passe) |
 | Plateforme | Web responsive, design entièrement nouveau (aucun lien visuel avec la V1) |
@@ -115,8 +115,8 @@ Disponible(début − 1) = 0
 - Sélecteur d'icônes par groupes (Maison et factures, Alimentation…) comme dans l'app de référence. Pas de premium.
 
 ### 2.6 Investissements
-- **Vue portefeuille**, par actif : quantité détenue, PRU, investi net, dernier cours saisi, valeur, plus-value latente, plus-value réalisée, dividendes. Totaux.
-- **Vue actif** : courbe du cours saisi dans le temps avec les points d'achat et de vente (prix unitaire de chaque opération), ligne du PRU, liste des opérations, saisie d'un nouveau cours.
+- **Vue portefeuille**, par actif : quantité détenue, PRU, prix de revient, plus-value réalisée, dividendes. Totaux.
+- **Vue actif** : points d'achat et de vente dans le temps (prix unitaire de chaque opération), ligne du PRU, liste des opérations.
 - Calculs : PRU au coût moyen pondéré (même méthode que la V1), frais inclus dans le coût (ils ne sont pas suivis à part : le montant saisi les contient). Plus-value réalisée d'une vente = produit net − PRU × quantité vendue.
 
 ### 2.7 Historique
@@ -134,7 +134,7 @@ Disponible(début − 1) = 0
 - Premier admin : repris de la V1 (`role = 'admin'`) lors de la migration, sinon activé à la main en base.
 
 ### 2.9 Hors périmètre
-Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement, DCA programmé, récurrents payés par un pot, multi-portefeuille, partage, API de cours, multi-devise.
+Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement, DCA programmé, récurrents payés par un pot, multi-portefeuille, partage, API de cours, valeur actuelle des actifs, multi-devise.
 
 ---
 
@@ -164,7 +164,6 @@ Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement
 
 **assets** — `id`, `wallet_id`, `name`, `name_key` (minuscules, unique par portefeuille), `ticker?`, `asset_class?` (`etf` | `stock` | `crypto` | `bond` | `other`), `created_at`
 
-**asset_prices** — `id`, `asset_id`, `date`, `unit_price` (entier en millionièmes de devise, pour les actifs à très bas prix), `created_at`. Unique `(asset_id, date)`.
 
 **recurrences** — `id`, `wallet_id`, `category_id`, `kind` (`expense` | `income`), `amount`, `frequency` (`daily` | `weekly` | `monthly` | `yearly`), `start_date`, `end_date?`, `memo?`, `created_at`, `updated_at`
 
@@ -223,8 +222,7 @@ Exemple : salaire de 2 335 €, bascule le 15 septembre (30 jours) → du 15 au 
 | — | `categories` | jeu par défaut, dont « Investissement » (dépense) et « Revenus d'investissement » (revenu) |
 | `investments.asset` (distinct, insensible à la casse) | `assets` | `name` = graphie la plus fréquente |
 | `investments` | `transactions` | `buy` → catégorie Investissement ; `sell` / `dividend` → catégorie Revenus d'investissement. `amount` identique (centimes) ; `quantity` = round(q × 10⁸)  (frais déjà inclus dans le montant V1) ; `date` = partie UTC du timestamp V1 (la V1 enregistre `YYYY-MM-DD` à minuit UTC) ; `note` → `memo` ; `pot_id` nul |
-| `investment_targets.current_value_override` | `asset_prices` | cours unitaire = valeur / quantité détenue, daté du jour de migration. Préserve la dernière valorisation manuelle |
-| `sessions`, `categories`, `expenses`, `investment_goals`, `investment_targets` (%) | — | non migrés |
+| `sessions`, `categories`, `expenses`, `investment_goals`, `investment_targets` | — | non migrés |
 
 ### 4.4 Contrôles post-migration (bloquants)
 Par utilisateur et par actif, V1 comparée à V2 : nombre d'opérations, quantité détenue, coût total, PRU, dividendes cumulés. Rapport affiché ; annulation de la transaction en cas d'écart.

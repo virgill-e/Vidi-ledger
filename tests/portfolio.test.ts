@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-    QUANTITY_SCALE, UNIT_PRICE_SCALE, averageCostHistory, computePosition, firstOversell, formatScaled, parseScaled, tradeUnitPrice, type Trade,
+    QUANTITY_SCALE, averageCostHistory, computePosition, firstOversell, formatScaled, parseScaled, tradeUnitPrice, type Trade,
 } from '../shared/utils/portfolio';
 
 let nextId = 1;
@@ -60,16 +60,10 @@ describe('computePosition (weighted average cost, like V1)', () => {
         expect(computePosition([sell, buy]).realizedPnL).toBe(1_000);
     });
 
-    it('values the position with the latest manual quote', () => {
-        const p = computePosition([t('buy', '2026-01-10', 20_000, 2)], { date: '2026-09-01', unitPrice: 125.5 * UNIT_PRICE_SCALE });
-        expect(p.lastPrice).toBe(12_550);
-        expect(p.value).toBe(25_100);
-        expect(p.unrealizedPnL).toBe(5_100);
-    });
-
     it('works with fractional crypto quantities', () => {
-        const p = computePosition([t('buy', '2026-01-10', 5_000, 0.00123456)], { date: '2026-02-01', unitPrice: 50_000 * UNIT_PRICE_SCALE });
-        expect(p.value).toBe(6_173); // 0,00123456 × 50 000 € = 61,73 €
+        const p = computePosition([t('buy', '2026-01-10', 5_000, 0.00123456)]);
+        expect(p.quantity).toBe(123_456);
+        expect(Math.round(p.averageCost!)).toBe(4_050_026); // 50 € / 0,00123456 = 40 500,26 €
     });
 });
 

@@ -1,7 +1,7 @@
 // Pure V1 → V2 conversion helpers (spec: docs/v2/analyse.md §4). No I/O.
 
 import { isLocalDate } from '../../shared/utils/dates';
-import { QUANTITY_SCALE, UNIT_PRICE_SCALE, computePosition, type Trade } from '../../shared/utils/portfolio';
+import { QUANTITY_SCALE, computePosition, type Trade } from '../../shared/utils/portfolio';
 
 export interface V1User {
     id: number;
@@ -21,12 +21,6 @@ export interface V1Investment {
     quantity: number; // float
     date: string; // 'YYYY-MM-DD', formatted by the source query
     note: string | null;
-}
-
-export interface V1Target {
-    userId: number;
-    asset: string;
-    currentValueOverride: number | null; // cents, total value of the holding
 }
 
 export interface ConvertedTrade {
@@ -117,13 +111,4 @@ export const compareWithV1 = (v1: ReturnType<typeof v1Aggregate>, trades: Trade[
     if (Math.abs(Math.round(v1.cost) - v2.costBasis) > 1) issues.push(`cost basis ${Math.round(v1.cost)} → ${v2.costBasis} cents`);
     if (v1.dividends !== v2.dividends) issues.push(`dividends ${v1.dividends} → ${v2.dividends} cents`);
     return issues;
-};
-
-/**
- * V1's manual "current value" (total, cents) → V2 unit quote (× UNIT_PRICE_SCALE).
- * Null when nothing is held (no unit price to derive).
- */
-export const overrideToUnitPrice = (overrideCents: number | null, heldScaled: number): number | null => {
-    if (overrideCents === null || overrideCents <= 0 || heldScaled <= 0) return null;
-    return Math.round(((overrideCents / 100) * UNIT_PRICE_SCALE * QUANTITY_SCALE) / heldScaled);
 };

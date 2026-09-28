@@ -13,14 +13,14 @@
 import Database from 'better-sqlite3';
 import postgres from 'postgres';
 import { eq } from 'drizzle-orm';
-import { assetPrices, assets, categories, transactions, users as usersTable, wallets } from '../../server/database/schema';
+import { assets, categories, transactions, users as usersTable, wallets } from '../../server/database/schema';
 import { db, fetchAll, fetchOne } from '../../server/utils/db';
 import { seedDefaultCategories } from '../../server/utils/wallet';
 import { isLocalDate, todayIn } from '../../shared/utils/dates';
 import { computePosition, type Trade } from '../../shared/utils/portfolio';
 import {
-    assetKey, compareWithV1, convertTrade, groupByAsset, overrideToUnitPrice, v1Aggregate,
-    type ConvertedTrade, type V1Investment, type V1Target, type V1User,
+    compareWithV1, convertTrade, groupByAsset, v1Aggregate,
+    type ConvertedTrade, type V1Investment, type V1User,
 } from './convert';
 
 const TIMEZONE = 'Europe/Brussels';
@@ -55,17 +55,15 @@ if (!isLocalDate(startDate)) fail(`--start-date must be YYYY-MM-DD (got "${start
 // Read V1 (dates formatted in SQL: V1 stores UTC midnight, never shift them)
 // ---------------------------------------------------------------------------
 
-const readV1 = async (): Promise<{ users: V1User[]; investments: V1Investment[]; targets: V1Target[] }> => {
+const readV1 = async (): Promise<{ users: V1User[]; investments: V1Investment[] }> => {
     if (isPostgresUrl(sourceUrl!)) {
         const sql = postgres(sourceUrl!, { max: 1, ...(v1Schema ? { connection: { search_path: v1Schema } } : {}) });
         try {
             const u = await sql`SELECT id, email, name, password, role, (EXTRACT(EPOCH FROM created_at) * 1000)::bigint AS "createdAt" FROM users ORDER BY id`;
             const i = await sql`SELECT id, user_id AS "userId", type, asset, amount, quantity, to_char(date, 'YYYY-MM-DD') AS date, note FROM investments ORDER BY id`;
-            const t = await sql`SELECT user_id AS "userId", asset, current_value_override AS "currentValueOverride" FROM investment_targets`.catch(() => []);
             return {
                 users: u.map((r: any) => ({ ...r, createdAt: Number(r.createdAt) })),
                 investments: i.map((r: any) => ({ ...r, quantity: Number(r.quantity) })),
-                targets: t as any,
             };
         } finally {
             await sql.end();
@@ -73,13 +71,9 @@ const readV1 = async (): Promise<{ users: V1User[]; investments: V1Investment[];
     }
     const sqlite = new Database(sourceUrl!, { readonly: true, fileMustExist: true });
     try {
-        const hasTargets = sqlite.prepare(`SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'investment_targets'`).get();
         return {
             users: sqlite.prepare(`SELECT id, email, name, password, role, created_at * 1000 AS createdAt FROM users ORDER BY id`).all() as V1User[],
             investments: sqlite.prepare(`SELECT id, user_id AS userId, type, asset, amount, quantity, strftime('%Y-%m-%d', date, 'unixepoch') AS date, note FROM investments ORDER BY id`).all() as V1Investment[],
-            targets: hasTargets
-                ? sqlite.prepare(`SELECT user_id AS userId, asset, current_value_override AS currentValueOverride FROM investment_targets`).all() as V1Target[]
-                : [],
         };
     } finally {
         sqlite.close();
@@ -95,7 +89,6 @@ interface AssetPlan {
     name: string;
     v1: ReturnType<typeof v1Aggregate>;
     trades: ConvertedTrade[];
-    quote: number | null; // from the V1 current-value override
 }
 
 interface UserPlan {
@@ -112,7 +105,6 @@ const selectUsers = (source: Awaited<ReturnType<typeof readV1>>) => {
     return {
         users,
         investments: source.investments.filter((i) => ids.has(i.userId)),
-        targets: source.targets.filter((t) => ids.has(t.userId)),
     };
 };
 
@@ -138,9 +130,7 @@ const plan = (source: Awaited<ReturnType<typeof readV1>>) => {
             const late = trades.filter((t) => t.date >= startDate);
             if (late.length) warnings.push(`${user.email} / ${group.name}: ${late.length} operation(s) on or after ${startDate} will affect the budget`);
 
-            const override = source.targets.find((t) => t.userId === user.id && assetKey(t.asset) === key)?.currentValueOverride ?? null;
-            const quote = overrideToUnitPrice(override, computePosition(asTrades).quantity);
-            assetsPlan.push({ key, name: group.name, v1, trades, quote });
+            assetsPlan.push({ key, name: group.name, v1, trades });
         }
         return { user, assets: assetsPlan };
     });
@@ -192,9 +182,6 @@ const write = async (plans: UserPlan[]) => {
                     quantity: t.quantity,
                 }))).execute();
             }
-            if (plan.quote !== null) {
-                await db.insert(assetPrices).values({ assetId: asset.id, date: startDate, unitPrice: plan.quote }).execute();
-            }
         }
     }
 };
@@ -235,7 +222,7 @@ const main = async () => {
         console.log(`• ${user.email}${user.role === 'admin' ? ' (admin)' : ''} — ${assetPlans.length} asset(s), ${tradeCount} operation(s)`);
         for (const a of assetPlans) {
             const p = computePosition(a.trades.map((t) => ({ ...t, id: t.v1Id })));
-            console.log(`    ${a.name}: ${p.quantity / 1e8} unit(s), cost ${(p.costBasis / 100).toFixed(2)}, dividends ${(p.dividends / 100).toFixed(2)}${a.quote !== null ? `, quote ${(a.quote / 1e6).toFixed(2)}` : ''}`);
+            console.log(`    ${a.name}: ${p.quantity / 1e8} unit(s), cost ${(p.costBasis / 100).toFixed(2)}, dividends ${(p.dividends / 100).toFixed(2)}`);
         }
     }
     const skipped = source.investments.filter((i) => !source.users.some((u) => u.id === i.userId));

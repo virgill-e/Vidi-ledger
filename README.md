@@ -98,7 +98,7 @@ docker exec -it vidi-ledger-app npx drizzle-kit push
 
 ## 🔁 Migration V1 → V2
 
-Reprend les **utilisateurs** (mots de passe conservés, rôle admin) et les **investissements** (achats, ventes, dividendes, valeur manuelle → cours) de la V1 dans une **nouvelle** base V2. La base V1 n'est que lue. Détails : [`docs/v2/analyse.md`](docs/v2/analyse.md) §4.
+Reprend les **utilisateurs** (mots de passe conservés, rôle admin) et les **investissements** (achats, ventes, dividendes) de la V1 dans une **nouvelle** base V2. La base V1 n'est que lue. Détails : [`docs/v2/analyse.md`](docs/v2/analyse.md) §4.
 
 1. Créer une base V2 vide et y appliquer le schéma (`DATABASE_URL` pointant vers elle) :
    ```bash

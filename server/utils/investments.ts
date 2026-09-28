@@ -1,5 +1,5 @@
-import { and, desc, eq } from 'drizzle-orm';
-import { assetPrices, assets, categories, transactions } from '../database/schema';
+import { and, eq } from 'drizzle-orm';
+import { assets, categories, transactions } from '../database/schema';
 import { db, fetchAll, fetchOne } from './db';
 
 const TRADE_TYPES = ['buy', 'sell', 'dividend'];
@@ -43,9 +43,6 @@ export const requireAsset = async (walletId: number, assetId: number, statusCode
 export const assetTrades = async (walletId: number, assetId: number) =>
     fetchAll(db.select().from(transactions).where(and(eq(transactions.walletId, walletId), eq(transactions.assetId, assetId))))
         .then((rows: any[]) => rows.filter((r) => TRADE_TYPES.includes(r.type)));
-
-export const latestQuote = async (assetId: number) =>
-    fetchOne(db.select().from(assetPrices).where(eq(assetPrices.assetId, assetId)).orderBy(desc(assetPrices.date)).limit(1));
 
 /**
  * Throws 400 if, with `replace` applied (a trade created or edited) and/or

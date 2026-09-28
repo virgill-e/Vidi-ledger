@@ -84,19 +84,11 @@ export interface AssetSummary extends Asset {
     lastTradeDate: string | null;
 }
 
-export interface AssetPrice {
-    id: number;
-    date: string;
-    /** × UNIT_PRICE_SCALE */
-    unitPrice: number;
-}
-
 // GET /api/assets/:id
 export interface AssetDetail {
     asset: Asset;
     position: Position;
     /** Newest first; `unitPrice` in cents per unit (null for dividends). */
     trades: (Transaction & { unitPrice: number | null })[];
-    prices: AssetPrice[];
     averageCostHistory: { date: string; averageCost: number | null }[];
 }

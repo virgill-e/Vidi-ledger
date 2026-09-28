@@ -1,13 +1,11 @@
 // Investment positions (spec §2.6). Pure functions, no I/O.
 //
-// Quantities are integers scaled by QUANTITY_SCALE (10⁸), unit prices by
-// UNIT_PRICE_SCALE (10⁶), money in cents. A buy's `amount` is the cash paid
-// (fees included); a sell's is the net cash received.
+// Quantities are integers scaled by QUANTITY_SCALE (10⁸), money in cents.
+// A buy's `amount` is the cash paid (fees included); a sell's is the net cash
+// received. There is no market value: positions are followed at cost.
 
 export const QUANTITY_DECIMALS = 8;
 export const QUANTITY_SCALE = 10 ** QUANTITY_DECIMALS;
-export const UNIT_PRICE_DECIMALS = 6;
-export const UNIT_PRICE_SCALE = 10 ** UNIT_PRICE_DECIMALS;
 
 /**
  * Exact decimal text → scaled integer ("1,5" with 8 decimals → 150000000),
@@ -52,12 +50,6 @@ export interface Position {
     /** Sale proceeds minus the cost of the units sold, cents. */
     realizedPnL: number;
     dividends: number;
-    /** Latest manual quote per unit, cents (fractional); null without quote. */
-    lastPrice: number | null;
-    lastPriceDate: string | null;
-    /** quantity × lastPrice, cents; null without quote. */
-    value: number | null;
-    unrealizedPnL: number | null;
 }
 
 /** Trades in the order they happened: by date, then by insertion (id). */
@@ -80,9 +72,6 @@ export const firstOversell = (trades: Trade[]): number => {
     }
     return -1;
 };
-
-/** Stored quote (× UNIT_PRICE_SCALE) → cents per unit (fractional). */
-export const unitPriceToCents = (scaled: number): number => (scaled * 100) / UNIT_PRICE_SCALE;
 
 /** Unit price paid/received by a trade, cents per unit; null for dividends. */
 export const tradeUnitPrice = (t: Pick<Trade, 'type' | 'amount' | 'quantity'>): number | null =>
@@ -109,10 +98,7 @@ export const averageCostHistory = (trades: Trade[]): { date: string; averageCost
     return points;
 };
 
-export const computePosition = (
-    trades: Trade[],
-    latestQuote: { date: string; unitPrice: number } | null = null,
-): Position => {
+export const computePosition = (trades: Trade[]): Position => {
     let quantity = 0;
     let cost = 0;
     let invested = 0;
@@ -142,9 +128,6 @@ export const computePosition = (
         cost = 0;
     }
 
-    const lastPrice = latestQuote ? unitPriceToCents(latestQuote.unitPrice) : null;
-    const value = lastPrice === null ? null : (lastPrice * quantity) / QUANTITY_SCALE;
-
     return {
         quantity,
         costBasis: Math.round(cost),
@@ -152,9 +135,5 @@ export const computePosition = (
         invested,
         realizedPnL: Math.round(realized),
         dividends,
-        lastPrice,
-        lastPriceDate: latestQuote?.date ?? null,
-        value: value === null ? null : Math.round(value),
-        unrealizedPnL: value === null ? null : Math.round(value - cost),
     };
 };

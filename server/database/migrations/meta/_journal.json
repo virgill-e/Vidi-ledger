@@ -15,6 +15,13 @@
       "when": 1790544968428,
       "tag": "0001_drop_trade_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790594759499,
+      "tag": "0002_drop_asset_prices",
+      "breakpoints": true
     }
   ]
 }

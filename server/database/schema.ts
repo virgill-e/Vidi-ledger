@@ -66,7 +66,7 @@ const localDate = (name: string) => text(name);
 // 32-bit integer: money in cents, foreign keys, counters.
 const int = (name: string) => usePostgres ? pgInteger(name) : sqliteInteger(name);
 
-// 64-bit integer read as a JS number: quantities (×10⁸) and unit prices (×10⁶).
+// 64-bit integer read as a JS number: quantities (×10⁸).
 const bigint = (name: string) => usePostgres ? pgBigint(name, { mode: 'number' }) : sqliteInteger(name);
 
 const bool = (name: string) => usePostgres ? pgBoolean(name) : sqliteInteger(name, { mode: 'boolean' });
@@ -74,8 +74,7 @@ const bool = (name: string) => usePostgres ? pgBoolean(name) : sqliteInteger(nam
 const createdAt = () => dateColumn('created_at').notNull().$defaultFn(() => new Date());
 const updatedAt = () => dateColumn('updated_at').notNull().$defaultFn(() => new Date()).$onUpdateFn(() => new Date());
 
-// Fixed-point scales of the bigint columns (transactions.quantity ×10⁸,
-// asset_prices.unit_price ×10⁶) live in shared/utils/portfolio.ts.
+// Fixed-point scale of transactions.quantity (×10⁸) lives in shared/utils/portfolio.ts.
 
 // ----------------------------------------------------------------------------
 // Accounts
@@ -167,18 +166,6 @@ export const assets = table('assets', {
 }, (t) => [
     uniqueIndex('assets_wallet_name_key_idx').on(t.walletId, t.nameKey),
     check('assets_class_check', sql`${t.assetClass} IS NULL OR ${t.assetClass} IN ('etf', 'stock', 'crypto', 'bond', 'other')`),
-]);
-
-// Manually entered quotes; the latest one is the asset's current price.
-export const assetPrices = table('asset_prices', {
-    id: idColumn('id'),
-    assetId: int('asset_id').notNull().references(() => assets.id, { onDelete: 'cascade' }),
-    date: localDate('date').notNull(),
-    unitPrice: bigint('unit_price').notNull(), // × UNIT_PRICE_SCALE
-    createdAt: createdAt(),
-}, (t) => [
-    uniqueIndex('asset_prices_asset_date_idx').on(t.assetId, t.date),
-    check('asset_prices_unit_price_check', sql`${t.unitPrice} > 0`),
 ]);
 
 // ----------------------------------------------------------------------------

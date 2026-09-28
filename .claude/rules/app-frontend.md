@@ -16,5 +16,5 @@ paths:
 - Fetch data with `$fetch`/`useFetch` against `/api/...`. Display money by dividing cents by 100.
 - A `<select>` bound with `:value` (not `v-model`) must also set `:selected` on its options, or SSR shows the first option (see `SelectRow`).
 - Money inputs: parse with `parseAmount` (euros, comma or dot), send euros to the API; display cents with `formatMoney`.
-- Don't write an auto-imported constant right before a `/` (e.g. `x * QUANTITY_SCALE / y`): unimport may take it for a regex and skip the import. Use the helpers (`tradeUnitPrice`, `unitPriceToCents`).
+- Don't write an auto-imported constant right before a `/` (e.g. `x * QUANTITY_SCALE / y`): unimport may take it for a regex and skip the import. Use the helpers (e.g. `tradeUnitPrice`).
 - Map API errors to French with `apiErrorMessage(err, fallback)` (`app/utils/labels.ts`).
