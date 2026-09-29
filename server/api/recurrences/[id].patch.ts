@@ -17,6 +17,11 @@ export default defineEventHandler(async (event) => {
     const endDate = body.endDate !== undefined ? body.endDate : rule.endDate;
     const valueChanged = amount !== rule.amount || frequency !== rule.frequency;
 
+    // A contribution to a pot must not shrink below what was already spent from it.
+    const assertPot = (next: (r: any) => any[]) => rule.potId === null
+        ? Promise.resolve()
+        : assertPotBalance(wallet, rule.potId, { rules: (current) => current.flatMap((r) => (r.id === rule.id ? next(r) : [r])) });
+
     if (valueChanged && body.effectiveFrom && body.effectiveFrom > rule.startDate) {
         if (rule.endDate !== null && body.effectiveFrom > rule.endDate) {
             throw createError({ statusCode: 400, statusMessage: 'effectiveFrom: The rule has already ended' });
@@ -24,6 +29,10 @@ export default defineEventHandler(async (event) => {
         if (endDate !== null && endDate < body.effectiveFrom) {
             throw createError({ statusCode: 400, statusMessage: 'endDate: End date must be on or after the start date' });
         }
+        await assertPot((r) => [
+            { ...r, endDate: addDays(body.effectiveFrom!, -1) },
+            { ...r, id: -1, amount, frequency, startDate: body.effectiveFrom!, endDate },
+        ]);
 
         await db.update(recurrences)
             .set({ endDate: addDays(body.effectiveFrom, -1) })
@@ -33,6 +42,7 @@ export default defineEventHandler(async (event) => {
         const next = await fetchOne(db.insert(recurrences).values({
             walletId: wallet.id,
             categoryId: rule.categoryId,
+            potId: rule.potId,
             kind: rule.kind,
             amount,
             frequency,
@@ -48,6 +58,7 @@ export default defineEventHandler(async (event) => {
     if (endDate !== null && endDate < rule.startDate) {
         throw createError({ statusCode: 400, statusMessage: 'endDate: End date must be on or after the start date' });
     }
+    await assertPot((r) => [{ ...r, amount, frequency, endDate }]);
 
     return fetchOne(db.update(recurrences)
         .set({ amount, frequency, memo, endDate })

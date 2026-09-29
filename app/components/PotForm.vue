@@ -98,9 +98,7 @@ const toggleArchive = async () => {
     await $fetch(`/api/pots/${props.pot!.id}`, { method: 'PATCH', body: { archived: !props.pot!.archivedAt } });
     await navigateTo('/pots');
   } catch (err: any) {
-    error.value = err?.data?.statusMessage === 'Empty the pot before archiving it'
-      ? 'Vide le pot (reprends son solde vers le budget) avant de l’archiver.'
-      : err?.data?.statusMessage || 'Action impossible.';
+    error.value = apiErrorMessage(err, 'Action impossible.');
   } finally {
     archiving.value = false;
   }

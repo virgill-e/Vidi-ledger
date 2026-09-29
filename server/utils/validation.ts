@@ -231,3 +231,17 @@ export const assetUpdateSchema = z.object({
 export const adminPasswordSchema = z.object({
     password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
+
+// Recurring contribution from the budget to a pot.
+export const potRecurrenceCreateSchema = z
+    .object({
+        amount: positiveAmount,
+        frequency,
+        startDate: localDateString,
+        endDate: localDateString.nullable().optional(),
+        memo: optionalMemo,
+    })
+    .refine((d) => !d.endDate || d.endDate >= d.startDate, {
+        message: 'End date must be on or after the start date',
+        path: ['endDate'],
+    });

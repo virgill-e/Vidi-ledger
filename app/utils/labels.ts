@@ -26,6 +26,8 @@ export const API_ERRORS: Record<string, string> = {
     'Insufficient pot balance': 'Solde du pot insuffisant.',
     'An asset already has this name': 'Un autre actif porte déjà ce nom.',
     'date: Date is outside the wallet period': 'Cette date est en dehors de la période du portefeuille.',
+    'Stop the recurring contribution before archiving the pot': "Arrête d'abord le versement programmé (date de fin) avant d'archiver le pot.",
+    'Empty the pot before archiving it': "Vide le pot (reprends son solde vers le budget) avant de l'archiver.",
 };
 
 /** French message for an API error, falling back to the raw status message. */

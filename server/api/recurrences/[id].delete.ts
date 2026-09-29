@@ -7,6 +7,10 @@ import { db } from '../../utils/db';
 export default defineEventHandler(async (event) => {
     const { wallet } = await requireWallet(event);
     const rule = await requireRecurrence(event, wallet.id);
+    // Removing a pot contribution takes back everything it credited.
+    if (rule.potId !== null) {
+        await assertPotBalance(wallet, rule.potId, { rules: (current) => current.filter((r) => r.id !== rule.id) });
+    }
     await db.delete(recurrences).where(eq(recurrences.id, rule.id)).execute();
     return { success: true };
 });

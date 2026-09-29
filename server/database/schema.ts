@@ -172,12 +172,15 @@ export const assets = table('assets', {
 // Money movements
 // ----------------------------------------------------------------------------
 
-// Recurring incomes/expenses, smoothed per day into the daily allowance.
-// Always charged to the budget (never to a pot).
+// Recurring incomes/expenses, smoothed per day into the daily allowance and
+// always paid by the budget. A rule has either a category, or a pot (a
+// recurring contribution to savings: an expense for the budget, credited to
+// the pot period by period — see shared/utils/pots.ts).
 export const recurrences = table('recurrences', {
     id: idColumn('id'),
     walletId: int('wallet_id').notNull().references(() => wallets.id, { onDelete: 'cascade' }),
-    categoryId: int('category_id').notNull().references(() => categories.id),
+    categoryId: int('category_id').references(() => categories.id),
+    potId: int('pot_id').references(() => pots.id),
     kind: text('kind').notNull(), // 'expense' | 'income'
     amount: int('amount').notNull(), // In cents
     frequency: text('frequency').notNull(), // 'daily' | 'weekly' | 'monthly' | 'yearly'
@@ -192,6 +195,10 @@ export const recurrences = table('recurrences', {
     check('recurrences_frequency_check', sql`${t.frequency} IN ('daily', 'weekly', 'monthly', 'yearly')`),
     check('recurrences_amount_check', sql`${t.amount} > 0`),
     check('recurrences_dates_check', sql`${t.endDate} IS NULL OR ${t.endDate} >= ${t.startDate}`),
+    check('recurrences_target_check', sql`
+        (${t.potId} IS NULL AND ${t.categoryId} IS NOT NULL)
+        OR (${t.potId} IS NOT NULL AND ${t.categoryId} IS NULL AND ${t.kind} = 'expense')
+    `),
 ]);
 
 // One-off movements. The sign comes from `type`; `pot_id` null = budget.

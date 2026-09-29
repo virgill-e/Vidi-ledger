@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         changes.potId = body.potId;
     }
     if (changes.potId !== undefined || changes.amount !== undefined) {
-        await assertPotsAfterEdit(wallet.id, tx, {
+        await assertPotsAfterEdit(wallet, tx, {
             potId: changes.potId !== undefined ? changes.potId as number | null : tx.potId,
             amount: (changes.amount as number | undefined) ?? tx.amount,
         });

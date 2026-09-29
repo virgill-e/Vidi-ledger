@@ -1,16 +1,50 @@
 import { and, eq, isNotNull } from 'drizzle-orm';
-import { pots, potTransfers, transactions } from '../database/schema';
+import { pots, potTransfers, recurrences, transactions } from '../database/schema';
 import { db, fetchAll, fetchOne } from './db';
 
+/** Wallet fields the pot balance needs: its period and "today" (timezone). */
+export interface PotWallet {
+    id: number;
+    startDate: string;
+    endDate: string | null;
+    timezone: string;
+}
+
+export interface PotRuleRow extends PotRecurrenceRow {
+    id: number;
+}
+
+/** Recurring contributions of the wallet (or of one pot). */
+const loadPotRules = (walletId: number, potId?: number): Promise<PotRuleRow[]> =>
+    fetchAll(db.select({
+        id: recurrences.id,
+        potId: recurrences.potId,
+        amount: recurrences.amount,
+        frequency: recurrences.frequency,
+        startDate: recurrences.startDate,
+        endDate: recurrences.endDate,
+    }).from(recurrences).where(and(
+        eq(recurrences.walletId, walletId),
+        potId === undefined ? isNotNull(recurrences.potId) : eq(recurrences.potId, potId),
+    )));
+
+/** Every period credited so far by recurring contributions (as of today). Auto-imported. */
+export const potRuleCredits = (wallet: PotWallet, rules: PotRuleRow[]) => {
+    const today = todayIn(wallet.timezone);
+    return rules.flatMap((rule) => recurringPotCredits(rule, today, wallet)
+        .map((credit) => ({ ...credit, potId: rule.potId, recurrenceId: rule.id })));
+};
+
 /** Current balance of every pot of the wallet (cents). Auto-imported. */
-export const walletPotBalances = async (walletId: number) => {
-    const [transfers, movements] = await Promise.all([
+export const walletPotBalances = async (wallet: PotWallet) => {
+    const [transfers, movements, rules] = await Promise.all([
         fetchAll(db.select({ potId: potTransfers.potId, direction: potTransfers.direction, amount: potTransfers.amount })
-            .from(potTransfers).where(eq(potTransfers.walletId, walletId))),
+            .from(potTransfers).where(eq(potTransfers.walletId, wallet.id))),
         fetchAll(db.select({ id: transactions.id, potId: transactions.potId, type: transactions.type, amount: transactions.amount })
-            .from(transactions).where(and(eq(transactions.walletId, walletId), isNotNull(transactions.potId)))),
+            .from(transactions).where(and(eq(transactions.walletId, wallet.id), isNotNull(transactions.potId)))),
+        loadPotRules(wallet.id),
     ]);
-    return { transfers, movements, balances: potBalances(transfers, movements) };
+    return { transfers, movements, rules, balances: potBalances(transfers, movements, potRuleCredits(wallet, rules)) };
 };
 
 /**
@@ -30,25 +64,33 @@ export const requirePot = async (walletId: number, potId: number, options: { act
 };
 
 /**
- * Throws 400 if the pot's balance would go negative once the given movement
- * and/or transfer are left out and `delta` (signed cents) is applied — e.g.
+ * Throws 400 if the pot's balance (as of today) would go negative once the
+ * given movement and/or transfer are left out, its recurring contributions
+ * are rewritten by `rules`, and `delta` (signed cents) is applied — e.g.
  * `delta: -amount` for an expense paid from the pot, `excludeTransactionId`
  * for a movement being edited or deleted. Auto-imported.
  */
 export const assertPotBalance = async (
-    walletId: number,
+    wallet: PotWallet,
     potId: number,
-    change: { delta?: number; excludeTransactionId?: number; excludeTransferId?: number } = {},
+    change: {
+        delta?: number;
+        excludeTransactionId?: number;
+        excludeTransferId?: number;
+        rules?: (current: PotRuleRow[]) => PotRuleRow[];
+    } = {},
 ) => {
-    const [transfers, movements] = await Promise.all([
+    const [transfers, movements, rules] = await Promise.all([
         fetchAll(db.select({ id: potTransfers.id, potId: potTransfers.potId, direction: potTransfers.direction, amount: potTransfers.amount })
-            .from(potTransfers).where(and(eq(potTransfers.walletId, walletId), eq(potTransfers.potId, potId)))),
+            .from(potTransfers).where(and(eq(potTransfers.walletId, wallet.id), eq(potTransfers.potId, potId)))),
         fetchAll(db.select({ id: transactions.id, potId: transactions.potId, type: transactions.type, amount: transactions.amount })
-            .from(transactions).where(and(eq(transactions.walletId, walletId), eq(transactions.potId, potId)))),
+            .from(transactions).where(and(eq(transactions.walletId, wallet.id), eq(transactions.potId, potId)))),
+        loadPotRules(wallet.id, potId),
     ]);
     const balance = potBalances(
         transfers.filter((t: any) => t.id !== change.excludeTransferId),
         movements.filter((m: any) => m.id !== change.excludeTransactionId),
+        potRuleCredits(wallet, change.rules ? change.rules(rules) : rules),
     ).get(potId) ?? 0;
 
     if (balance + (change.delta ?? 0) < 0) {
@@ -66,15 +108,21 @@ export const isOutflow = (type: string) => type === 'expense' || type === 'buy';
  * (or keeps) must not go negative. Auto-imported.
  */
 export const assertPotsAfterEdit = async (
-    walletId: number,
+    wallet: PotWallet,
     tx: { id: number; type: string; potId: number | null },
     next: { potId: number | null; amount: number },
 ) => {
     const sign = isOutflow(tx.type) ? -1 : 1;
     if (next.potId !== null) {
-        await assertPotBalance(walletId, next.potId, { excludeTransactionId: tx.id, delta: sign * next.amount });
+        await assertPotBalance(wallet, next.potId, { excludeTransactionId: tx.id, delta: sign * next.amount });
     }
     if (tx.potId !== null && tx.potId !== next.potId) {
-        await assertPotBalance(walletId, tx.potId, { excludeTransactionId: tx.id });
+        await assertPotBalance(wallet, tx.potId, { excludeTransactionId: tx.id });
     }
+};
+
+/** True if the pot still has a recurring contribution running today or later. */
+export const potHasActiveRule = async (wallet: PotWallet, potId: number) => {
+    const today = todayIn(wallet.timezone);
+    return (await loadPotRules(wallet.id, potId)).some((r) => r.endDate === null || r.endDate >= today);
 };

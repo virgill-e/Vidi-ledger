@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     const tx = await requireTransaction(event, wallet.id);
     // Removing money credited to a pot must not leave it negative.
     if (tx.potId !== null && !isOutflow(tx.type)) {
-        await assertPotBalance(wallet.id, tx.potId, { excludeTransactionId: tx.id });
+        await assertPotBalance(wallet, tx.potId, { excludeTransactionId: tx.id });
     }
     // Removing a buy must not leave a later sale without units.
     if (tx.type === 'buy') await assertNoOversell(wallet.id, tx.assetId, { excludeId: tx.id });

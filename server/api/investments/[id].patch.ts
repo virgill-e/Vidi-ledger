@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
     const next = { ...tx, ...changes };
     if (changes.potId !== undefined || changes.amount !== undefined) {
-        await assertPotsAfterEdit(wallet.id, tx, { potId: next.potId, amount: next.amount });
+        await assertPotsAfterEdit(wallet, tx, { potId: next.potId, amount: next.amount });
     }
     if (tx.type !== 'dividend' && (changes.quantity !== undefined || changes.date !== undefined)) {
         await assertNoOversell(wallet.id, tx.assetId, { replace: next });

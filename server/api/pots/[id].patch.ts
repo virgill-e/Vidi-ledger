@@ -11,7 +11,10 @@ export default defineEventHandler(async (event) => {
     if (targetAmount !== undefined) changes.targetAmount = targetAmount === null ? null : toCents(targetAmount);
     if (archived !== undefined) {
         // Money left in a pot would silently disappear from the savings total.
-        if (archived && ((await walletPotBalances(wallet.id)).balances.get(pot.id) ?? 0) !== 0) {
+        if (archived && await potHasActiveRule(wallet, pot.id)) {
+            throw createError({ statusCode: 400, statusMessage: 'Stop the recurring contribution before archiving the pot' });
+        }
+        if (archived && ((await walletPotBalances(wallet)).balances.get(pot.id) ?? 0) !== 0) {
             throw createError({ statusCode: 400, statusMessage: 'Empty the pot before archiving it' });
         }
         changes.archivedAt = archived ? new Date() : null;

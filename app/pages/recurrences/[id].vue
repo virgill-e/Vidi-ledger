@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="save">
-    <SheetHeader :title="category?.name ?? 'Récurrent'" :icon="category?.icon" :icon-color="category?.color" back-to="/history?tab=recurrences">
+    <SheetHeader :title="look.name" :icon="look.icon" :icon-color="look.color" :back-to="backTo">
       <template #action>
         <button
           type="submit"
@@ -74,12 +74,18 @@ const { wallet } = useWallet();
 const { categories, ensureLoaded } = useCategories();
 const { formatMoney, formatDate } = useFormat();
 
-const [rules] = await Promise.all([requestFetch<Recurrence[]>('/api/recurrences'), ensureLoaded()]);
+const [rules, pots] = await Promise.all([requestFetch<Recurrence[]>('/api/recurrences'), requestFetch<Pot[]>('/api/pots'), ensureLoaded()]);
 const found = rules.find((r) => r.id === Number(route.params.id));
 if (!found) throw createError({ statusCode: 404, statusMessage: 'Recurrence not found' });
 const rule: Recurrence = found;
 
 const category = computed(() => categories.value?.find((c) => c.id === rule.categoryId));
+// Recurring contributions to a pot show the pot and lead back to it.
+const pot = rule.potId !== null ? pots.find((p) => p.id === rule.potId) : undefined;
+const look = computed(() => pot
+  ? { name: `Vers ${pot.name}`, icon: pot.icon, color: pot.color }
+  : { name: category.value?.name ?? 'Récurrent', icon: category.value?.icon, color: category.value?.color });
+const backTo = pot ? `/pots/${pot.id}` : '/history?tab=recurrences';
 const today = todayIn(wallet.value!.timezone);
 
 const amountText = ref(centsToInput(rule.amount));
@@ -100,8 +106,9 @@ const canVersion = today >= minEffective;
 const rewritePast = ref(false);
 const effectiveFrom = ref(today);
 
+// Shown for today's period, or the rule's first one if it has not started yet.
 const perDay = computed(() =>
-  amount.value === null ? '' : formatMoney(Math.round(dailyAmount(Math.round(amount.value * 100), frequency.value, today))),
+  amount.value === null ? '' : formatMoney(Math.round(dailyAmount(Math.round(amount.value * 100), frequency.value, rule.startDate > today ? rule.startDate : today))),
 );
 
 const canSave = computed(() => amount.value !== null && (noEnd.value || endDate.value >= rule.startDate));
@@ -125,9 +132,9 @@ const save = async () => {
         ...(valueChanged.value && canVersion && !rewritePast.value ? { effectiveFrom: effectiveFrom.value } : {}),
       },
     });
-    await navigateTo('/history?tab=recurrences');
+    await navigateTo(backTo);
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || "Impossible d'enregistrer.";
+    error.value = apiErrorMessage(err, "Impossible d'enregistrer.");
   } finally {
     saving.value = false;
   }
@@ -137,9 +144,9 @@ const remove = async () => {
   deleting.value = true;
   try {
     await $fetch(`/api/recurrences/${rule.id}`, { method: 'DELETE' });
-    await navigateTo('/history?tab=recurrences');
+    await navigateTo(backTo);
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || 'Impossible de supprimer.';
+    error.value = apiErrorMessage(err, 'Impossible de supprimer.');
     deleting.value = false;
   }
 };

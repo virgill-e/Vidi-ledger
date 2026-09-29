@@ -34,9 +34,9 @@
             :to="`/recurrences/${r.id}`"
             class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60"
           >
-            <Icon :name="categoryOf(r.categoryId)?.icon ?? 'lucide:tag'" class="size-6 shrink-0" :style="{ color: categoryOf(r.categoryId)?.color }" />
+            <Icon :name="ruleLook(r).icon" class="size-6 shrink-0" :style="{ color: ruleLook(r).color }" />
             <span class="grow min-w-0">
-              <span class="block truncate">{{ r.memo || categoryOf(r.categoryId)?.name }}</span>
+              <span class="block truncate">{{ r.memo || ruleLook(r).name }}</span>
               <span class="block text-[13px] text-ink-muted truncate">{{ FREQUENCY_LABELS[r.frequency] }} · {{ periodLabel(r) }}</span>
             </span>
             <span :class="['tabular-nums font-medium', r.kind === 'income' ? 'text-positive' : '']">
@@ -119,12 +119,23 @@ const periodLabel = (r: Recurrence) => {
   return `depuis le ${shortDate(r.startDate)}`;
 };
 
+// A rule shows its category, or "→ pot" for a recurring contribution to savings.
+const ruleLook = (r: Recurrence) => {
+  if (r.potId !== null) {
+    const pot = pots.find((p) => p.id === r.potId);
+    return { icon: pot?.icon ?? 'lucide:piggy-bank', color: pot?.color, name: `Vers ${pot?.name ?? 'un pot'}` };
+  }
+  const category = r.categoryId !== null ? categoryOf(r.categoryId) : undefined;
+  return { icon: category?.icon ?? 'lucide:tag', color: category?.color, name: category?.name ?? '' };
+};
+
 const recurrenceGroups = computed(() => {
   const active = recurrences.filter((r) => r.endDate === null || r.endDate >= today);
   const ended = recurrences.filter((r) => r.endDate !== null && r.endDate < today);
   return [
     { title: 'Revenus', items: active.filter((r) => r.kind === 'income') },
-    { title: 'Dépenses', items: active.filter((r) => r.kind === 'expense') },
+    { title: 'Dépenses', items: active.filter((r) => r.kind === 'expense' && r.potId === null) },
+    { title: 'Épargne programmée', items: active.filter((r) => r.potId !== null) },
     { title: 'Terminés', items: ended },
   ].filter((g) => g.items.length);
 });

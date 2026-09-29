@@ -42,7 +42,10 @@ export interface Transaction {
 
 export interface Recurrence {
     id: number;
-    categoryId: number;
+    /** Set for incomes/expenses; null for a recurring contribution to a pot. */
+    categoryId: number | null;
+    /** Set for a recurring contribution to a pot (kind 'expense'). */
+    potId: number | null;
     kind: CategoryKind;
     amount: number;
     frequency: Frequency;
@@ -66,7 +69,8 @@ export interface Pot {
 // GET /api/pots/:id/movements — `amount` is signed from the pot's point of view.
 export type PotMovement =
     | { kind: 'transfer'; id: number; date: string; memo: string | null; direction: 'to_pot' | 'from_pot'; amount: number }
-    | { kind: 'transaction'; id: number; date: string; memo: string | null; type: TransactionType; categoryId: number; amount: number };
+    | { kind: 'transaction'; id: number; date: string; memo: string | null; type: TransactionType; categoryId: number; amount: number }
+    | { kind: 'recurring'; id: number; date: string; memo: string | null; amount: number };
 
 export type AssetClass = 'etf' | 'stock' | 'crypto' | 'bond' | 'other';
 

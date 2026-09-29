@@ -11,7 +11,7 @@ Refonte complète inspirée de **Today's Budget** : budget journalier calculé �
 | Modèle budgétaire | Budget journalier : revenus et charges récurrents lissés par jour, report continu du surplus **et du déficit** |
 | Épargne | Plusieurs pots nommés, alimentés manuellement depuis le surplus, utilisables comme source d'une dépense |
 | Investissements | Achat = dépense (catégorie d'investissement dans l'onglet Dépense). Vente et dividende = revenu ponctuel (catégorie de revenu dédiée, distincte du salaire). Chaque opération est saisie à la main, **pas de DCA programmé** |
-| Récurrents | Revenus et charges récurrents (salaire, loyer, charges…) lissés dans le budget. Toujours imputés au budget, jamais à un pot |
+| Récurrents | Revenus et charges récurrents (salaire, loyer, charges…) lissés dans le budget. Toujours imputés au budget ; un récurrent peut aussi alimenter un pot (versement programmé) |
 | Cours des actifs | Aucun : pas de valeur actuelle, les positions sont suivies au prix de revient (retiré le 28/09/2026) |
 | Portefeuille | Un seul par utilisateur |
 | Comptes | Inscription ouverte. Drapeau `is_admin` en base, vue admin (suppression de compte ou de données, changement de mot de passe) |
@@ -103,6 +103,7 @@ Disponible(début − 1) = 0
 
 ### 2.4 Pots d'épargne
 - Nom, icône, couleur, objectif optionnel.
+- **Versement programmé** (ajouté le 29/09/2026) : un récurrent du budget vers un pot, ex. 500 €/mois pour investir. Le budget le paie jour après jour comme une charge (500 € / jours du mois) ; le pot reçoit chaque période en entier dès son premier jour, pour qu'un achat en début de mois puisse être payé depuis le pot. Les achats d'investissement se saisissent ensuite « payés depuis le pot », au prix réel.
 - Solde = entrées (envois depuis le budget, revenus, ventes et dividendes destinés au pot) − sorties (retraits vers le budget, dépenses et achats payés par le pot).
 - Solde négatif interdit.
 

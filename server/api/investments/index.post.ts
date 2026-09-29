@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     const potId = body.potId ?? null;
     if (potId !== null) {
         await requirePot(wallet.id, potId, { active: true });
-        if (body.type === 'buy') await assertPotBalance(wallet.id, potId, { delta: -amount });
+        if (body.type === 'buy') await assertPotBalance(wallet, potId, { delta: -amount });
     }
     if (body.type === 'sell') {
         await assertNoOversell(wallet.id, asset.id, {

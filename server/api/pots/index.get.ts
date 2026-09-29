@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     const { wallet } = await requireWallet(event);
     const [rows, { balances }] = await Promise.all([
         fetchAll(db.select().from(pots).where(eq(pots.walletId, wallet.id)).orderBy(asc(pots.position), asc(pots.id))),
-        walletPotBalances(wallet.id),
+        walletPotBalances(wallet),
     ]);
     return rows.map((p: any) => ({ ...p, balance: balances.get(p.id) ?? 0 }));
 });

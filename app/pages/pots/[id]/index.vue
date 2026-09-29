@@ -29,6 +29,32 @@
         </NuxtLink>
       </div>
 
+      <UiGroup title="Versement programmé">
+        <NuxtLink
+          v-for="r in activeRules"
+          :key="r.id"
+          :to="`/recurrences/${r.id}`"
+          class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60"
+        >
+          <Icon name="lucide:repeat" class="size-6 shrink-0 text-primary" />
+          <span class="grow min-w-0">
+            <span class="block truncate">{{ formatMoney(r.amount) }} · {{ FREQUENCY_LABELS[r.frequency].toLowerCase() }}</span>
+            <span class="block text-[13px] text-ink-muted truncate">
+              {{ r.endDate ? `du ${formatDate(r.startDate)} au ${formatDate(r.endDate)}` : `depuis le ${formatDate(r.startDate)}` }} · {{ perDay(r) }} / jour sur ton budget
+            </span>
+          </span>
+          <Icon name="lucide:chevron-right" class="size-5 text-ink-muted" />
+        </NuxtLink>
+        <NuxtLink
+          v-if="!pot.archivedAt"
+          :to="`/pots/${pot.id}/recurring`"
+          class="flex items-center gap-3 px-4 min-h-13 text-primary font-medium hover:bg-surface-muted/60"
+        >
+          <Icon name="lucide:plus" class="size-5" />
+          {{ activeRules.length ? 'Ajouter un versement' : 'Programmer un versement' }}
+        </NuxtLink>
+      </UiGroup>
+
       <p v-if="error" class="text-sm text-negative bg-negative/5 rounded-xl px-3 py-2" role="alert">{{ error }}</p>
 
       <p v-if="!movements.length" class="text-center text-ink-muted py-6">Aucun mouvement pour l'instant.</p>
@@ -41,6 +67,14 @@
               <span class="block text-[13px] text-ink-muted">{{ formatDate(m.date) }}</span>
             </span>
             <span :class="['tabular-nums font-medium', m.amount > 0 && 'text-positive']">{{ formatMoney(m.amount, { signed: true }) }}</span>
+          </NuxtLink>
+          <NuxtLink v-else-if="m.kind === 'recurring'" :to="`/recurrences/${m.id}`" class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60">
+            <Icon name="lucide:repeat" class="size-6 shrink-0 text-primary" />
+            <span class="grow min-w-0">
+              <span class="block truncate">{{ m.memo || 'Versement programmé' }}</span>
+              <span class="block text-[13px] text-ink-muted">{{ formatDate(m.date) }}</span>
+            </span>
+            <span class="tabular-nums font-medium text-positive">{{ formatMoney(m.amount, { signed: true }) }}</span>
           </NuxtLink>
           <div v-else class="flex items-center gap-3 px-4 py-3">
             <Icon :name="m.direction === 'to_pot' ? 'lucide:piggy-bank' : 'lucide:undo-2'" class="size-6 shrink-0 text-primary" />
@@ -74,9 +108,10 @@ const { formatMoney, formatDate } = useFormat();
 const { categories, ensureLoaded } = useCategories();
 
 const id = Number(route.params.id);
-const [pots, movementsData] = await Promise.all([
+const [pots, movementsData, allRules] = await Promise.all([
   requestFetch<Pot[]>('/api/pots'),
   requestFetch<PotMovement[]>(`/api/pots/${id}/movements`).catch(() => null),
+  requestFetch<Recurrence[]>('/api/recurrences'),
   ensureLoaded(),
 ]);
 const found = pots.find((p) => p.id === id);
@@ -85,6 +120,12 @@ if (!found || !movementsData) throw createError({ statusCode: 404, statusMessage
 const pot = ref<Pot>(found);
 const movements = ref<PotMovement[]>(movementsData);
 const categoryOf = (categoryId: number) => categories.value?.find((c) => c.id === categoryId);
+
+// Recurring contributions still running (the ended ones stay in the history).
+const { wallet } = useWallet();
+const today = todayIn(wallet.value!.timezone);
+const activeRules = allRules.filter((r) => r.potId === id && (r.endDate === null || r.endDate >= today));
+const perDay = (r: Recurrence) => formatMoney(Math.round(dailyAmount(r.amount, r.frequency, r.startDate > today ? r.startDate : today)));
 
 // Two-step delete: first tap arms the row, second tap deletes.
 const confirmingId = ref<number | null>(null);

@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Undoing a deposit must not leave the pot negative.
-    if (transfer.direction === 'to_pot') await assertPotBalance(wallet.id, transfer.potId, { excludeTransferId: transfer.id });
+    if (transfer.direction === 'to_pot') await assertPotBalance(wallet, transfer.potId, { excludeTransferId: transfer.id });
 
     await db.delete(potTransfers).where(eq(potTransfers.id, transfer.id)).execute();
     return { success: true };
