@@ -2,8 +2,7 @@ services:
   app:
     build: .
     container_name: vidi-ledger-app
-    ports:
-      - "3018:3018"
+    # No published port: Traefik (Dokploy domain) reaches the container on dokploy-network.
     environment:
       - DB_TYPE=${DB_TYPE:-postgres}
       - DATABASE_URL=${DATABASE_URL}
