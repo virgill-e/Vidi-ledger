@@ -4,11 +4,14 @@ import Database from 'better-sqlite3';
 import postgres from 'postgres';
 import * as schema from '../database/schema';
 
-const getDb = () => {
-    const dbType = process.env.DB_TYPE;
-    const dbUrl = process.env.DATABASE_URL;
+const dbUrl = process.env.DATABASE_URL;
 
-    if (dbType === 'postgres' || (dbUrl && (dbUrl.startsWith('postgres://') || dbUrl.startsWith('postgresql://')))) {
+/** Postgres in production (Docker); SQLite for local development. */
+export const isPostgres = process.env.DB_TYPE === 'postgres'
+    || !!dbUrl?.startsWith('postgres://') || !!dbUrl?.startsWith('postgresql://');
+
+const getDb = () => {
+    if (isPostgres) {
         // PostgreSQL for Production (Docker)
         const client = postgres(dbUrl || '');
         return drizzlePg(client, { schema });

@@ -76,21 +76,12 @@ Assurez-vous que votre `.env` contient les accès à votre base PostgreSQL (via 
 docker-compose up -d --build
 ```
 
-### 2. Migration manuelle de la base de données
-Puisque l'application ne fait pas le push automatiquement au démarrage, vous devez le lancer manuellement depuis votre machine locale en pointant vers la base de production.
+### 2. Migrations de la base de données
+En production (Postgres), l'app **applique elle-même les migrations en attente au démarrage** (`server/plugins/migrate.ts`, dossier `server/database/migrations/` embarqué dans l'image Docker). Les requêtes attendent la fin de la migration ; en cas d'échec elles reçoivent une erreur 503 et le détail est dans les logs du conteneur.
 
-**Option A : Depuis votre terminal local (Recommandé)**
-Si votre base PostgreSQL est accessible depuis votre machine :
-```bash
-# Vérifiez que DB_TYPE=postgres et DATABASE_URL pointe vers votre prod dans le .env
-npm run db:push
-```
+Une migration s'exécute pendant que l'ancienne version tourne encore : elle doit rester compatible avec le code précédent (ajouter plutôt que renommer ou supprimer une colonne encore utilisée).
 
-**Option B : Via le conteneur (Si configuré)**
-Si vous avez accès au conteneur de l'app :
-```bash
-docker exec -it vidi-ledger-app npx drizzle-kit push
-```
+En local (SQLite), on continue d'utiliser `npm run db:push`.
 
 ---
 

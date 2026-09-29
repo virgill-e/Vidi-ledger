@@ -16,8 +16,10 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# On ne copie que l'output du build pour garder l'image légère
+# On ne copie que l'output du build pour garder l'image légère,
+# plus les migrations SQL appliquées au démarrage (server/plugins/migrate.ts)
 COPY --from=builder /src/.output ./.output
+COPY --from=builder /src/server/database/migrations ./server/database/migrations
 
 ENV HOST=0.0.0.0
 ENV PORT=3018
