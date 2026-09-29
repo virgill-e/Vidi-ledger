@@ -200,7 +200,7 @@ Une transaction datée avant `wallets.start_date` n'a **aucun impact** sur le bu
 - Les migrations Drizzle V2 repartent d'une baseline `0000` ; l'historique V1 reste sur `V1/main`.
 
 ### 4.1 bis Bascule réalisée (28/09/2026)
-Choix final : **même base Postgres**. Les tables V1 ont été déplacées dans le schéma `v1` (sans suppression), les tables V2 créées dans `public` via les migrations Drizzle, puis le compte principal migré avec `--only=<email> --v1-schema=v1 --start-date=2026-10-01`. Sauvegarde JSON de la V1 hors dépôt. Le schéma `v1` est à supprimer (`DROP SCHEMA v1 CASCADE`) une fois la V2 validée en prod.
+Choix final : **même base Postgres**. Les tables V1 ont été déplacées dans le schéma `v1` (sans suppression), les tables V2 créées dans `public` via les migrations Drizzle, puis le compte principal migré avec `--only=<email> --v1-schema=v1 --start-date=2026-10-01`. Sauvegarde JSON de la V1 hors dépôt. Le schéma `v1` a été supprimé le 2026-09-29 (`DROP SCHEMA v1 CASCADE`), après validation de la V2 ; le second compte V1, non migré, et les 267 dépenses V1 ne subsistent que dans la sauvegarde JSON.
 
 ### 4.2 Date de bascule
 La bascule peut avoir lieu n'importe quel jour. Les dépenses V1 n'étant pas migrées, les jours du mois déjà écoulés sont **considérés comme dépensés à hauteur de la moyenne journalière**, et les jours restants gardent cette même moyenne.
