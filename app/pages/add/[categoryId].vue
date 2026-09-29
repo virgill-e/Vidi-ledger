@@ -96,7 +96,8 @@ const today = todayIn(wallet.timezone);
 const amountText = ref('');
 const amount = computed(() => parseAmount(amountText.value));
 const memo = ref('');
-const date = ref(today);
+// Today, or the wallet's first/last day when today is outside its period.
+const date = ref(clampDate(today, wallet.startDate, wallet.endDate));
 const repeat = ref<'none' | Frequency>('none');
 const spread = ref('1');
 const fromWalletStart = ref(true);
@@ -173,7 +174,7 @@ const submit = async () => {
     lastAdded.value = { amount: category.kind === 'expense' ? -cents : cents, name: category.name, icon: category.icon };
     await navigateTo('/');
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || "Impossible d'enregistrer.";
+    error.value = apiErrorMessage(err, "Impossible d'enregistrer.");
   } finally {
     saving.value = false;
   }

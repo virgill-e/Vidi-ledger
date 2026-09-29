@@ -25,6 +25,7 @@ export const API_ERRORS: Record<string, string> = {
     'Quantity exceeds the units held at that date': 'Quantité supérieure aux parts détenues à cette date.',
     'Insufficient pot balance': 'Solde du pot insuffisant.',
     'An asset already has this name': 'Un autre actif porte déjà ce nom.',
+    'date: Date is outside the wallet period': 'Cette date est en dehors de la période du portefeuille.',
 };
 
 /** French message for an API error, falling back to the raw status message. */

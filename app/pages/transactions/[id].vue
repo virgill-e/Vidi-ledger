@@ -120,7 +120,7 @@ const save = async () => {
   } catch (err: any) {
     error.value = err?.data?.statusMessage === 'Insufficient pot balance'
       ? 'Solde du pot insuffisant.'
-      : err?.data?.statusMessage || "Impossible d'enregistrer.";
+      : apiErrorMessage(err, "Impossible d'enregistrer.");
   } finally {
     saving.value = false;
   }

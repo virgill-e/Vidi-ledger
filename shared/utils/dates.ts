@@ -27,3 +27,10 @@ export const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 1
 /** Today's date in an IANA timezone, e.g. todayIn('Europe/Brussels'). */
 export const todayIn = (timeZone: string, now: Date = new Date()): LocalDate =>
     new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+
+/** `date` moved into [min, max] (either bound optional), e.g. today → the wallet's first day. */
+export const clampDate = (date: LocalDate, min?: LocalDate | null, max?: LocalDate | null): LocalDate => {
+    if (min && date < min) return min;
+    if (max && date > max) return max;
+    return date;
+};

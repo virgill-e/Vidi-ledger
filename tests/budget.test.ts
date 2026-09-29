@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeBudget, dailyAmount, type BudgetRecurrence, type BudgetTransaction } from '../shared/utils/budget';
-import { addDays, isLocalDate, todayIn } from '../shared/utils/dates';
+import { addDays, clampDate, isLocalDate, todayIn } from '../shared/utils/dates';
 
 const salary = (amount: number, startDate = '2026-01-01', endDate: string | null = null): BudgetRecurrence =>
     ({ kind: 'income', amount, frequency: 'monthly', startDate, endDate });
@@ -158,6 +158,12 @@ describe('dates', () => {
     it('adds days across month and year boundaries', () => {
         expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
         expect(addDays('2028-03-01', -1)).toBe('2028-02-29');
+    });
+
+    it('clamps a date into the wallet period', () => {
+        expect(clampDate('2026-09-29', '2026-10-01', null)).toBe('2026-10-01');
+        expect(clampDate('2026-12-31', '2026-10-01', '2026-11-30')).toBe('2026-11-30');
+        expect(clampDate('2026-10-15', '2026-10-01', undefined)).toBe('2026-10-15');
     });
 
     it("computes today in the wallet's timezone", () => {

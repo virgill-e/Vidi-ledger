@@ -63,7 +63,7 @@ const amountText = ref('');
 const amount = computed(() => parseAmount(amountText.value));
 const exceedsPot = computed(() => !toPot && amount.value !== null && Math.round(amount.value * 100) > pot.balance);
 const memo = ref('');
-const date = ref(today);
+const date = ref(clampDate(today, wallet.startDate, wallet.endDate));
 
 const canSubmit = computed(() => amount.value !== null && !exceedsPot.value);
 const saving = ref(false);
@@ -80,7 +80,7 @@ const submit = async () => {
     });
     await navigateTo(`/pots/${pot.id}`);
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || "Impossible d'enregistrer.";
+    error.value = apiErrorMessage(err, "Impossible d'enregistrer.");
   } finally {
     saving.value = false;
   }
