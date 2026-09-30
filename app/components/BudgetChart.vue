@@ -1,5 +1,5 @@
 <template>
-  <div class="relative select-none">
+  <div ref="root" class="relative select-none">
     <svg class="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <polygon :points="areaPoints" class="fill-white/10" />
       <polyline :points="linePoints" fill="none" stroke="white" stroke-width="6" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
@@ -18,7 +18,7 @@
       type="button"
       class="absolute -translate-x-1/2 -translate-y-1/2 focus:outline-none"
       :class="selected === i ? 'z-20' : 'z-10'"
-      :style="{ left: `${p.x}%`, top: `${p.y}%` }"
+      :style="position(p, i)"
       :aria-expanded="selected === i"
       :aria-label="`${label(p.day.date)} : ${formatMoney(p.day.available)}`"
       @click="selected = selected === i ? null : i"
@@ -28,7 +28,7 @@
         <span :class="['block text-lg font-bold tabular-nums', p.day.available < 0 ? 'text-negative' : 'text-primary']">{{ formatMoney(p.day.available) }}</span>
       </span>
 
-      <span v-else class="flex flex-col items-center bg-white rounded-2xl px-5 py-3 shadow-xl shadow-black/15 min-w-40 text-center">
+      <span v-else data-card class="flex flex-col items-center bg-white rounded-2xl px-5 py-3 shadow-xl shadow-black/15 min-w-40 text-center">
         <span class="text-[12px] font-semibold text-white bg-primary rounded-full px-2.5 py-0.5 mb-2">{{ label(p.day.date) }}</span>
         <span class="text-[13px] font-semibold text-ink-muted">Excédent</span>
         <span :class="['text-lg font-bold tabular-nums', p.day.carry < 0 ? 'text-negative' : 'text-positive']">{{ formatMoney(p.day.carry) }}</span>
@@ -98,4 +98,32 @@ const linePoints = computed(() => {
 });
 
 const areaPoints = computed(() => (linePoints.value ? `${linePoints.value} 100,100 0,100` : ''));
+
+// The open card is taller and wider than a bubble: once shown, it is moved back
+// inside the screen, below the header and above the floating buttons
+// (elements marked `data-floating`).
+const root = ref<HTMLElement | null>(null);
+const shift = ref({ x: 0, y: 0 });
+const EDGE = 12;
+
+watch(selected, async () => {
+  shift.value = { x: 0, y: 0 };
+  await nextTick();
+  const card = root.value?.querySelector('[data-card]');
+  if (!card) return;
+  const r = card.getBoundingClientRect();
+  const top = (document.querySelector('header')?.getBoundingClientRect().bottom ?? 0) + EDGE;
+  const floating = Array.from(document.querySelectorAll('[data-floating]'), (el) => el.getBoundingClientRect().top);
+  const bottom = Math.min(window.innerHeight, ...floating) - EDGE;
+  const right = document.documentElement.clientWidth - EDGE;
+  const x = r.left < EDGE ? EDGE - r.left : r.right > right ? right - r.right : 0;
+  let y = r.bottom > bottom ? bottom - r.bottom : 0;
+  if (r.top + y < top) y = top - r.top;
+  shift.value = { x, y };
+});
+
+const position = (p: { x: number; y: number }, i: number) => {
+  const { x, y } = selected.value === i ? shift.value : { x: 0, y: 0 };
+  return { left: `calc(${p.x}% + ${x}px)`, top: `calc(${p.y}% + ${y}px)` };
+};
 </script>
