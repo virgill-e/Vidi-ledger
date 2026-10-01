@@ -23,6 +23,13 @@
             </span>
           </NuxtLink>
         </UiGroup>
+        <div v-if="hasMore" ref="sentinel" class="flex flex-col items-center gap-2 py-4 text-ink-muted">
+          <template v-if="loadError">
+            <span>Impossible de charger la suite.</span>
+            <UiButton variant="ghost" class="w-auto" @click="loadMore">Réessayer</UiButton>
+          </template>
+          <Icon v-else name="lucide:loader-circle" class="size-6 animate-spin" aria-label="Chargement" />
+        </div>
       </template>
 
       <template v-else>
@@ -69,13 +76,58 @@ const { categories, ensureLoaded } = useCategories();
 const { formatMoney, formatDate, formatQuantity } = useFormat();
 const requestFetch = useRequestFetch();
 
-const [transactions, recurrences, pots, assets] = await Promise.all([
-  requestFetch<Transaction[]>('/api/transactions'),
+// Movements come by pages, newest first; a page starts after the last movement already shown.
+const PAGE_SIZE = 100;
+const pageQuery = (after?: Transaction) =>
+  after ? { limit: PAGE_SIZE, beforeDate: after.date, beforeId: after.id } : { limit: PAGE_SIZE };
+
+const [firstPage, recurrences, pots, assets] = await Promise.all([
+  requestFetch<Transaction[]>('/api/transactions', { query: pageQuery() }),
   requestFetch<Recurrence[]>('/api/recurrences'),
   requestFetch<Pot[]>('/api/pots'),
   requestFetch<AssetSummary[]>('/api/assets'),
   ensureLoaded(),
 ]);
+
+const transactions = ref(firstPage);
+const hasMore = ref(firstPage.length === PAGE_SIZE);
+const loadingMore = ref(false);
+const loadError = ref(false);
+
+// The next page loads when the end of the list comes within 600 px of the screen.
+const sentinel = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | undefined;
+
+const loadMore = async () => {
+  if (loadingMore.value || !hasMore.value) return;
+  loadingMore.value = true;
+  loadError.value = false;
+  try {
+    const page = await $fetch<Transaction[]>('/api/transactions', { query: pageQuery(transactions.value.at(-1)) });
+    transactions.value.push(...page);
+    hasMore.value = page.length === PAGE_SIZE;
+  } catch {
+    loadError.value = true;
+  } finally {
+    loadingMore.value = false;
+  }
+  // Observing again reports whether the end of the list is still in view (short pages, tall screens).
+  if (!loadError.value && sentinel.value && observer) {
+    observer.unobserve(sentinel.value);
+    observer.observe(sentinel.value);
+  }
+};
+
+onMounted(() => {
+  observer = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) loadMore();
+  }, { rootMargin: '600px 0px' });
+  watch(sentinel, (el, old) => {
+    if (old) observer!.unobserve(old);
+    if (el) observer!.observe(el);
+  }, { immediate: true });
+});
+onBeforeUnmount(() => observer?.disconnect());
 
 const categoryOf = (id: number) => categories.value?.find((c) => c.id === id);
 const assetName = (tx: Transaction) => assets.find((a) => a.id === tx.assetId)?.name ?? '';
@@ -96,7 +148,7 @@ const isInflow = (tx: Transaction) => tx.type === 'income' || tx.type === 'sell'
 
 const days = computed(() => {
   const groups: { date: string; items: Transaction[] }[] = [];
-  for (const tx of transactions) {
+  for (const tx of transactions.value) {
     const last = groups.at(-1);
     if (last?.date === tx.date) last.items.push(tx);
     else groups.push({ date: tx.date, items: [tx] });
