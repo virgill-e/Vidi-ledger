@@ -77,7 +77,7 @@ docker-compose up -d --build
 ```
 
 ### 2. Migrations de la base de données
-En production (Postgres), l'app **applique elle-même les migrations en attente au démarrage** (`server/plugins/migrate.ts`, dossier `server/database/migrations/` embarqué dans l'image Docker). Les requêtes attendent la fin de la migration ; en cas d'échec elles reçoivent une erreur 503 et le détail est dans les logs du conteneur.
+En production (Postgres), l'app **applique elle-même les migrations en attente au démarrage** (`server/plugins/migrate.ts`, dossier `server/database/migrations/` embarqué dans l'image Docker). Les requêtes attendent la fin de la migration ; en cas d'échec (base injoignable, par exemple) elles reçoivent une erreur 503, le détail est dans les logs du conteneur et l'app réessaie seule après 5 s, puis 10, 20… jusqu'à une tentative par minute.
 
 Une migration s'exécute pendant que l'ancienne version tourne encore : elle doit rester compatible avec le code précédent (ajouter plutôt que renommer ou supprimer une colonne encore utilisée).
 
