@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <SheetHeader :title="trade ? TRADE_LABELS[type] : category.name" :icon="category.icon" :icon-color="category.color" :back-to="backTo">
+    <SheetHeader :title="trade ? TRADE_LABELS[type as TradeType] : category.name" :icon="category.icon" :icon-color="category.color" :back-to="backTo">
       <template #action>
         <button
           type="submit"
@@ -40,7 +40,7 @@
         <span class="font-medium">{{ tradeAsset?.name }}</span>
       </div>
 
-      <template v-if="type !== 'reward'">
+      <template v-if="!unitsMode">
         <p class="text-[13px] font-medium text-ink-muted px-1 -mb-2">{{ amountLabel }}</p>
         <AmountInput v-model="amountText" :invalid="amountText !== '' && amount === null" />
       </template>
@@ -56,7 +56,7 @@
             placeholder="ex. 1,5"
             :class="[
               'w-full h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary',
-              quantityText && (quantity === null || oversell || rewardTooLow) ? 'border-negative' : 'border-line',
+              quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line',
               maxQuantity !== null && 'pr-20',
             ]"
           />
@@ -72,11 +72,13 @@
         </div>
       </div>
       <p v-if="oversell" class="text-[13px] text-negative text-center -mt-2">Tu ne détiens que {{ formatQuantity(selectedAsset!.position.quantity) }} part(s).</p>
-      <p v-else-if="rewardTooLow" class="text-[13px] text-negative text-center -mt-2">Le solde réel doit dépasser les {{ formatQuantity(knownQuantity) }} part(s) déjà connues.</p>
-      <p v-else-if="rewardQuantity !== null" class="text-center text-sm text-ink-muted -mt-1">
-        L'app connaît {{ formatQuantity(knownQuantity) }} part(s) : <strong class="text-ink">+{{ formatQuantity(rewardQuantity) }}</strong> reçue(s) en récompense.
+      <p v-else-if="delta === 0" class="text-center text-sm text-ink-muted -mt-1">C'est déjà la quantité connue par l'app : rien à ajuster.</p>
+      <p v-else-if="delta !== null" class="text-center text-sm text-ink-muted -mt-1">
+        L'app connaît {{ formatQuantity(knownQuantity) }} part(s) :
+        <strong class="text-ink">{{ delta > 0 ? '+' : '−' }}{{ formatQuantity(Math.abs(delta)) }}</strong>
+        {{ delta > 0 ? 'reçue(s) en récompense' : 'payée(s) en frais' }}.
       </p>
-      <p v-if="type === 'reward'" class="text-[13px] text-ink-muted text-center -mt-2">Reçue gratuitement : aucun effet sur le budget, le PRU baisse.</p>
+      <p v-if="unitsMode" class="text-[13px] text-ink-muted text-center -mt-2">{{ unitsHint }}</p>
       <p v-else-if="unitPrice !== null" class="text-center text-sm text-ink-muted -mt-1">
         Prix unitaire : <strong class="text-ink">{{ formatUnitPrice(unitPrice) }}</strong>
       </p>
@@ -91,10 +93,10 @@
       />
 
       <DateChoice v-model="date" :today="today" :max="wallet.endDate ?? undefined" />
-      <p v-if="date < wallet.startDate && type !== 'reward'" class="text-[13px] text-ink-muted text-center -mt-2">Antérieur au portefeuille : n'affecte pas le budget.</p>
+      <p v-if="date < wallet.startDate && !unitsMode" class="text-[13px] text-ink-muted text-center -mt-2">Antérieur au portefeuille : n'affecte pas le budget.</p>
 
       <SelectRow
-        v-if="potOptions.length > 1 && type !== 'reward'"
+        v-if="potOptions.length > 1 && !unitsMode"
         v-model="potId"
         :label="type === 'buy' ? 'Payé depuis' : 'Versé sur'"
         :options="potOptions"
@@ -111,6 +113,8 @@
 </template>
 
 <script setup lang="ts">
+type FormType = TradeType | 'adjust';
+
 const props = defineProps<{
   category: Category;
   assets: AssetSummary[];
@@ -120,8 +124,8 @@ const props = defineProps<{
   backTo: string;
   /** Prefilled asset name (e.g. "Nouvel achat" from an asset page). */
   initialAsset?: string;
-  /** Preselected income-side type (e.g. a reward from an asset page). */
-  initialType?: TradeType;
+  /** Preselected income-side mode (e.g. the real-balance adjustment from an asset page). */
+  initialType?: FormType;
 }>();
 
 const { wallet: walletState } = useWallet();
@@ -130,13 +134,15 @@ const { formatMoney, formatUnitPrice, formatQuantity } = useFormat();
 const lastAdded = useLastAdded();
 const today = todayIn(wallet.timezone);
 
-const incomeTypes: { value: TradeType; label: string }[] = [
+// 'adjust' enters the real balance; it is saved as a reward or a fee.
+const incomeTypes: { value: FormType; label: string }[] = [
   { value: 'sell', label: 'Vente' },
   { value: 'dividend', label: 'Dividende' },
-  { value: 'reward', label: 'Récompense' },
+  { value: 'adjust', label: 'Solde réel' },
 ];
 const initialType = props.category.kind === 'income' && incomeTypes.some((t) => t.value === props.initialType) ? props.initialType : undefined;
-const type = ref<TradeType>((props.trade?.type as TradeType) ?? initialType ?? (props.category.kind === 'expense' ? 'buy' : 'sell'));
+const type = ref<FormType>((props.trade?.type as TradeType) ?? initialType ?? (props.category.kind === 'expense' ? 'buy' : 'sell'));
+const unitsMode = computed(() => type.value === 'adjust' || unitsOnly(type.value));
 
 const tradeAsset = computed(() => props.assets.find((a) => a.id === props.trade?.assetId));
 const assetName = ref(props.initialAsset ?? '');
@@ -155,21 +161,22 @@ const amountLabel = computed(() => ({
   buy: 'Montant payé (frais inclus)',
   sell: 'Montant reçu (net de frais)',
   dividend: 'Dividende reçu',
-  reward: '',
-}[type.value]));
+} as Record<string, string>)[type.value] ?? '');
 
-// A new reward is entered as the real balance (wallet, exchange): the app records
-// the difference with the units it knows, whatever the staking frequency.
-const newReward = computed(() => !props.trade && type.value === 'reward');
-const quantityLabel = computed(() => (newReward.value ? 'Solde réel' : type.value === 'reward' ? 'Quantité reçue' : 'Quantité'));
+// The real balance (wallet, exchange) against the units the app knows: above is
+// a reward (staking), below a fee paid in units (unstaking), whatever the frequency.
 const knownQuantity = computed(() => selectedAsset.value?.position.quantity ?? 0);
-const rewardQuantity = computed(() =>
-  newReward.value && quantity.value !== null && quantity.value > knownQuantity.value ? quantity.value - knownQuantity.value : null,
-);
-const rewardTooLow = computed(() => newReward.value && quantity.value !== null && rewardQuantity.value === null);
+const delta = computed(() => (type.value === 'adjust' && quantity.value !== null ? quantity.value - knownQuantity.value : null));
+const adjustType = computed<TradeType | null>(() => (delta.value === null || delta.value === 0 ? null : delta.value > 0 ? 'reward' : 'fee'));
+const quantityLabel = computed(() => ({ adjust: 'Solde réel', reward: 'Quantité reçue', fee: 'Quantité payée en frais' } as Record<string, string>)[type.value] ?? 'Quantité');
+const unitsHint = computed(() => ({
+  adjust: 'Sans effet sur le budget : une récompense fait baisser le PRU, des frais le font monter.',
+  reward: 'Reçue gratuitement : aucun effet sur le budget, le PRU baisse.',
+  fee: 'Payés en parts : aucun effet sur le budget, le PRU monte.',
+} as Record<string, string>)[type.value] ?? '');
 
 const unitPrice = computed(() =>
-  amount.value === null ? null : tradeUnitPrice({ type: type.value, amount: Math.round(amount.value * 100), quantity: quantity.value }),
+  amount.value === null || type.value === 'adjust' ? null : tradeUnitPrice({ type: type.value, amount: Math.round(amount.value * 100), quantity: quantity.value }),
 );
 
 // Whole current holding, offered by the "Max" button when selling.
@@ -193,10 +200,10 @@ const potOptions = [
 ];
 
 const canSubmit = computed(() => {
-  if (type.value !== 'reward' && amount.value === null) return false;
+  if (!unitsMode.value && amount.value === null) return false;
   if (!props.trade && !assetName.value.trim()) return false;
   if (type.value !== 'dividend' && quantity.value === null) return false;
-  if (newReward.value && rewardQuantity.value === null) return false;
+  if (type.value === 'adjust' && adjustType.value === null) return false;
   return !oversell.value;
 });
 
@@ -209,7 +216,7 @@ const submit = async () => {
   saving.value = true;
   error.value = '';
   const common = {
-    ...(type.value === 'reward' ? {} : { amount: amount.value, potId: potId.value ? Number(potId.value) : null }),
+    ...(unitsMode.value ? {} : { amount: amount.value, potId: potId.value ? Number(potId.value) : null }),
     date: date.value,
     memo: memo.value || null,
   };
@@ -225,14 +232,14 @@ const submit = async () => {
         method: 'POST',
         body: {
           ...common,
-          type: type.value,
+          type: type.value === 'adjust' ? adjustType.value : type.value,
           categoryId: props.category.id,
           ...(selectedAsset.value ? { assetId: selectedAsset.value.id } : { assetName: assetName.value.trim() }),
-          ...(type.value === 'dividend' ? {} : { quantity: newReward.value ? formatQuantity(rewardQuantity.value!) : quantityText.value }),
+          ...(type.value === 'dividend' ? {} : { quantity: type.value === 'adjust' ? formatQuantity(Math.abs(delta.value!)) : quantityText.value }),
         },
       });
       // No cash moved: show the asset and its new quantity rather than the budget.
-      if (type.value === 'reward') return await navigateTo(`/investments/${created.assetId}`);
+      if (unitsMode.value) return await navigateTo(`/investments/${created.assetId}`);
       const cents = Math.round(amount.value! * 100);
       lastAdded.value = { amount: type.value === 'buy' ? -cents : cents, name: selectedAsset.value?.name ?? assetName.value.trim(), icon: props.category.icon };
       await navigateTo('/');

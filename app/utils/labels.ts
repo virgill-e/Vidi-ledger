@@ -12,6 +12,7 @@ export const TRADE_LABELS: Record<TradeType, string> = {
     sell: 'Vente',
     dividend: 'Dividende',
     reward: 'Récompense',
+    fee: 'Frais',
 };
 
 export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
@@ -24,7 +25,7 @@ export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
 
 export const API_ERRORS: Record<string, string> = {
     'Quantity exceeds the units held at that date': 'Quantité supérieure aux parts détenues à cette date.',
-    'amount: A reward has no amount nor pot': 'Une récompense ne porte ni montant ni pot.',
+    'amount: Rewards and fees have no amount nor pot': 'Une récompense ou des frais en parts ne portent ni montant ni pot.',
     'Insufficient pot balance': 'Solde du pot insuffisant.',
     'An asset already has this name': 'Un autre actif porte déjà ce nom.',
     'date: Date is outside the wallet period': 'Cette date est en dehors de la période du portefeuille.',

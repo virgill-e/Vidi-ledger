@@ -18,7 +18,7 @@
               <span class="block truncate">{{ title(tx) }}</span>
               <span v-if="subtitle(tx)" class="block text-[13px] text-ink-muted truncate">{{ subtitle(tx) }}</span>
             </span>
-            <span v-if="tx.type === 'reward'" class="tabular-nums font-medium text-ink-muted">{{ formatMoney(0) }}</span>
+            <span v-if="unitsOnly(tx.type)" class="tabular-nums font-medium text-ink-muted">{{ formatMoney(0) }}</span>
             <span v-else :class="['tabular-nums font-medium', isInflow(tx) ? 'text-positive' : '']">
               {{ formatMoney(isInflow(tx) ? tx.amount : -tx.amount, { signed: true }) }}
             </span>

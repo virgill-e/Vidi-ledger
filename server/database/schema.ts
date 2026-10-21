@@ -207,9 +207,9 @@ export const transactions = table('transactions', {
     id: idColumn('id'),
     walletId: int('wallet_id').notNull().references(() => wallets.id, { onDelete: 'cascade' }),
     categoryId: int('category_id').notNull().references(() => categories.id),
-    type: text('type').notNull(), // 'expense' | 'income' | 'buy' | 'sell' | 'dividend' | 'reward'
+    type: text('type').notNull(), // 'expense' | 'income' | 'buy' | 'sell' | 'dividend' | 'reward' | 'fee'
     date: localDate('date').notNull(),
-    amount: int('amount').notNull(), // In cents, fees included; 0 for a reward (units received for free)
+    amount: int('amount').notNull(), // In cents, fees included; 0 for a reward or a fee (units only)
     memo: text('memo'),
     potId: int('pot_id').references(() => pots.id),
     spreadDays: int('spread_days').notNull().default(1),
@@ -220,12 +220,12 @@ export const transactions = table('transactions', {
 }, (t) => [
     index('transactions_wallet_date_idx').on(t.walletId, t.date),
     index('transactions_asset_date_idx').on(t.assetId, t.date),
-    check('transactions_type_check', sql`${t.type} IN ('expense', 'income', 'buy', 'sell', 'dividend', 'reward')`),
-    check('transactions_amount_check', sql`(${t.type} = 'reward' AND ${t.amount} = 0) OR (${t.type} <> 'reward' AND ${t.amount} > 0)`),
+    check('transactions_type_check', sql`${t.type} IN ('expense', 'income', 'buy', 'sell', 'dividend', 'reward', 'fee')`),
+    check('transactions_amount_check', sql`(${t.type} IN ('reward', 'fee') AND ${t.amount} = 0) OR (${t.type} NOT IN ('reward', 'fee') AND ${t.amount} > 0)`),
     check('transactions_spread_check', sql`${t.spreadDays} = 1 OR (${t.type} = 'expense' AND ${t.spreadDays} > 1)`),
     check('transactions_investment_check', sql`
         (${t.type} IN ('buy', 'sell') AND ${t.assetId} IS NOT NULL AND ${t.quantity} IS NOT NULL AND ${t.quantity} > 0)
-        OR (${t.type} = 'reward' AND ${t.assetId} IS NOT NULL AND ${t.quantity} IS NOT NULL AND ${t.quantity} > 0 AND ${t.potId} IS NULL)
+        OR (${t.type} IN ('reward', 'fee') AND ${t.assetId} IS NOT NULL AND ${t.quantity} IS NOT NULL AND ${t.quantity} > 0 AND ${t.potId} IS NULL)
         OR (${t.type} = 'dividend' AND ${t.assetId} IS NOT NULL AND (${t.quantity} IS NULL OR ${t.quantity} >= 0))
         OR (${t.type} IN ('expense', 'income') AND ${t.assetId} IS NULL AND ${t.quantity} IS NULL)
     `),

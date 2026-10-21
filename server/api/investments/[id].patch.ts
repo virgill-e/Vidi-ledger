@@ -10,8 +10,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await validateBody(event, investmentUpdateSchema);
-    if (tx.type === 'reward' && (body.amount !== undefined || (body.potId ?? null) !== null)) {
-        throw createError({ statusCode: 400, statusMessage: 'amount: A reward has no amount nor pot' });
+    if (unitsOnly(tx.type) && (body.amount !== undefined || (body.potId ?? null) !== null)) {
+        throw createError({ statusCode: 400, statusMessage: 'amount: Rewards and fees have no amount nor pot' });
     }
     const changes: Record<string, unknown> = {};
     if (body.amount !== undefined) changes.amount = toCents(body.amount);

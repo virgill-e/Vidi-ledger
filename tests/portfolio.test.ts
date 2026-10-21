@@ -112,3 +112,34 @@ describe('rewards (staking, airdrops: units received for free)', () => {
         expect(history[1]!.averageCost!).toBeLessThan(history[0]!.averageCost!);
     });
 });
+
+describe('fees paid in units (unstaking): units taken without cash', () => {
+    // 10 SOL bought for 1 000 €, then 0,02 SOL paid as an unstaking fee.
+    const bought = () => t('buy', '2026-01-10', 100_000, 10);
+    const fee = () => t('fee', '2026-02-01', 0, 0.02);
+
+    it('keeps the cost with the units left: same cost basis, higher PRU', () => {
+        const p = computePosition([bought(), fee()]);
+        expect(p.quantity).toBe(9.98 * QUANTITY_SCALE);
+        expect(p.costBasis).toBe(100_000);
+        expect(p.realizedPnL).toBe(0);
+        expect(p.fees).toBe(0.02 * QUANTITY_SCALE);
+        expect(Math.round(p.averageCost!)).toBe(Math.round(100_000 / 9.98)); // 100,20 € instead of 100 €
+    });
+
+    it('cannot take more than what is held, and the fee counts in the end result', () => {
+        expect(firstOversell([bought(), t('fee', '2026-02-01', 0, 10.5)])).toBe(1);
+        const sold = computePosition([bought(), fee(), t('sell', '2026-03-01', 110_000, 9.98)]);
+        expect(sold).toMatchObject({ quantity: 0, costBasis: 0, realizedPnL: 10_000 });
+    });
+
+    it('turns the remaining cost into a loss when a fee takes the last units', () => {
+        expect(computePosition([bought(), t('fee', '2026-02-01', 0, 10)])).toMatchObject({ quantity: 0, costBasis: 0, realizedPnL: -100_000 });
+    });
+
+    it('has no unit price and raises the PRU line of the chart', () => {
+        expect(tradeUnitPrice(fee())).toBeNull();
+        const history = averageCostHistory([bought(), fee()]);
+        expect(history[1]!.averageCost!).toBeGreaterThan(history[0]!.averageCost!);
+    });
+});

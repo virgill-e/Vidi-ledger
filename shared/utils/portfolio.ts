@@ -3,7 +3,9 @@
 // Quantities are integers scaled by QUANTITY_SCALE (10⁸), money in cents.
 // A buy's `amount` is the cash paid (fees included); a sell's is the net cash
 // received. A reward (staking, airdrop) brings units for free: amount 0, so the
-// PRU goes down. There is no market value: positions are followed at cost.
+// PRU goes down. A fee paid in units (unstaking…) takes units without cash: the
+// cost stays with the units left, so the PRU goes up — like buy fees included
+// in the amount. There is no market value: positions are followed at cost.
 
 export const QUANTITY_DECIMALS = 8;
 export const QUANTITY_SCALE = 10 ** QUANTITY_DECIMALS;
@@ -31,14 +33,20 @@ export const formatScaled = (value: number, decimals: number): string => {
     return `${negative ? '-' : ''}${Number(int).toLocaleString('fr-FR')}${fraction ? `,${fraction}` : ''}`;
 };
 
-export const TRADE_TYPES = ['buy', 'sell', 'dividend', 'reward'] as const;
+export const TRADE_TYPES = ['buy', 'sell', 'dividend', 'reward', 'fee'] as const;
 export type TradeType = (typeof TRADE_TYPES)[number];
 
-/** True for a movement on an asset (buy, sell, dividend, reward). */
+/** True for a movement on an asset (buy, sell, dividend, reward, fee). */
 export const isTrade = (type: string): type is TradeType => (TRADE_TYPES as readonly string[]).includes(type);
 
 /** Buys and rewards add units to a position. */
 export const addsUnits = (type: string) => type === 'buy' || type === 'reward';
+
+/** Sales and fees paid in units take units from a position. */
+export const removesUnits = (type: string) => type === 'sell' || type === 'fee';
+
+/** Rewards and fees move units only: no amount, no pot, no budget impact. */
+export const unitsOnly = (type: string) => type === 'reward' || type === 'fee';
 
 export interface Trade {
     id: number;
@@ -62,6 +70,8 @@ export interface Position {
     dividends: number;
     /** Units received for free (staking, airdrops), scaled. */
     rewards: number;
+    /** Units paid as fees (unstaking…), scaled. */
+    fees: number;
 }
 
 /** Trades in the order they happened: by date, then by insertion (id). */
@@ -79,7 +89,7 @@ export const firstOversell = (trades: Trade[]): number => {
     for (let i = 0; i < sorted.length; i++) {
         const t = sorted[i]!;
         if (addsUnits(t.type)) held += t.quantity ?? 0;
-        else if (t.type === 'sell') held -= t.quantity ?? 0;
+        else if (removesUnits(t.type)) held -= t.quantity ?? 0;
         if (held < 0) return i;
     }
     return -1;
@@ -89,7 +99,7 @@ export const firstOversell = (trades: Trade[]): number => {
 export const tradeUnitPrice = (t: Pick<Trade, 'type' | 'amount' | 'quantity'>): number | null =>
     (t.type !== 'buy' && t.type !== 'sell') || !t.quantity ? null : (t.amount * QUANTITY_SCALE) / t.quantity;
 
-/** PRU after each buy, sell or reward, for the price chart. */
+/** PRU after each buy, sell, reward or fee, for the price chart. */
 export const averageCostHistory = (trades: Trade[]): { date: string; averageCost: number | null }[] => {
     const points: { date: string; averageCost: number | null }[] = [];
     let quantity = 0;
@@ -100,6 +110,9 @@ export const averageCostHistory = (trades: Trade[]): { date: string; averageCost
         if (addsUnits(t.type)) {
             quantity += q;
             cost += t.amount;
+        } else if (t.type === 'fee') {
+            quantity -= q;
+            if (quantity <= 0) cost = 0;
         } else {
             const avg = quantity > 0 ? cost / quantity : 0;
             cost -= avg * Math.min(q, quantity);
@@ -117,6 +130,7 @@ export const computePosition = (trades: Trade[]): Position => {
     let realized = 0;
     let dividends = 0;
     let rewards = 0;
+    let fees = 0;
 
     for (const t of sortTrades(trades)) {
         const q = t.quantity ?? 0;
@@ -134,6 +148,14 @@ export const computePosition = (trades: Trade[]): Position => {
         } else if (t.type === 'reward') {
             quantity += q;
             rewards += q;
+        } else if (t.type === 'fee') {
+            // The cost stays with the units left (PRU up); if nothing is left, it is lost.
+            quantity -= q;
+            fees += q;
+            if (quantity <= 0) {
+                realized -= cost;
+                cost = 0;
+            }
         } else {
             dividends += t.amount;
         }
@@ -152,5 +174,6 @@ export const computePosition = (trades: Trade[]): Position => {
         realizedPnL: Math.round(realized),
         dividends,
         rewards,
+        fees,
     };
 };

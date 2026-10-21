@@ -27,7 +27,7 @@ export interface BudgetRecurrence {
 }
 
 export interface BudgetTransaction {
-    type: 'expense' | 'income' | 'buy' | 'sell' | 'dividend' | 'reward';
+    type: 'expense' | 'income' | 'buy' | 'sell' | 'dividend' | 'reward' | 'fee';
     date: LocalDate;
     amount: number; // cents
     potId: number | null; // set = paid from / credited to a pot, not the budget
@@ -108,8 +108,8 @@ export const computeBudget = (input: {
     const inRange = (i: number) => i >= 0 && i < length;
 
     for (const tx of transactions) {
-        // Pot movements stay out of the budget; rewards bring units, no cash.
-        if (tx.potId !== null || tx.type === 'reward') continue;
+        // Pot movements stay out of the budget; rewards and fees move units, no cash.
+        if (tx.potId !== null || tx.type === 'reward' || tx.type === 'fee') continue;
         const i = toDayNumber(tx.date) - first;
         if (OUTFLOW_TYPES.has(tx.type)) {
             const days = Math.max(1, tx.spreadDays);

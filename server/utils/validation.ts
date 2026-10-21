@@ -200,7 +200,7 @@ export const investmentCreateSchema = z
         // An existing asset, or a name (the asset is created if unknown).
         assetId: z.coerce.number().int().positive().optional(),
         assetName: z.string().trim().min(1).max(60).optional(),
-        // None for a reward: its units come for free.
+        // None for a reward or a fee: they move units only.
         amount: positiveAmount.optional(),
         quantity: quantityField.optional(),
         date: localDateString,
@@ -209,8 +209,8 @@ export const investmentCreateSchema = z
     })
     .refine((d) => d.assetId !== undefined || d.assetName !== undefined, { message: 'Asset is required', path: ['assetName'] })
     .refine((d) => d.type === 'dividend' || d.quantity !== undefined, { message: 'Quantity is required', path: ['quantity'] })
-    .refine((d) => d.type === 'reward' || d.amount !== undefined, { message: 'Amount is required', path: ['amount'] })
-    .refine((d) => d.type !== 'reward' || (d.amount === undefined && (d.potId ?? null) === null), { message: 'A reward has no amount nor pot', path: ['amount'] });
+    .refine((d) => unitsOnly(d.type) || d.amount !== undefined, { message: 'Amount is required', path: ['amount'] })
+    .refine((d) => !unitsOnly(d.type) || (d.amount === undefined && (d.potId ?? null) === null), { message: 'Rewards and fees have no amount nor pot', path: ['amount'] });
 
 // No defaults: omitted fields stay untouched. The type and asset never change.
 export const investmentUpdateSchema = z.object({

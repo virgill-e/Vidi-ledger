@@ -128,8 +128,8 @@ describe('one-off movements', () => {
         expect(days[0]).toMatchObject({ spent: 10_000, income: 6_500, available: -3_500 });
     });
 
-    it('ignores rewards: units received, no cash', () => {
-        const days = run({ start: '2026-09-01', until: '2026-09-01', transactions: [{ ...expense('2026-09-01', 0), type: 'reward' }] });
+    it('ignores rewards and fees paid in units: no cash', () => {
+        const days = run({ start: '2026-09-01', until: '2026-09-01', transactions: [{ ...expense('2026-09-01', 0), type: 'reward' }, { ...expense('2026-09-01', 0), type: 'fee' }] });
         expect(days[0]).toMatchObject({ spent: 0, income: 0, available: 0 });
     });
 

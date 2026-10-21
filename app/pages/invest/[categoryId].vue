@@ -1,5 +1,5 @@
 <template>
-  <InvestmentForm :category="category" :assets="assets" :pots="pots" :back-to="`/add?kind=${category.kind}`" :initial-asset="typeof route.query.asset === 'string' ? route.query.asset : undefined" :initial-type="route.query.type === 'reward' ? 'reward' : undefined" />
+  <InvestmentForm :category="category" :assets="assets" :pots="pots" :back-to="`/add?kind=${category.kind}`" :initial-asset="typeof route.query.asset === 'string' ? route.query.asset : undefined" :initial-type="route.query.type === 'adjust' || route.query.type === 'reward' ? 'adjust' : undefined" />
 </template>
 
 <script setup lang="ts">
