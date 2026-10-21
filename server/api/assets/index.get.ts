@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
         fetchAll(db.select().from(assets).where(eq(assets.walletId, wallet.id))),
         fetchAll(db.select().from(transactions).where(and(
             eq(transactions.walletId, wallet.id),
-            inArray(transactions.type, ['buy', 'sell', 'dividend']),
+            inArray(transactions.type, [...TRADE_TYPES]),
         ))),
     ]);
 

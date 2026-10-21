@@ -40,11 +40,13 @@
         <span class="font-medium">{{ tradeAsset?.name }}</span>
       </div>
 
-      <p class="text-[13px] font-medium text-ink-muted px-1 -mb-2">{{ amountLabel }}</p>
-      <AmountInput v-model="amountText" :invalid="amountText !== '' && amount === null" />
+      <template v-if="type !== 'reward'">
+        <p class="text-[13px] font-medium text-ink-muted px-1 -mb-2">{{ amountLabel }}</p>
+        <AmountInput v-model="amountText" :invalid="amountText !== '' && amount === null" />
+      </template>
 
       <div v-if="type !== 'dividend'" class="flex flex-col gap-1">
-        <label for="trade-quantity" class="text-[13px] font-medium text-ink-muted px-1">Quantité</label>
+        <label for="trade-quantity" class="text-[13px] font-medium text-ink-muted px-1">{{ quantityLabel }}</label>
         <div class="relative">
           <input
             id="trade-quantity"
@@ -54,7 +56,7 @@
             placeholder="ex. 1,5"
             :class="[
               'w-full h-14 rounded-2xl bg-surface border px-4 text-[16px] tabular-nums outline-none focus:border-primary',
-              quantityText && (quantity === null || oversell) ? 'border-negative' : 'border-line',
+              quantityText && (quantity === null || oversell || rewardTooLow) ? 'border-negative' : 'border-line',
               maxQuantity !== null && 'pr-20',
             ]"
           />
@@ -70,6 +72,11 @@
         </div>
       </div>
       <p v-if="oversell" class="text-[13px] text-negative text-center -mt-2">Tu ne détiens que {{ formatQuantity(selectedAsset!.position.quantity) }} part(s).</p>
+      <p v-else-if="rewardTooLow" class="text-[13px] text-negative text-center -mt-2">Le solde réel doit dépasser les {{ formatQuantity(knownQuantity) }} part(s) déjà connues.</p>
+      <p v-else-if="rewardQuantity !== null" class="text-center text-sm text-ink-muted -mt-1">
+        L'app connaît {{ formatQuantity(knownQuantity) }} part(s) : <strong class="text-ink">+{{ formatQuantity(rewardQuantity) }}</strong> reçue(s) en récompense.
+      </p>
+      <p v-if="type === 'reward'" class="text-[13px] text-ink-muted text-center -mt-2">Reçue gratuitement : aucun effet sur le budget, le PRU baisse.</p>
       <p v-else-if="unitPrice !== null" class="text-center text-sm text-ink-muted -mt-1">
         Prix unitaire : <strong class="text-ink">{{ formatUnitPrice(unitPrice) }}</strong>
       </p>
@@ -84,10 +91,10 @@
       />
 
       <DateChoice v-model="date" :today="today" :max="wallet.endDate ?? undefined" />
-      <p v-if="date < wallet.startDate" class="text-[13px] text-ink-muted text-center -mt-2">Antérieur au portefeuille : n'affecte pas le budget.</p>
+      <p v-if="date < wallet.startDate && type !== 'reward'" class="text-[13px] text-ink-muted text-center -mt-2">Antérieur au portefeuille : n'affecte pas le budget.</p>
 
       <SelectRow
-        v-if="potOptions.length > 1"
+        v-if="potOptions.length > 1 && type !== 'reward'"
         v-model="potId"
         :label="type === 'buy' ? 'Payé depuis' : 'Versé sur'"
         :options="potOptions"
@@ -104,8 +111,6 @@
 </template>
 
 <script setup lang="ts">
-type TradeType = 'buy' | 'sell' | 'dividend';
-
 const props = defineProps<{
   category: Category;
   assets: AssetSummary[];
@@ -115,6 +120,8 @@ const props = defineProps<{
   backTo: string;
   /** Prefilled asset name (e.g. "Nouvel achat" from an asset page). */
   initialAsset?: string;
+  /** Preselected income-side type (e.g. a reward from an asset page). */
+  initialType?: TradeType;
 }>();
 
 const { wallet: walletState } = useWallet();
@@ -126,8 +133,10 @@ const today = todayIn(wallet.timezone);
 const incomeTypes: { value: TradeType; label: string }[] = [
   { value: 'sell', label: 'Vente' },
   { value: 'dividend', label: 'Dividende' },
+  { value: 'reward', label: 'Récompense' },
 ];
-const type = ref<TradeType>((props.trade?.type as TradeType) ?? (props.category.kind === 'expense' ? 'buy' : 'sell'));
+const initialType = props.category.kind === 'income' && incomeTypes.some((t) => t.value === props.initialType) ? props.initialType : undefined;
+const type = ref<TradeType>((props.trade?.type as TradeType) ?? initialType ?? (props.category.kind === 'expense' ? 'buy' : 'sell'));
 
 const tradeAsset = computed(() => props.assets.find((a) => a.id === props.trade?.assetId));
 const assetName = ref(props.initialAsset ?? '');
@@ -146,7 +155,18 @@ const amountLabel = computed(() => ({
   buy: 'Montant payé (frais inclus)',
   sell: 'Montant reçu (net de frais)',
   dividend: 'Dividende reçu',
+  reward: '',
 }[type.value]));
+
+// A new reward is entered as the real balance (wallet, exchange): the app records
+// the difference with the units it knows, whatever the staking frequency.
+const newReward = computed(() => !props.trade && type.value === 'reward');
+const quantityLabel = computed(() => (newReward.value ? 'Solde réel' : type.value === 'reward' ? 'Quantité reçue' : 'Quantité'));
+const knownQuantity = computed(() => selectedAsset.value?.position.quantity ?? 0);
+const rewardQuantity = computed(() =>
+  newReward.value && quantity.value !== null && quantity.value > knownQuantity.value ? quantity.value - knownQuantity.value : null,
+);
+const rewardTooLow = computed(() => newReward.value && quantity.value !== null && rewardQuantity.value === null);
 
 const unitPrice = computed(() =>
   amount.value === null ? null : tradeUnitPrice({ type: type.value, amount: Math.round(amount.value * 100), quantity: quantity.value }),
@@ -173,9 +193,10 @@ const potOptions = [
 ];
 
 const canSubmit = computed(() => {
-  if (amount.value === null) return false;
+  if (type.value !== 'reward' && amount.value === null) return false;
   if (!props.trade && !assetName.value.trim()) return false;
   if (type.value !== 'dividend' && quantity.value === null) return false;
+  if (newReward.value && rewardQuantity.value === null) return false;
   return !oversell.value;
 });
 
@@ -188,10 +209,9 @@ const submit = async () => {
   saving.value = true;
   error.value = '';
   const common = {
-    amount: amount.value,
+    ...(type.value === 'reward' ? {} : { amount: amount.value, potId: potId.value ? Number(potId.value) : null }),
     date: date.value,
     memo: memo.value || null,
-    potId: potId.value ? Number(potId.value) : null,
   };
   try {
     if (props.trade) {
@@ -201,16 +221,18 @@ const submit = async () => {
       });
       await navigateTo(props.backTo);
     } else {
-      await $fetch('/api/investments', {
+      const created = await $fetch<Transaction>('/api/investments', {
         method: 'POST',
         body: {
           ...common,
           type: type.value,
           categoryId: props.category.id,
           ...(selectedAsset.value ? { assetId: selectedAsset.value.id } : { assetName: assetName.value.trim() }),
-          ...(type.value !== 'dividend' ? { quantity: quantityText.value } : {}),
+          ...(type.value === 'dividend' ? {} : { quantity: newReward.value ? formatQuantity(rewardQuantity.value!) : quantityText.value }),
         },
       });
+      // No cash moved: show the asset and its new quantity rather than the budget.
+      if (type.value === 'reward') return await navigateTo(`/investments/${created.assetId}`);
       const cents = Math.round(amount.value! * 100);
       lastAdded.value = { amount: type.value === 'buy' ? -cents : cents, name: selectedAsset.value?.name ?? assetName.value.trim(), icon: props.category.icon };
       await navigateTo('/');

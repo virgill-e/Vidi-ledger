@@ -7,10 +7,11 @@ export const FREQUENCY_LABELS: Record<Frequency, string> = {
 
 export const SPREAD_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 10, 14, 21, 30, 60, 90, 180, 365];
 
-export const TRADE_LABELS: Record<'buy' | 'sell' | 'dividend', string> = {
+export const TRADE_LABELS: Record<TradeType, string> = {
     buy: 'Achat',
     sell: 'Vente',
     dividend: 'Dividende',
+    reward: 'Récompense',
 };
 
 export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
@@ -23,6 +24,7 @@ export const ASSET_CLASS_LABELS: Record<AssetClass, string> = {
 
 export const API_ERRORS: Record<string, string> = {
     'Quantity exceeds the units held at that date': 'Quantité supérieure aux parts détenues à cette date.',
+    'amount: A reward has no amount nor pot': 'Une récompense ne porte ni montant ni pot.',
     'Insufficient pot balance': 'Solde du pot insuffisant.',
     'An asset already has this name': 'Un autre actif porte déjà ce nom.',
     'date: Date is outside the wallet period': 'Cette date est en dehors de la période du portefeuille.',

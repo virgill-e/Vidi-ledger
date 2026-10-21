@@ -18,7 +18,8 @@
               <span class="block truncate">{{ title(tx) }}</span>
               <span v-if="subtitle(tx)" class="block text-[13px] text-ink-muted truncate">{{ subtitle(tx) }}</span>
             </span>
-            <span :class="['tabular-nums font-medium', isInflow(tx) ? 'text-positive' : '']">
+            <span v-if="tx.type === 'reward'" class="tabular-nums font-medium text-ink-muted">{{ formatMoney(0) }}</span>
+            <span v-else :class="['tabular-nums font-medium', isInflow(tx) ? 'text-positive' : '']">
               {{ formatMoney(isInflow(tx) ? tx.amount : -tx.amount, { signed: true }) }}
             </span>
           </NuxtLink>
@@ -133,7 +134,7 @@ const categoryOf = (id: number) => categories.value?.find((c) => c.id === id);
 const assetName = (tx: Transaction) => assets.find((a) => a.id === tx.assetId)?.name ?? '';
 // Trades read "Achat VWCE"; other movements show their memo or category.
 const title = (tx: Transaction) => {
-  if (tx.type === 'buy' || tx.type === 'sell' || tx.type === 'dividend') return `${TRADE_LABELS[tx.type]} ${assetName(tx)}`;
+  if (isTrade(tx.type)) return `${TRADE_LABELS[tx.type]} ${assetName(tx)}`;
   return tx.memo || categoryOf(tx.categoryId)?.name;
 };
 // "Courses · Vacances · étalé sur 3 jours": category (when a memo is shown), pot, spread.

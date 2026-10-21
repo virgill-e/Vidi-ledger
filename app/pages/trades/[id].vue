@@ -14,7 +14,7 @@ const [found, assets, pots] = await Promise.all([
   requestFetch<Pot[]>('/api/pots'),
   ensureLoaded(),
 ]);
-if (!found || (found.type !== 'buy' && found.type !== 'sell' && found.type !== 'dividend')) {
+if (!found || !isTrade(found.type)) {
   throw createError({ statusCode: 404, statusMessage: 'Trade not found' });
 }
 const trade: Transaction = found;

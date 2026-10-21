@@ -195,19 +195,22 @@ const optionalPotId = z.coerce.number().int().positive().nullable().optional();
 
 export const investmentCreateSchema = z
     .object({
-        type: z.enum(['buy', 'sell', 'dividend']),
+        type: z.enum(TRADE_TYPES),
         categoryId: z.coerce.number().int().positive(),
         // An existing asset, or a name (the asset is created if unknown).
         assetId: z.coerce.number().int().positive().optional(),
         assetName: z.string().trim().min(1).max(60).optional(),
-        amount: positiveAmount,
+        // None for a reward: its units come for free.
+        amount: positiveAmount.optional(),
         quantity: quantityField.optional(),
         date: localDateString,
         memo: optionalMemo,
         potId: optionalPotId,
     })
     .refine((d) => d.assetId !== undefined || d.assetName !== undefined, { message: 'Asset is required', path: ['assetName'] })
-    .refine((d) => d.type === 'dividend' || d.quantity !== undefined, { message: 'Quantity is required', path: ['quantity'] });
+    .refine((d) => d.type === 'dividend' || d.quantity !== undefined, { message: 'Quantity is required', path: ['quantity'] })
+    .refine((d) => d.type === 'reward' || d.amount !== undefined, { message: 'Amount is required', path: ['amount'] })
+    .refine((d) => d.type !== 'reward' || (d.amount === undefined && (d.potId ?? null) === null), { message: 'A reward has no amount nor pot', path: ['amount'] });
 
 // No defaults: omitted fields stay untouched. The type and asset never change.
 export const investmentUpdateSchema = z.object({

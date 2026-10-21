@@ -81,7 +81,7 @@ Disponible(début − 1) = 0
 
 1. `+` → choix de la catégorie, onglets **Dépense** / **Revenu**.
    - Onglet Dépense : la catégorie « Investissement » ouvre le formulaire d'**achat**.
-   - Onglet Revenu : la catégorie « Revenus d'investissement » ouvre le formulaire de **vente** ou de **dividende**.
+   - Onglet Revenu : la catégorie « Revenus d'investissement » ouvre le formulaire de **vente**, de **dividende** ou de **récompense** (staking, airdrop ; aussi « Ajuster au solde réel » depuis la vue actif).
 2. Formulaire, clavier numérique en priorité :
 
 | Champ | Dépense | Revenu | Achat | Vente / Dividende |
@@ -98,6 +98,7 @@ Disponible(début − 1) = 0
 
 3. Règles :
    - Une vente supérieure à la quantité détenue est refusée.
+   - **Récompense** (staking, airdrop) : des parts reçues gratuitement, sans montant ni pot, sans effet sur le budget. On saisit le **solde réel** (portefeuille, plateforme) et l'app enregistre l'écart avec la quantité connue : une saisie de temps en temps suffit (récompenses Solana toutes les 2-3 jours), et toujours avant une vente.
    - Un récurrent est toujours imputé au budget. Une charge payée depuis un pot se saisit à la main à chaque occurrence.
    - Une grosse vente versée au budget gonfle le disponible d'autant : choisir un pot comme destination pour l'éviter.
 
@@ -116,9 +117,9 @@ Disponible(début − 1) = 0
 - Sélecteur d'icônes par groupes (Maison et factures, Alimentation…) comme dans l'app de référence. Pas de premium.
 
 ### 2.6 Investissements
-- **Vue portefeuille**, par actif : quantité détenue, PRU, prix de revient, plus-value réalisée, dividendes. Totaux.
+- **Vue portefeuille**, par actif : quantité détenue, PRU, prix de revient, plus-value réalisée, dividendes, parts reçues en récompenses. Totaux.
 - **Vue actif** : points d'achat et de vente dans le temps (prix unitaire de chaque opération), ligne du PRU, liste des opérations.
-- Calculs : PRU au coût moyen pondéré (même méthode que la V1), frais inclus dans le coût (ils ne sont pas suivis à part : le montant saisi les contient). Plus-value réalisée d'une vente = produit net − PRU × quantité vendue.
+- Calculs : PRU au coût moyen pondéré (même méthode que la V1), frais inclus dans le coût (ils ne sont pas suivis à part : le montant saisi les contient). Plus-value réalisée d'une vente = produit net − PRU × quantité vendue. Une récompense entre à **coût zéro** : le prix de revient ne change pas, le PRU baisse.
 
 ### 2.7 Historique
 - Liste groupée par jour, filtres par catégorie et type, modification et suppression.
@@ -168,10 +169,11 @@ Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement
 
 **recurrences** — `id`, `wallet_id`, `category_id`, `kind` (`expense` | `income`), `amount`, `frequency` (`daily` | `weekly` | `monthly` | `yearly`), `start_date`, `end_date?`, `memo?`, `created_at`, `updated_at`
 
-**transactions** — `id`, `wallet_id`, `category_id`, `type` (`expense` | `income` | `buy` | `sell` | `dividend`), `date`, `amount`, `memo?`, `pot_id?`, `spread_days` (≥ 1, défaut 1), `asset_id?`, `quantity?` (×10⁸), `created_at`, `updated_at`
-- `buy` / `sell` ⇒ `asset_id` et `quantity > 0` obligatoires ; `dividend` ⇒ `asset_id` obligatoire ; `expense` / `income` ⇒ `asset_id` nul.
+**transactions** — `id`, `wallet_id`, `category_id`, `type` (`expense` | `income` | `buy` | `sell` | `dividend` | `reward`), `date`, `amount`, `memo?`, `pot_id?`, `spread_days` (≥ 1, défaut 1), `asset_id?`, `quantity?` (×10⁸), `created_at`, `updated_at`
+- `buy` / `sell` ⇒ `asset_id` et `quantity > 0` obligatoires ; `reward` ⇒ idem, avec `amount = 0` et `pot_id` nul ; `dividend` ⇒ `asset_id` obligatoire ; `expense` / `income` ⇒ `asset_id` nul.
+- `amount > 0` pour tous les types sauf `reward` (`amount = 0`).
 - `spread_days > 1` uniquement pour `expense`.
-- Cohérence type ↔ catégorie, vérifiée côté API (contrainte inter-tables) : `buy` ⇒ catégorie dépense d'investissement ; `sell` / `dividend` ⇒ catégorie revenu d'investissement ; `expense` / `income` ⇒ catégorie non investissement du même sens.
+- Cohérence type ↔ catégorie, vérifiée côté API (contrainte inter-tables) : `buy` ⇒ catégorie dépense d'investissement ; `sell` / `dividend` / `reward` ⇒ catégorie revenu d'investissement ; `expense` / `income` ⇒ catégorie non investissement du même sens.
 - Index `(wallet_id, date)` et `(asset_id, date)`.
 
 **pot_transfers** — `id`, `wallet_id`, `pot_id`, `direction` (`to_pot` | `from_pot`), `amount`, `date`, `memo?`, `created_at`
@@ -182,6 +184,7 @@ Analytics, export PDF/CSV, cibles d'allocation, objectif global d'investissement
 |---|---|---|
 | `expense`, `buy` | − budget | − pot |
 | `income`, `sell`, `dividend` | + budget | + pot |
+| `reward` | aucun (parts reçues, pas d'argent) | — (non autorisé) |
 | récurrence (`recurrences`) | lissée dans l'allocation | — (non autorisé) |
 
 Une transaction datée avant `wallets.start_date` n'a **aucun impact** sur le budget ni sur les pots. C'est ce qui neutralise l'historique d'investissements migré.

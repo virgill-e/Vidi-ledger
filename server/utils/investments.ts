@@ -2,13 +2,11 @@ import { and, eq } from 'drizzle-orm';
 import { assets, categories, transactions } from '../database/schema';
 import { db, fetchAll, fetchOne } from './db';
 
-const TRADE_TYPES = ['buy', 'sell', 'dividend'];
-
 /**
  * The wallet's active investment category for a trade: expense side for
- * buys, income side for sells and dividends. Throws 400 otherwise. Auto-imported.
+ * buys, income side for sells, dividends and rewards. Throws 400 otherwise. Auto-imported.
  */
-export const requireInvestmentCategory = async (walletId: number, categoryId: number, type: 'buy' | 'sell' | 'dividend') => {
+export const requireInvestmentCategory = async (walletId: number, categoryId: number, type: TradeType) => {
     const category = await fetchOne(db.select().from(categories)
         .where(and(eq(categories.id, categoryId), eq(categories.walletId, walletId))));
     const kind = type === 'buy' ? 'expense' : 'income';
@@ -39,10 +37,10 @@ export const requireAsset = async (walletId: number, assetId: number, statusCode
     return asset;
 };
 
-/** Buys, sells and dividends of one asset, in no particular order. */
+/** Buys, sells, dividends and rewards of one asset, in no particular order. */
 export const assetTrades = async (walletId: number, assetId: number) =>
     fetchAll(db.select().from(transactions).where(and(eq(transactions.walletId, walletId), eq(transactions.assetId, assetId))))
-        .then((rows: any[]) => rows.filter((r) => TRADE_TYPES.includes(r.type)));
+        .then((rows: any[]) => rows.filter((r) => isTrade(r.type)));
 
 /**
  * Throws 400 if, with `replace` applied (a trade created or edited) and/or

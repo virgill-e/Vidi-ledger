@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
     if (tx.potId !== null && !isOutflow(tx.type)) {
         await assertPotBalance(wallet, tx.potId, { excludeTransactionId: tx.id });
     }
-    // Removing a buy must not leave a later sale without units.
-    if (tx.type === 'buy') await assertNoOversell(wallet.id, tx.assetId, { excludeId: tx.id });
+    // Removing a buy or a reward must not leave a later sale without units.
+    if (addsUnits(tx.type)) await assertNoOversell(wallet.id, tx.assetId, { excludeId: tx.id });
 
     await db.delete(transactions).where(eq(transactions.id, tx.id)).execute();
     return { success: true };

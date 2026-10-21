@@ -11,7 +11,7 @@ export interface PotTransferRow {
 
 export interface PotTransactionRow {
     potId: number | null;
-    type: 'expense' | 'income' | 'buy' | 'sell' | 'dividend';
+    type: 'expense' | 'income' | 'buy' | 'sell' | 'dividend' | 'reward';
     amount: number; // cents
 }
 

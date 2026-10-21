@@ -1,7 +1,7 @@
 // Shapes returned by the API (dates as 'YYYY-MM-DD', money in cents).
 
 import type { Frequency } from '../utils/budget';
-import type { Position } from '../utils/portfolio';
+import type { Position, TradeType } from '../utils/portfolio';
 
 export type CategoryKind = 'expense' | 'income';
 
@@ -25,7 +25,7 @@ export interface Category {
     archivedAt: string | null;
 }
 
-export type TransactionType = 'expense' | 'income' | 'buy' | 'sell' | 'dividend';
+export type TransactionType = 'expense' | 'income' | TradeType;
 
 export interface Transaction {
     id: number;
@@ -92,7 +92,7 @@ export interface AssetSummary extends Asset {
 export interface AssetDetail {
     asset: Asset;
     position: Position;
-    /** Newest first; `unitPrice` in cents per unit (null for dividends). */
+    /** Newest first; `unitPrice` in cents per unit (null for dividends and rewards). */
     trades: (Transaction & { unitPrice: number | null })[];
     averageCostHistory: { date: string; averageCost: number | null }[];
 }

@@ -1,9 +1,10 @@
 import { transactions } from '../../database/schema';
 import { db, fetchOne } from '../../utils/db';
 
-// Buy (investment expense category) or sell/dividend (investment income
+// Buy (investment expense category) or sell/dividend/reward (investment income
 // category). Dates may precede the wallet start to record past trades; those
-// do not affect the budget.
+// do not affect the budget. A reward (staking, airdrop) adds units at no cost
+// and never touches the budget nor a pot.
 export default defineEventHandler(async (event) => {
     const { wallet } = await requireWallet(event);
     const body = await validateBody(event, investmentCreateSchema);
@@ -13,7 +14,7 @@ export default defineEventHandler(async (event) => {
         ? await requireAsset(wallet.id, body.assetId)
         : await findOrCreateAsset(wallet.id, body.assetName!);
 
-    const amount = toCents(body.amount);
+    const amount = body.type === 'reward' ? 0 : toCents(body.amount!);
     const quantity = body.type === 'dividend' ? (body.quantity ?? null) : body.quantity!;
     const potId = body.potId ?? null;
     if (potId !== null) {

@@ -5,11 +5,14 @@ import { db, fetchOne } from '../../utils/db';
 export default defineEventHandler(async (event) => {
     const { wallet } = await requireWallet(event);
     const tx = await requireTransaction(event, wallet.id);
-    if (tx.type !== 'buy' && tx.type !== 'sell' && tx.type !== 'dividend') {
+    if (!isTrade(tx.type)) {
         throw createError({ statusCode: 400, statusMessage: 'Not an investment movement' });
     }
 
     const body = await validateBody(event, investmentUpdateSchema);
+    if (tx.type === 'reward' && (body.amount !== undefined || (body.potId ?? null) !== null)) {
+        throw createError({ statusCode: 400, statusMessage: 'amount: A reward has no amount nor pot' });
+    }
     const changes: Record<string, unknown> = {};
     if (body.amount !== undefined) changes.amount = toCents(body.amount);
     if (body.date !== undefined) changes.date = body.date;

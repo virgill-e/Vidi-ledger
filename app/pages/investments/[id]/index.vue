@@ -20,6 +20,7 @@
         <MetricCell label="+/- réalisée" :value="formatMoney(p.realizedPnL, { signed: true })" :tone="p.realizedPnL" />
         <MetricCell label="Dividendes" :value="formatMoney(p.dividends)" />
         <MetricCell label="Total acheté" :value="formatMoney(p.invested)" />
+        <MetricCell v-if="p.rewards > 0" label="Reçu en récompenses" :value="`${formatQuantity(p.rewards)} part(s)`" />
       </div>
 
       <PriceChart :trades="detail.trades" :average-cost="p.averageCost" />
@@ -31,16 +32,22 @@
           :to="`/trades/${t.id}?from=/investments/${detail.asset.id}`"
           class="flex items-center gap-3 px-4 py-3 hover:bg-surface-muted/60"
         >
-          <span :class="['text-[11px] font-bold uppercase rounded-md px-1.5 py-0.5 w-20 text-center shrink-0', badgeClass(t.type)]">{{ TRADE_LABELS[t.type as 'buy'] }}</span>
+          <span :class="['text-[11px] font-bold uppercase rounded-md px-1.5 py-0.5 w-24 text-center shrink-0', badgeClass(t.type)]">{{ TRADE_LABELS[t.type as TradeType] }}</span>
           <span class="grow min-w-0">
             <span class="block text-[13px] text-ink-muted">{{ formatDate(t.date) }}</span>
             <span v-if="t.unitPrice !== null" class="block truncate tabular-nums text-[14px]">{{ formatQuantity(t.quantity!) }} × {{ formatUnitPrice(t.unitPrice) }}</span>
+            <span v-else-if="t.type === 'reward'" class="block truncate tabular-nums text-[14px]">+{{ formatQuantity(t.quantity!) }} part(s)</span>
           </span>
-          <span :class="['tabular-nums font-medium', t.type !== 'buy' && 'text-positive']">{{ formatMoney(t.type === 'buy' ? -t.amount : t.amount, { signed: true }) }}</span>
+          <span v-if="t.type === 'reward'" class="tabular-nums font-medium text-ink-muted">{{ formatMoney(0) }}</span>
+          <span v-else :class="['tabular-nums font-medium', t.type !== 'buy' && 'text-positive']">{{ formatMoney(t.type === 'buy' ? -t.amount : t.amount, { signed: true }) }}</span>
         </NuxtLink>
         <NuxtLink v-if="buyCategory" :to="`/invest/${buyCategory.id}?asset=${encodeURIComponent(detail.asset.name)}`" class="flex items-center gap-3 px-4 min-h-13 text-primary font-medium hover:bg-surface-muted/60">
           <Icon name="lucide:plus" class="size-5" />
           Nouvel achat
+        </NuxtLink>
+        <NuxtLink v-if="incomeCategory" :to="`/invest/${incomeCategory.id}?type=reward&asset=${encodeURIComponent(detail.asset.name)}`" class="flex items-center gap-3 px-4 min-h-13 text-primary font-medium hover:bg-surface-muted/60">
+          <Icon name="lucide:refresh-cw" class="size-5" />
+          Ajuster au solde réel (staking)
         </NuxtLink>
       </UiGroup>
 
@@ -65,7 +72,11 @@ if (!initial) throw createError({ statusCode: 404, statusMessage: 'Asset not fou
 const detail = initial;
 const p = detail.position;
 const buyCategory = computed(() => categories.value?.find((c) => c.isInvestment && c.kind === 'expense' && !c.archivedAt));
+const incomeCategory = computed(() => categories.value?.find((c) => c.isInvestment && c.kind === 'income' && !c.archivedAt));
 
 const badgeClass = (type: string) =>
-  type === 'buy' ? 'bg-positive/10 text-positive' : type === 'sell' ? 'bg-negative/10 text-negative' : 'bg-primary-soft text-primary';
+  type === 'buy' ? 'bg-positive/10 text-positive'
+    : type === 'sell' ? 'bg-negative/10 text-negative'
+    : type === 'reward' ? 'bg-amber-100 text-amber-700'
+    : 'bg-primary-soft text-primary';
 </script>

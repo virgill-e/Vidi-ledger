@@ -80,3 +80,35 @@ describe('guards and chart helpers', () => {
         expect(history.map((h) => h.averageCost)).toEqual([10_000, 15_000, null]);
     });
 });
+
+describe('rewards (staking, airdrops: units received for free)', () => {
+    // 10 SOL bought for 1 000 €, then 0,5 SOL of staking rewards.
+    const bought = () => t('buy', '2026-01-10', 100_000, 10);
+    const staked = () => t('reward', '2026-02-01', 0, 0.5);
+
+    it('adds units at no cost: same cost basis and invested amount, lower PRU', () => {
+        const p = computePosition([bought(), staked()]);
+        expect(p.quantity).toBe(10.5 * QUANTITY_SCALE);
+        expect(p.costBasis).toBe(100_000);
+        expect(p.invested).toBe(100_000);
+        expect(p.rewards).toBe(0.5 * QUANTITY_SCALE);
+        expect(Math.round(p.averageCost!)).toBe(Math.round(100_000 / 10.5)); // 95,24 € instead of 100 €
+    });
+
+    it('lets the rewarded units be sold, at the lowered average cost', () => {
+        const trades = [bought(), staked(), t('sell', '2026-03-01', 115_500, 10.5)];
+        expect(firstOversell(trades)).toBe(-1);
+        expect(computePosition(trades)).toMatchObject({ quantity: 0, costBasis: 0, realizedPnL: 15_500 });
+    });
+
+    it('only counts once received: a sale dated before the reward cannot use its units', () => {
+        expect(firstOversell([bought(), t('sell', '2026-01-20', 105_000, 10.5), staked()])).toBe(1);
+    });
+
+    it('has no unit price and moves the PRU line of the chart', () => {
+        expect(tradeUnitPrice(staked())).toBeNull();
+        const history = averageCostHistory([bought(), staked()]);
+        expect(history).toHaveLength(2);
+        expect(history[1]!.averageCost!).toBeLessThan(history[0]!.averageCost!);
+    });
+});
