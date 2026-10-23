@@ -27,4 +27,9 @@ ENV NODE_ENV=production
 
 EXPOSE 3018
 
+# Utilisateur non privilégié de l'image (uid 1000) : l'app ne fait que lire ses
+# fichiers (restés à root, donc non modifiables) et écoute sur un port > 1024.
+# Les données sont dans Postgres ; une base SQLite demanderait un volume inscriptible.
+USER node
+
 CMD ["node", ".output/server/index.mjs"]
