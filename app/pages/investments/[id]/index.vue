@@ -24,6 +24,18 @@
         <MetricCell v-if="p.fees > 0" label="Payé en frais" :value="`${formatQuantity(p.fees)} part(s)`" />
       </div>
 
+      <!-- Above the chart and the list: reachable without scrolling a long history. -->
+      <div v-if="buyCategory || incomeCategory" class="flex gap-3 -mt-2">
+        <NuxtLink v-if="buyCategory" :to="`/invest/${buyCategory.id}?asset=${encodeURIComponent(detail.asset.name)}`" class="flex-1 h-12 rounded-2xl bg-primary text-white font-semibold flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:brightness-105">
+          <Icon name="lucide:plus" class="size-5" />
+          Nouvel achat
+        </NuxtLink>
+        <NuxtLink v-if="incomeCategory" :to="`/invest/${incomeCategory.id}?type=adjust&asset=${encodeURIComponent(detail.asset.name)}`" class="flex-1 h-12 rounded-2xl bg-surface border border-line text-primary font-semibold flex items-center justify-center gap-2 hover:bg-primary-soft/60" title="Ajuster au solde réel (staking, frais)">
+          <Icon name="lucide:refresh-cw" class="size-5" />
+          Ajuster le solde
+        </NuxtLink>
+      </div>
+
       <PriceChart :trades="detail.trades" :average-cost="p.averageCost" />
 
       <UiGroup title="Opérations">
@@ -41,14 +53,6 @@
           </span>
           <span v-if="unitsOnly(t.type)" class="tabular-nums font-medium text-ink-muted">{{ formatMoney(0) }}</span>
           <span v-else :class="['tabular-nums font-medium', t.type !== 'buy' && 'text-positive']">{{ formatMoney(t.type === 'buy' ? -t.amount : t.amount, { signed: true }) }}</span>
-        </NuxtLink>
-        <NuxtLink v-if="buyCategory" :to="`/invest/${buyCategory.id}?asset=${encodeURIComponent(detail.asset.name)}`" class="flex items-center gap-3 px-4 min-h-13 text-primary font-medium hover:bg-surface-muted/60">
-          <Icon name="lucide:plus" class="size-5" />
-          Nouvel achat
-        </NuxtLink>
-        <NuxtLink v-if="incomeCategory" :to="`/invest/${incomeCategory.id}?type=adjust&asset=${encodeURIComponent(detail.asset.name)}`" class="flex items-center gap-3 px-4 min-h-13 text-primary font-medium hover:bg-surface-muted/60">
-          <Icon name="lucide:refresh-cw" class="size-5" />
-          Ajuster au solde réel (staking, frais)
         </NuxtLink>
       </UiGroup>
 
