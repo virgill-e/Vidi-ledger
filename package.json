@@ -23,6 +23,7 @@
     "better-sqlite3": "^12.6.2",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "fflate": "^0.8.3",
     "nuxt": "^4.3.1",
     "nuxt-auth-utils": "^0.5.29",
     "postgres": "^3.4.8",

@@ -13,6 +13,11 @@
           <span class="grow">Catégories</span>
           <Icon name="lucide:chevron-right" class="size-5 text-ink-muted" />
         </NuxtLink>
+        <NuxtLink to="/settings/export" class="flex items-center gap-3 px-4 min-h-13 hover:bg-surface-muted/60">
+          <Icon name="lucide:download" class="size-5 text-primary" />
+          <span class="grow">Exporter mes données</span>
+          <Icon name="lucide:chevron-right" class="size-5 text-ink-muted" />
+        </NuxtLink>
       </UiGroup>
 
       <UiGroup title="Compte">
